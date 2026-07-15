@@ -1,0 +1,42 @@
+# Python caches and environments
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+.venv-build/
+.env
+.env.*
+!.env.example
+
+# Test and coverage output
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# PyInstaller output (keep LPA.spec tracked)
+/build/
+/dist/
+/tmp/
+
+# Editors and operating-system files
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Local logs and temporary files
+*.log
+*.tmp
+~$*
+
+# Local LPA projects and credentials
+*.cfg
+*.lpa
+*.pem
+*.pfx
+*.key
+credentials.*
+secrets.*
