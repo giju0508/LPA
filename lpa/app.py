@@ -18,11 +18,13 @@ from .project import (
     LEGACY_PROJECT_EXTENSIONS,
     load_project,
     make_project,
+    project_with_defaults,
     save_project,
     validate_project,
 )
 from .ui.input_views import EngineDefinitionPage, ThermalAnalysisPage, ThrustChamberPage
 from .ui.result_views import (
+    AmbientConditionPerformancePage,
     ChamberResultsPage,
     ThermalResultsPage,
     ThermodynamicsResultsPage,
@@ -31,7 +33,7 @@ from .ui.result_views import (
 from .ui.theme import COLORS, FONT_UI, apply_theme
 
 
-APP_TITLE = f"LPA {__version__}"
+APP_TITLE = f"LPA {__version__} Beta"
 
 
 def resource_path(name: str) -> Path:
@@ -62,6 +64,9 @@ class LPAApplication(tk.Tk):
         self._project_path: Path | None = None
         self._dirty = False
         self._loading = False
+        self._project_revision = 0
+        self._analysis_revision: int | None = None
+        self.film_correction_var = tk.BooleanVar(self, value=False)
         self._analysis_service = AnalysisService()
         self.pages: dict[str, ttk.Frame] = {}
         self.nav_buttons: dict[str, ttk.Button] = {}
@@ -158,6 +163,7 @@ class LPAApplication(tk.Tk):
             ("thermal_result", "02  Thermal Analysis"),
             ("thermo_result", "03  Thermodynamics"),
             ("throttle_result", "04  Throttled Performance"),
+            ("ambient_result", "05  Ambient Performance"),
         ))
         spacer = ttk.Frame(nav, style="Nav.TFrame")
         spacer.pack(fill="both", expand=True)
@@ -178,7 +184,7 @@ class LPAApplication(tk.Tk):
         header.grid_columnconfigure(0, weight=1)
         context = ttk.Frame(header, style="Header.TFrame")
         context.grid(row=0, column=0, sticky="ew", padx=(0, 18))
-        self.context_title = ttk.Label(context, text="Engine Definition", style="Section.TLabel")
+        self.context_title = ttk.Label(context, text="Engine Definition", style="PageTitle.TLabel")
         self.context_title.pack(anchor="w")
         self.context_description = ttk.Label(
             context,
@@ -211,6 +217,7 @@ class LPAApplication(tk.Tk):
             "thermal_result": ThermalResultsPage,
             "thermo_result": ThermodynamicsResultsPage,
             "throttle_result": ThrottledPerformancePage,
+            "ambient_result": AmbientConditionPerformancePage,
         }
         for key, page_type in page_types.items():
             page = page_type(self.content)
@@ -244,6 +251,10 @@ class LPAApplication(tk.Tk):
     def _on_change(self, *_args: Any) -> None:
         if not self._loading:
             self._set_dirty(True)
+            self._project_revision += 1
+            if any(getattr(page, "data", None) is not None for page in self.pages.values()):
+                self.clear_results()
+                self.status_text.set("Inputs changed; run analysis again")
         try:
             engine_name = str(getattr(self.pages["engine"], "variables")["engine_name"].get())
             self.nav_engine_name.configure(text=engine_name or "Untitled engine")
@@ -254,7 +265,7 @@ class LPAApplication(tk.Tk):
         widget = event.widget
         if widget.edit_modified():
             if not self._loading:
-                self._set_dirty(True)
+                self._on_change()
             widget.edit_modified(False)
 
     def _set_dirty(self, dirty: bool) -> None:
@@ -284,6 +295,11 @@ class LPAApplication(tk.Tk):
 
         self.context_title.configure(text=title)
         self.context_description.configure(text=description)
+        if description:
+            if not self.context_description.winfo_manager():
+                self.context_description.pack(anchor="w", pady=(2, 0))
+        else:
+            self.context_description.pack_forget()
 
     def collect_project(self) -> dict[str, Any]:
         return make_project(
@@ -293,19 +309,24 @@ class LPAApplication(tk.Tk):
         )
 
     def load_project_data(self, project: dict[str, Any]) -> None:
+        project = project_with_defaults(project, self._default_project)
+        previous = self.collect_project()
         self._loading = True
         try:
-            getattr(self.pages["engine"], "load_values")(project["engine"])
-            getattr(self.pages["chamber"], "load_values")(project["thrust_chamber"])
-            getattr(self.pages["thermal_input"], "load_values")(project["thermal"])
-            refresh = getattr(self.pages["chamber"], "_refresh_states", None)
-            if refresh:
-                refresh()
+            self._apply_project_values(project)
+        except Exception:
+            self._apply_project_values(previous)
+            raise
         finally:
             self._loading = False
         self.nav_engine_name.configure(text=project["engine"].get("engine_name", "Untitled engine"))
         self.clear_results()
         self._set_dirty(False)
+
+    def _apply_project_values(self, project: dict[str, Any]) -> None:
+        for page_key, section in (("engine", "engine"), ("chamber", "thrust_chamber"),
+                                  ("thermal_input", "thermal")):
+            getattr(self.pages[page_key], "load_values")(project[section])
 
     def new_project(self) -> None:
         if not self._confirm_discard():
@@ -332,8 +353,8 @@ class LPAApplication(tk.Tk):
             return
         try:
             project = load_project(path)
-            self._project_path = Path(path)
             self.load_project_data(project)
+            self._project_path = Path(path)
             self.status_text.set(f"Opened {self._project_path.name}")
         except Exception as exc:
             messagebox.showerror("Open project", f"The project could not be opened.\n\n{exc}", parent=self)
@@ -369,8 +390,16 @@ class LPAApplication(tk.Tk):
         )
         if not path:
             return False
-        self._project_path = Path(path)
-        return self.save_project()
+        target = Path(path)
+        try:
+            save_project(target, self.collect_project())
+        except Exception as exc:
+            messagebox.showerror("Save project", f"The project could not be saved.\n\n{exc}", parent=self)
+            return False
+        self._project_path = target
+        self._set_dirty(False)
+        self.status_text.set(f"Saved {target.name}")
+        return True
 
     def _confirm_discard(self) -> bool:
         if not self._dirty:
@@ -403,6 +432,7 @@ class LPAApplication(tk.Tk):
         self.progress.pack(side="right", padx=(0, 12))
         self.progress.start(9)
         self.status_text.set("Running propulsion and thermal analysis…")
+        self._analysis_revision = self._project_revision
         self._future = self._executor.submit(self._analysis_service.analyze, project)
         self.after(80, self._poll_analysis)
 
@@ -415,6 +445,10 @@ class LPAApplication(tk.Tk):
         self.progress.stop()
         self.progress.pack_forget()
         self.run_button.state(["!disabled"])
+        if self._analysis_revision != self._project_revision:
+            self._future = None
+            self.status_text.set("Inputs changed; discarded results from the previous input state")
+            return
         try:
             result = self._future.result()
         except Exception as exc:
@@ -427,7 +461,13 @@ class LPAApplication(tk.Tk):
             self._future = None
             return
         self._future = None
-        for key in ("size_result", "thermal_result", "thermo_result", "throttle_result"):
+        for key in (
+            "size_result",
+            "thermal_result",
+            "thermo_result",
+            "throttle_result",
+            "ambient_result",
+        ):
             getattr(self.pages[key], "set_result")(result)
         method = result.get("method", self._analysis_service.backend_description)
         self.backend_text.configure(text=str(method))
@@ -435,7 +475,14 @@ class LPAApplication(tk.Tk):
         self.show_page("size_result")
 
     def clear_results(self) -> None:
-        for key in ("size_result", "thermal_result", "thermo_result", "throttle_result"):
+        self._project_revision += 1
+        for key in (
+            "size_result",
+            "thermal_result",
+            "thermo_result",
+            "throttle_result",
+            "ambient_result",
+        ):
             getattr(self.pages[key], "clear")()
         self.status_text.set("Results cleared")
 
@@ -443,11 +490,14 @@ class LPAApplication(tk.Tk):
         text = (
             "LPA calculation methods\n\n"
             "• Combustion/performance: RocketCEA equilibrium chemistry where supported.\n"
-            "• Frozen flow: RocketCEA frozen-at-throat approximation with the requested criterion recorded.\n"
+            "• Automatic O/F: maximizes theoretical vacuum specific impulse for the selected nozzle exit condition, chemistry flow model and reactant supply state. Performance losses and Film correction are excluded from this objective.\n"
+            "• Frozen flow: RocketCEA chemistry frozen at the throat. Chamber-frozen chemistry for finite-area chambers and arbitrary freezing locations are unsupported.\n"
             "• Contour: circular-arc convergent, conical or Rao-style parabolic divergent.\n"
             "• Hot-gas heat transfer: Bartz correlation with local area/Mach correction.\n"
             "• Regenerative cooling: 1-D wall/TBC conduction, internal forced convection and coolant energy balance.\n"
             "• Radiation: gray-body outer-surface balance. Film cooling is treated as a boundary-layer correction.\n\n"
+            "Numerical convergence does not establish physical validity. Phase/property limits, boiling, "
+            "decomposition, material ranges, separation and empirical film assumptions are reported with the results.\n\n"
             "Method basis: RPA — Design Tool for Liquid Rocket Engine Analysis; Thermal Analysis of Thrust Chambers; RPA 4 User Manual."
         )
         messagebox.showinfo("Calculation methods", text, parent=self)
@@ -455,7 +505,7 @@ class LPAApplication(tk.Tk):
     def _show_about(self) -> None:
         messagebox.showinfo(
             "About LPA",
-            f"LGJ Propulsion Analysis\nVersion {__version__}\n\nLiquid rocket thrust chamber sizing, performance, thermodynamics, and thermal analysis.\n\n© LGJ",
+            f"LGJ Propulsion Analysis\nVersion {__version__}\n\nLiquid rocket thrust chamber sizing, performance, thermodynamics, and thermal analysis.\nAutomatic O/F maximizes theoretical vacuum specific impulse at the selected exit and chemistry conditions.\n\n© LGJ",
             parent=self,
         )
 
@@ -476,6 +526,9 @@ class LPAApplication(tk.Tk):
         self._executor.shutdown(wait=False, cancel_futures=True)
         try:
             if self.winfo_exists():
+                if getattr(self, "tk", None) is not None:
+                    for callback in self.tk.call("after", "info"):
+                        self.after_cancel(callback)
                 self.destroy()
         except tk.TclError:
             # The Tcl interpreter may already be gone after an external stop.

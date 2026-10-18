@@ -1,3 +1,3 @@
 """LGJ Propulsion Analysis (LPA)."""
 
-__version__ = "0.7.0"
+__version__ = "0.16.0b1"

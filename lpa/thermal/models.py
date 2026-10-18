@@ -124,9 +124,24 @@ class ThermalAnalysisResult:
     iterations: int = 0
     converged: bool = True
     metadata: dict[str, Any] = field(default_factory=dict)
+    physical_validity: str = "screening"
+    physical_issues: tuple[str, ...] = ()
+    coolant_phase: tuple[str | None, ...] = ()
+    coolant_vapor_quality: tuple[float, ...] = ()
+    coolant_flow_regime: tuple[str | None, ...] = ()
+    coolant_outlet_phase: dict[str, str] = field(default_factory=dict)
+    coolant_outlet_enthalpy_j_kg: dict[str, float] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         station_count = self.section_count
+        if not self.coolant_phase:
+            self.coolant_phase = (None,) * station_count
+        if not self.coolant_vapor_quality:
+            self.coolant_vapor_quality = (float("nan"),) * station_count
+        if not self.coolant_flow_regime:
+            self.coolant_flow_regime = (None,) * station_count
+        if self.physical_validity not in {"valid", "screening", "invalid", "unsupported"}:
+            raise ValueError("unknown physical validity")
         arrays = {
             "x_m": self.x_m,
             "radius_m": self.radius_m,
@@ -142,6 +157,9 @@ class ThermalAnalysisResult:
             "coolant_density_kg_m3": self.coolant_density_kg_m3,
             "film_effectiveness": self.film_effectiveness,
             "active_segment_id": self.active_segment_id,
+            "coolant_phase": self.coolant_phase,
+            "coolant_vapor_quality": self.coolant_vapor_quality,
+            "coolant_flow_regime": self.coolant_flow_regime,
         }
         wrong = [name for name, values in arrays.items() if len(values) != station_count]
         if wrong:

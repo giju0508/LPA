@@ -220,10 +220,28 @@ def apply_theme(root: tk.Misc) -> ttk.Style:
         font=(FONT_UI, 9),
     )
     style.configure(
+        "PageTitle.TLabel",
+        background=COLORS["surface"],
+        foreground=COLORS["text"],
+        font=(FONT_UI, 15, "bold"),
+    )
+    style.configure(
         "Section.TLabel",
         background=COLORS["surface"],
         foreground=COLORS["text"],
-        font=(FONT_UI, 11, "bold"),
+        font=(FONT_UI, 12, "bold"),
+    )
+    style.configure(
+        "Field.TLabel",
+        background=COLORS["surface"],
+        foreground=COLORS["text"],
+        font=(FONT_UI, 10, "bold"),
+    )
+    style.configure(
+        "Unit.TLabel",
+        background=COLORS["surface"],
+        foreground=COLORS["muted"],
+        font=(FONT_UI, 9),
     )
     style.configure(
         "NavGroup.TLabel",
@@ -436,7 +454,7 @@ def apply_theme(root: tk.Misc) -> ttk.Style:
         "TLabelframe.Label",
         background=COLORS["surface"],
         foreground=COLORS["text"],
-        font=(FONT_UI, 9, "bold"),
+        font=(FONT_UI, 12, "bold"),
     )
     _install_combobox_wheel_guard(root)
     _install_selection_indicators(root, style)

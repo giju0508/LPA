@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import csv
+import json
 import math
 import sys
 import tkinter as tk
 from pathlib import Path
-from tkinter import filedialog, ttk
+from tkinter import filedialog, messagebox, ttk
 from typing import Any
 
 import numpy as np
@@ -16,7 +17,7 @@ from matplotlib.figure import Figure
 from matplotlib.ticker import AutoMinorLocator
 
 from .theme import COLORS, FONT_UI
-from .widgets import EmptyState, ScrollableFrame
+from .widgets import EmptyState, ScrollableFrame, fit_tree_columns
 
 
 def _resource_path(name: str) -> Path:
@@ -70,6 +71,54 @@ def _number(value: Any, default: float = math.nan) -> float:
         return default
 
 
+def _display_number(value: Any, digits: int = 3) -> str:
+    number = _number(value)
+    return f"{number:.{digits}f}" if math.isfinite(number) else "—"
+
+
+def _thermal_station_completion(thermal: Any) -> tuple[int, int]:
+    """Count wall solutions independently of local nonlinear convergence."""
+
+    x = _array(thermal, "x_mm", "x", "x_m")
+    hot_wall = _array(thermal, "twg_k", "Twg_K", "Twg")
+    total = len(x) or max(0, int(_number(_get(thermal, "section_count", default=0), 0)))
+    return int(np.count_nonzero(np.isfinite(hot_wall[:total]))), total
+
+
+def _thermal_two_phase_regions(thermal: Any, x: np.ndarray) -> list[tuple[float, float, str | None]]:
+    """Return contiguous phase cells, including a diagnosed unsolved cell."""
+
+    phases = _get(thermal, "coolant_phase", default=[]) or []
+    active = _get(thermal, "active_segment_id", default=[]) or []
+    if len(phases) != len(x):
+        return []
+    regions: list[tuple[float, float, str | None]] = []
+    index = 0
+    while index < len(x):
+        if str(phases[index]).replace("-", "_") != "two_phase" or not math.isfinite(float(x[index])):
+            index += 1
+            continue
+        start = index
+        identifier = active[index] if len(active) == len(x) else None
+        index += 1
+        while (index < len(x) and str(phases[index]).replace("-", "_") == "two_phase"
+               and math.isfinite(float(x[index]))
+               and (active[index] if len(active) == len(x) else None) == identifier):
+            index += 1
+        end = index - 1
+        left = float(x[start]) if start == 0 or not math.isfinite(float(x[start - 1])) else float(0.5 * (x[start - 1] + x[start]))
+        right = float(x[end]) if end == len(x) - 1 or not math.isfinite(float(x[end + 1])) else float(0.5 * (x[end] + x[end + 1]))
+        regions.append((left, right, identifier))
+    return regions
+
+
+def _coolant_quality_array(thermal: Any) -> np.ndarray:
+    """Do not display an EOS sentinel or an invalid quality as a mass fraction."""
+
+    quality = _array(thermal, "coolant_vapor_quality")
+    return np.where((quality >= 0.0) & (quality <= 1.0), quality, np.nan)
+
+
 def engineering_force(value_n: Any) -> tuple[str, str]:
     value = _number(value_n, 0.0)
     return (f"{value / 1000:.3f}", "kN") if abs(value) >= 1000 else (f"{value:.2f}", "N")
@@ -78,6 +127,8 @@ def engineering_force(value_n: Any) -> tuple[str, str]:
 def engineering_flow(value_kg_s: Any) -> tuple[str, str]:
     value = _number(value_kg_s, 0.0)
     return (f"{value * 1000:.2f}", "g/s") if abs(value) < 1 else (f"{value:.4f}", "kg/s")
+
+
 
 
 class ResultPage(ttk.Frame):
@@ -90,6 +141,9 @@ class ResultPage(ttk.Frame):
         self.current_subtitle = self.page_description
         self.empty = EmptyState(self, "No analysis results", "Complete the inputs and select Run Analysis.")
         self.empty.pack(fill="both", expand=True)
+        top = self.winfo_toplevel()
+        self.film_display_var = getattr(top, "film_correction_var", tk.BooleanVar(self, value=False))
+        self.report_warnings: list[str] = []
 
     def clear(self) -> None:
         self.data = None
@@ -101,6 +155,113 @@ class ResultPage(ttk.Frame):
 
     def set_result(self, data: dict[str, Any]) -> None:
         self.data = data
+
+    def _select_sweep_rows(self, rows: list[Any]) -> list[dict[str, Any]]:
+        basis = "with_film" if self.film_display_var.get() else "without_film"
+        selected = []
+        for item in rows:
+            row = dict(_mapping(item))
+            row.update(_mapping(row.get(basis)))
+            row["display_basis"] = basis
+            selected.append(row)
+        return selected
+
+    def _toggle_film_display(self) -> None:
+        pages = getattr(self.winfo_toplevel(), "pages", {})
+        targets = (pages.get(key) for key in ("size_result", "throttle_result", "ambient_result"))
+        for page in targets:
+            if page is not None and page.data is not None:
+                page.set_result(page.data)
+
+    def _film_display_control(self, parent: tk.Misc) -> None:
+        ttk.Checkbutton(parent, text="Display film correction", variable=self.film_display_var,
+                        command=self._toggle_film_display).pack(anchor="e", pady=(0, 7))
+
+    def _result_diagnostics(self, parent: tk.Misc, data: dict[str, Any]) -> None:
+        thermal = _mapping(data.get("thermal"))
+        raw = list(data.get("warnings", [])) + list(thermal.get("warnings", [])) + list(thermal.get("physical_issues", []))
+        for rows in (data.get("throttle", []), _get(data, "ambient.pressure_rows", default=[]),
+                     _get(data, "ambient.altitude_rows", default=[])):
+            for row in rows if isinstance(rows, list) else []:
+                raw.extend(_mapping(row).get("warnings", []))
+        self.report_warnings = list(dict.fromkeys(str(item) for item in raw if str(item).strip()))
+        row = ttk.Frame(parent, style="Surface.TFrame")
+        row.pack(fill="x", pady=(0, 8))
+        status = str(thermal.get("physical_validity", "not_assessed"))
+        label_text = {"valid": "Within reported model limits", "screening": "Screening model: review limits",
+                      "invalid": "Outside model limits", "unsupported": "Unsupported physical state",
+                      "not_assessed": "Not assessed"}.get(status, status)
+        if data.get("thermal_enabled", bool(thermal.get("section_count"))):
+            label = ttk.Label(row, text=f"Physical applicability: {label_text}",
+                              style=("Badge.TLabel" if status == "valid" else "Error.TLabel"
+                                     if status in {"invalid", "unsupported"} else "Warning.TLabel"),
+                              wraplength=500)
+            label.pack(side="left", fill="x", expand=True)
+            row.bind("<Configure>", lambda event: label.configure(
+                wraplength=max(100, event.width - details.winfo_reqwidth() - 24)), add="+")
+        details = ttk.Button(row, text=f"Warnings ({len(self.report_warnings)}) / model details…",
+                             command=self._show_diagnostics)
+        details.pack(side="right")
+        if self.report_warnings:
+            preview = ttk.Label(parent, text=self.report_warnings[0], style="Warning.TLabel", wraplength=700)
+            preview.pack(fill="x", pady=(0, 8))
+            preview.bind("<Configure>", lambda event: preview.configure(wraplength=max(120, event.width - 24)), add="+")
+
+    def _diagnostic_text(self) -> str:
+        data = self.data or {}
+        thermal = _mapping(data.get("thermal"))
+        lines = [f"Backend: {data.get('method', 'Unknown')}",
+                 f"Numerical convergence: {thermal.get('converged', 'Not assessed')}",
+                 f"Physical applicability: {thermal.get('physical_validity', 'Not assessed')}", "", "Warnings:"]
+        if thermal:
+            solved, total = _thermal_station_completion(thermal)
+            phases = thermal.get("coolant_phase", []) or []
+            two_phase = sum(str(phase).replace("-", "_") == "two_phase" for phase in phases)
+            quality = _coolant_quality_array(thermal)
+            finite_quality = quality[np.isfinite(quality)]
+            regimes = thermal.get("coolant_flow_regime", []) or []
+            counts = {str(regime): regimes.count(regime) for regime in dict.fromkeys(regimes) if regime}
+            lines[3:3] = [f"Solved wall stations: {solved}/{total}; unsolved: {total - solved}",
+                          f"Two-phase coolant stations: {two_phase}",
+                          "Vapor mass quality (0–1): " + (f"{min(finite_quality):.5f} to {max(finite_quality):.5f}"
+                                                         if len(finite_quality) else "not reported"),
+                          "Coolant flow / boiling status: " + (json.dumps(counts, ensure_ascii=False) if counts else "not reported")]
+        lines.extend(f"{index}. {warning}" for index, warning in enumerate(self.report_warnings, 1))
+        if not self.report_warnings:
+            lines.append("No reported warnings.")
+        metadata = _mapping(thermal.get("metadata"))
+        lines.extend(("", "Model capabilities / property sources:", json.dumps(metadata, indent=2, ensure_ascii=False, default=str)))
+        for key, title in (("reactant_supply_states", "Reactant supply states / enthalpy model:"),
+                           ("regen_feed_feedback", "Regen feed feedback:"),
+                           ("mixture_ratio_optimization", "Automatic O/F: theoretical vacuum Isp optimization:")):
+            if key in data:
+                lines.extend(("", title, json.dumps(data[key], indent=2, ensure_ascii=False, default=str)))
+        return "\n".join(lines)
+
+    def _show_diagnostics(self) -> None:
+        dialog = tk.Toplevel(self)
+        dialog.title("Analysis warnings and model applicability")
+        dialog.geometry("780x600")
+        dialog.minsize(540, 360)
+        dialog.transient(self.winfo_toplevel())
+        icon = getattr(self.winfo_toplevel(), "apply_child_icon", None)
+        if callable(icon):
+            icon(dialog)
+        frame = ttk.Frame(dialog, padding=12)
+        frame.pack(fill="both", expand=True)
+        text = tk.Text(frame, wrap="word", font=(FONT_UI, 10))
+        scroll = ttk.Scrollbar(frame, orient="vertical", command=text.yview)
+        scroll.pack(side="right", fill="y")
+        text.pack(fill="both", expand=True)
+        text.configure(yscrollcommand=scroll.set)
+        contents = self._diagnostic_text()
+        text.insert("1.0", contents)
+        text.configure(state="disabled")
+        def copy_all() -> None:
+            dialog.clipboard_clear()
+            dialog.clipboard_append(contents)
+        ttk.Button(dialog, text="Copy all", command=copy_all).pack(side="right", padx=12, pady=10)
+        ttk.Button(dialog, text="Close", command=dialog.destroy).pack(side="right", pady=10)
 
     def _update_page_context(self, title: str, subtitle: str = "") -> None:
         self.current_subtitle = subtitle or self.page_description
@@ -128,13 +289,17 @@ class ResultPage(ttk.Frame):
 class MetricTile(ttk.Frame):
     def __init__(self, master: tk.Misc, label: str, value: str, unit: str, note: str = "") -> None:
         super().__init__(master, style="Card.TFrame", padding=(10, 7), relief="solid", borderwidth=1)
-        ttk.Label(self, text=label, style="Muted.TLabel", font=(FONT_UI, 8, "bold")).pack(anchor="w")
+        # A bounded request prevents wrapped text from feeding its own grid
+        # allocation back into Tk's geometry negotiation.
+        heading = ttk.Label(self, text=label, style="Muted.TLabel", font=(FONT_UI, 8, "bold"), wraplength=120)
+        heading.pack(anchor="w", fill="x")
         row = ttk.Frame(self, style="Surface.TFrame")
         row.pack(anchor="w", pady=(2, 0))
         ttk.Label(row, text=value, style="Surface.TLabel", font=(FONT_UI, 13, "bold")).pack(side="left")
         ttk.Label(row, text=unit, style="Muted.TLabel", font=(FONT_UI, 8)).pack(side="left", padx=(4, 0), pady=(3, 0))
         if note:
             ttk.Label(self, text=note, style="Muted.TLabel", font=(FONT_UI, 7)).pack(anchor="w", pady=(2, 0))
+        self._heading = heading
 
 
 def style_axis(axis: Any, *, xlabel: str = "", ylabel: str = "", title: str = "") -> None:
@@ -171,7 +336,7 @@ class ChamberResultsPage(ResultPage):
     def __init__(self, master: tk.Misc) -> None:
         super().__init__(master)
         self.scroll = ScrollableFrame(self, padding=20)
-        self.film_blc_var = tk.BooleanVar(self, value=False)
+        self.film_blc_var = self.film_display_var
         self.rao_reference_image: tk.PhotoImage | None = None
         try:
             self.rao_reference_image = tk.PhotoImage(
@@ -184,8 +349,7 @@ class ChamberResultsPage(ResultPage):
             self.rao_reference_image = None
 
     def _toggle_film_blc(self) -> None:
-        if self.data is not None:
-            self.set_result(self.data)
+        self._toggle_film_display()
 
     def set_result(self, data: dict[str, Any]) -> None:
         super().set_result(data)
@@ -205,21 +369,11 @@ class ChamberResultsPage(ResultPage):
         ).pack(side="right", anchor="e")
         ttk.Checkbutton(
             header,
-            text="Apply film cooling as BLC",
+            text="Display film correction",
             variable=self.film_blc_var,
             command=self._toggle_film_blc,
         ).pack(side="right", padx=(0, 12))
-        warnings = [str(item) for item in data.get("warnings", []) if str(item).strip()]
-        if warnings:
-            message = "  ".join(f"• {item}" for item in warnings[:4])
-            if len(warnings) > 4:
-                message += f"  • …and {len(warnings) - 4} more"
-            ttk.Label(
-                self.scroll.body,
-                text=message,
-                style="Warning.TLabel",
-                wraplength=960,
-            ).pack(fill="x", pady=(0, 12))
+        self._result_diagnostics(self.scroll.body, data)
         source = _get(data, "performance", default=data)
         summary = ttk.Frame(self.scroll.body, style="Surface.TFrame")
         summary.pack(fill="x", pady=(0, 12))
@@ -230,6 +384,18 @@ class ChamberResultsPage(ResultPage):
         mass_flow_card = self._mass_flow_section(summary, source)
         performance_card.grid(row=0, column=0, sticky="nsew", padx=(0, 6))
         mass_flow_card.grid(row=0, column=1, sticky="nsew", padx=(6, 0))
+        def arrange(event: tk.Event) -> None:
+            scale = float(self.tk.call("tk", "scaling")) / (96.0 / 72.0)
+            stacked = event.width < 730 * scale + 25
+            if getattr(summary, "_stacked", None) == stacked:
+                return
+            summary._stacked = stacked  # type: ignore[attr-defined]
+            performance_card.grid_configure(columnspan=2 if stacked else 1,
+                                            sticky="ew" if stacked else "nsew", padx=(0, 0 if stacked else 6))
+            mass_flow_card.grid_configure(row=1 if stacked else 0, column=0 if stacked else 1,
+                                         columnspan=2 if stacked else 1, sticky="ew" if stacked else "nsew",
+                                         padx=(0 if stacked else 6, 0), pady=(8 if stacked else 0, 0))
+        summary.bind("<Configure>", arrange, add="+")
         self._geometry_section(data)
         self._contour_section(data)
         self._rao_reference_section()
@@ -255,17 +421,17 @@ class ChamberResultsPage(ResultPage):
         else:
             selected = _get(source, "without_film", "ideal", "uncorrected", default=source)
         thrust_values = [
-            _number(_get(selected, key, key.replace("_n", ""), default=0), 0.0)
+            _number(_get(selected, key, key.replace("_n", ""), default=None))
             for key in ("sea_level_thrust_n", "optimal_thrust_n", "vacuum_thrust_n")
         ]
-        force_unit = "kN" if max((abs(value) for value in thrust_values), default=0.0) >= 1000.0 else "N"
+        force_unit = "kN" if max((abs(value) for value in thrust_values if math.isfinite(value)), default=0.0) >= 1000.0 else "N"
         force_scale = 0.001 if force_unit == "kN" else 1.0
         thrust_metrics: list[tuple[str, str, str, str]] = []
         for value, label in zip(thrust_values, ("Sea-level thrust", "Optimal thrust", "Vacuum thrust")):
-            formatted = f"{value * force_scale:.3f}" if force_unit == "kN" else f"{value:.2f}"
+            formatted = _display_number(value * force_scale, 3 if force_unit == "kN" else 2)
             thrust_metrics.append((label, formatted, force_unit, ""))
         for key, label in (("sea_level_isp_s", "Sea-level Isp"), ("optimal_isp_s", "Optimal Isp"), ("vacuum_isp_s", "Vacuum Isp")):
-            thrust_metrics.append((label, f"{_number(_get(selected, key, default=0)):.2f}", "s", ""))
+            thrust_metrics.append((label, _display_number(_get(selected, key), 2), "s", ""))
         geometry = _get(data, "geometry", "contour.metrics", default={})
         chamber_pressure = _get(source, "chamber_pressure_bar", default=None)
         exit_pressure = _get(source, "exit_pressure_bar", default=None)
@@ -274,19 +440,19 @@ class ChamberResultsPage(ResultPage):
             (
                 (
                     "Chamber pressure",
-                    "—" if chamber_pressure is None else f"{_number(chamber_pressure):.3f}",
+                    _display_number(chamber_pressure, 3),
                     "bar(a)",
                     "",
                 ),
                 (
                     "Nozzle exit pressure",
-                    "—" if exit_pressure is None else f"{_number(exit_pressure):.4f}",
+                    _display_number(exit_pressure, 4),
                     "bar(a)",
                     "",
                 ),
                 (
                     "Gas residence time",
-                    "—" if residence_time is None else f"{_number(residence_time):.3f}",
+                    _display_number(residence_time, 3),
                     "ms",
                     "",
                 ),
@@ -297,16 +463,27 @@ class ChamberResultsPage(ResultPage):
 
     def _mass_flow_section(self, parent: tk.Misc, source: Any) -> ttk.LabelFrame:
         card = ttk.LabelFrame(parent, text="  Mass flow rates  ", padding=9)
-        total = _get(source, "mass_flow.total_kg_s", "total_mass_flow_kg_s", "mass_flow_kg_s", default=0)
-        oxidizer = _get(source, "mass_flow.oxidizer_kg_s", "oxidizer_mass_flow_kg_s", default=0)
-        fuel = _get(source, "mass_flow.fuel_kg_s", "fuel_mass_flow_kg_s", default=0)
-        film = _get(source, "mass_flow.film_kg_s", "film_mass_flow_kg_s", default=0)
+        total = _get(source, "mass_flow.total_kg_s", "total_mass_flow_kg_s", "mass_flow_kg_s")
+        oxidizer = _get(source, "mass_flow.oxidizer_kg_s", "oxidizer_mass_flow_kg_s")
+        fuel = _get(source, "mass_flow.fuel_kg_s", "fuel_mass_flow_kg_s")
+        film = _get(source, "mass_flow.film_kg_s", "film_mass_flow_kg_s")
+        external_coolants = _get(
+            source, "mass_flow.external_regen_coolants", default=[]
+        )
         metrics = []
         use_grams = abs(_number(total, 0.0)) < 1.0
         unit = "g/s" if use_grams else "kg/s"
         scale = 1000.0 if use_grams else 1.0
         for label, value in (("Total", total), ("Oxidizer", oxidizer), ("Fuel", fuel), ("Film", film)):
-            formatted = f"{_number(value, 0.0) * scale:.2f}" if use_grams else f"{_number(value, 0.0):.4f}"
+            formatted = _display_number(_number(value) * scale, 2 if use_grams else 4)
+            metrics.append((label, formatted, unit, ""))
+        for coolant_flow in external_coolants if isinstance(external_coolants, (list, tuple)) else ():
+            item = _mapping(coolant_flow)
+            coolant = str(item.get("coolant", "Coolant"))
+            segment_name = str(item.get("segment_name", "Regen"))
+            label = f"{coolant} coolant ({segment_name})"
+            value = _number(item.get("kg_s"), 0.0)
+            formatted = f"{value * scale:.2f}" if use_grams else f"{value:.4f}"
             metrics.append((label, formatted, unit, ""))
         self._metric_grid(card, metrics, columns=2)
         return card
@@ -316,8 +493,11 @@ class ChamberResultsPage(ResultPage):
         card = ttk.LabelFrame(self.scroll.body, text="  Chamber & Rao geometry  ", padding=11)
         card.pack(fill="x", pady=(0, 12))
         # Keep related dimensions together in three-column rows:
-        # radii, axial lengths, blend radii, angles, and area/volume ratios.
+        # diameters, radii, axial lengths, blend radii, angles, and ratios.
         definitions = (
+            ("Chamber diameter Dc", ("chamber_diameter_mm", "dc_mm"), "mm"),
+            ("Throat diameter Dt", ("throat_diameter_mm", "dt_mm"), "mm"),
+            ("Exit diameter De", ("exit_diameter_mm", "de_mm"), "mm"),
             ("Chamber radius Rc", ("chamber_radius_mm", "rc_mm"), "mm"),
             ("Throat radius Rt", ("throat_radius_mm", "rt_mm"), "mm"),
             ("Exit radius Re", ("exit_radius_mm", "re_mm"), "mm"),
@@ -337,7 +517,7 @@ class ChamberResultsPage(ResultPage):
         metrics = []
         for label, keys, unit in definitions:
             value = next((_get(geometry, key, default=None) for key in keys if _get(geometry, key, default=None) is not None), None)
-            formatted = "—" if value is None else f"{_number(value):.3f}"
+            formatted = _display_number(value, 3)
             metrics.append((label, formatted, unit, ""))
         self._metric_grid(card, metrics)
 
@@ -426,6 +606,11 @@ class ThermalResultsPage(ResultPage):
         toolbar = ttk.Frame(header, style="Surface.TFrame")
         toolbar.pack(side="right", anchor="e")
         ttk.Checkbutton(toolbar, text="Smooth curves", variable=self.smooth, command=self._draw).pack(side="left")
+        export_button = ttk.Button(toolbar, text="Export all stations…", command=self._export_all_stations)
+        export_button.pack(side="left", padx=(8, 0))
+        if not data.get("thermal_enabled", bool(thermal.get("section_count"))):
+            export_button.state(["disabled"])
+        self._result_diagnostics(self.shell, data)
         if not _get(data, "thermal_enabled", default=bool(_mapping(thermal))):
             ttk.Label(
                 self.shell,
@@ -437,19 +622,30 @@ class ThermalResultsPage(ResultPage):
         summary.pack(fill="x", pady=(0, 9))
         converged = bool(_get(thermal, "converged", default=True))
         iterations = int(_number(_get(thermal, "iterations", default=0), 0))
-        ttk.Label(
+        numerical_label = ttk.Label(
             summary,
-            text=("Converged" if converged else "Iteration limit reached") + f" · {iterations} max station iterations",
+            text=("Numerically converged" if converged else "Iteration limit reached") + f" · {iterations} max station iterations",
             style="Badge.TLabel" if converged else "Warning.TLabel",
-        ).pack(side="left")
+        )
+        numerical_label.pack(side="left", fill="x", expand=True)
+        summary.bind("<Configure>", lambda event: numerical_label.configure(
+            wraplength=max(140, (event.width - 20) // 2)), add="+")
+        solved, total = _thermal_station_completion(thermal)
+        completion = ttk.Label(self.shell,
+                               text=f"Solved wall stations {solved}/{total} · Unsolved {total - solved}",
+                               style="Badge.TLabel" if solved == total and total else "Warning.TLabel")
+        completion.pack(fill="x", pady=(0, 9))
         hot_wall = _array(thermal, "twg_k", "Twg_K", "Twg")
         finite_hot_wall = hot_wall[np.isfinite(hot_wall)]
         if len(finite_hot_wall):
-            ttk.Label(
+            maximum_label = ttk.Label(
                 summary,
                 text=f"Maximum inner wall Twg  {float(np.max(finite_hot_wall)):.2f} K",
                 style="Badge.TLabel",
-            ).pack(side="right")
+            )
+            maximum_label.pack(side="right", fill="x", expand=True)
+            summary.bind("<Configure>", lambda event: maximum_label.configure(
+                wraplength=max(140, (event.width - 20) // 2)), add="+")
         inlets = _mapping(_get(thermal, "coolant_inlet_temperature_k", default={}))
         outlets = _mapping(_get(thermal, "coolant_outlet_temperature_k", default={}))
         pressure_inlets = _mapping(_get(thermal, "coolant_inlet_pressure_bar", default={}))
@@ -526,6 +722,7 @@ class ThermalResultsPage(ResultPage):
                         pressure_text(pressure_drop),
                     ),
                 )
+            fit_tree_columns(circuit_tree)
         angle_geometry = _mapping(
             _get(
                 thermal,
@@ -578,6 +775,7 @@ class ThermalResultsPage(ResultPage):
                         *(f"{_number(value):.4f}" for value in rib_widths),
                     ),
                 )
+            fit_tree_columns(tree)
         orifices = _get(thermal, "film_orifices", default=[])
         if orifices:
             orifice_box = ttk.LabelFrame(self.shell, text="  Film orifice sizing  ", padding=(10, 7))
@@ -589,17 +787,91 @@ class ThermalResultsPage(ResultPage):
                     f"{int(_number(mapping.get('orifice_count'), 0))}  ·  Δp {_number(mapping.get('pressure_drop_bar')):.3f} bar  ·  "
                     f"ṁ {_number(mapping.get('mass_flow_kg_s')):.6f} kg/s"
                 )
-                ttk.Label(orifice_box, text=text, style="Surface.TLabel").pack(anchor="w")
-            ttk.Label(
-                orifice_box,
-                text="Incompressible Cd estimate using linked Regen inlet pressure; line losses are not deducted.",
-                style="Muted.TLabel",
-            ).pack(anchor="w", pady=(2, 0))
+                model = str(mapping.get("model", "Model not reported"))
+                choking = ("yes" if mapping.get("choked") else "no") if model.startswith("compressible") else "not applicable"
+                lines = (
+                    text,
+                    f"Model: {model} · applicability: {mapping.get('physical_validity', 'not assessed')}",
+                    f"Regen outlet: {_display_number(mapping.get('temperature_k'), 2)} K, "
+                    f"{_display_number(mapping.get('upstream_pressure_bar'), 3)} bar(a) · "
+                    f"local gas: {_display_number(mapping.get('gas_pressure_bar'), 3)} bar(a) · "
+                    f"phase: {mapping.get('phase', 'not reported')} · choked: {choking}",
+                )
+                for line in lines:
+                    label = ttk.Label(orifice_box, text=line, style="Surface.TLabel", wraplength=700)
+                    label.pack(fill="x", pady=(0, 3))
+                    label.bind("<Configure>", lambda event, item=label:
+                               item.configure(wraplength=max(120, event.width - 8)), add="+")
+            note = ttk.Label(orifice_box,
+                text="Uses the linked Regen outlet state and local injection gas pressure. "
+                     "Film is an independent stream; the link supplies state only. Additional feed-line losses are not modeled.",
+                style="Muted.TLabel", wraplength=700)
+            note.pack(fill="x", pady=(2, 0))
+            note.bind("<Configure>", lambda event: note.configure(wraplength=max(120, event.width - 8)), add="+")
         self.panel = FigurePanel(self.shell, self.figure)
         self.panel.pack(fill="x")
         self.panel.canvas.mpl_connect("resize_event", self._on_figure_resize)
         self._draw()
         self._build_axial_table(thermal)
+
+    def _export_all_stations(self) -> None:
+        if not self.data:
+            return
+        path = filedialog.asksaveasfilename(parent=self, title="Export all thermal stations",
+                                          defaultextension=".csv", initialfile="thermal-all-stations.csv",
+                                          filetypes=(("CSV table", "*.csv"),))
+        if not path:
+            return
+        try:
+            self.export_all_stations(path)
+        except (OSError, ValueError) as exc:
+            messagebox.showerror("Export thermal stations", str(exc), parent=self)
+
+    def export_all_stations(self, path: str | Path) -> None:
+        """Export unfiltered stations with numerical/physical status and warnings."""
+        thermal = _mapping(_get(self.data or {}, "thermal", default={}))
+        x = _array(thermal, "x_mm", "x")
+        fields = {"radius_mm": ("radius_mm",), "heat_flux_w_m2": ("heat_flux_w_m2",),
+                  "twg_k": ("twg_k", "Twg_K"), "twi_k": ("twi_k", "Twi_K"),
+                  "twc_k": ("twc_k", "Twc_K"), "tc_k": ("tc_k", "Tc_K"),
+                  "coolant_pressure_bar": ("coolant_pressure_bar",),
+                  "coolant_velocity_m_s": ("coolant_velocity_m_s",),
+                  "coolant_density_kg_m3": ("coolant_density_kg_m3",),
+                  "coolant_vapor_quality": ("coolant_vapor_quality",),
+                  "gas_coefficient_w_m2k": ("gas_coefficient_w_m2k",),
+                  "coolant_coefficient_w_m2k": ("coolant_coefficient_w_m2k",),
+                  "film_effectiveness": ("film_effectiveness",)}
+        arrays = {key: _array(thermal, *paths) for key, paths in fields.items()}
+        arrays["coolant_vapor_quality"] = _coolant_quality_array(thermal)
+        phases = thermal.get("coolant_phase", [])
+        regimes = thermal.get("coolant_flow_regime", [])
+        active = thermal.get("active_segment_id", [])
+        warnings = " | ".join(self.report_warnings)
+        metadata = _mapping(thermal.get("metadata"))
+        source_keys = ("model_capabilities", "coolant_property_sources", "material_references", "gas_state_source",
+                       "gas_side_model", "coolant_side_model", "wall_model", "radiation_model", "film_model",
+                       "two_phase_model", "two_phase_model_by_segment")
+        sources = json.dumps({key: metadata[key] for key in source_keys if key in metadata},
+                             ensure_ascii=False, default=str)
+        hot_wall = _array(thermal, "twg_k", "Twg_K", "Twg")
+        keys = ["station_index", "x_mm", *fields, "active_segment_id", "coolant_phase", "coolant_flow_regime",
+                "wall_solution_available",
+                "numerically_converged", "physical_validity", "warnings", "model_and_property_sources"]
+        with Path(path).open("w", newline="", encoding="utf-8-sig") as stream:
+            writer = csv.DictWriter(stream, fieldnames=keys)
+            writer.writeheader()
+            for index, position in enumerate(x):
+                row = {"station_index": index, "x_mm": float(position),
+                       "active_segment_id": active[index] if len(active) == len(x) else "",
+                       "coolant_phase": phases[index] if len(phases) == len(x) else "",
+                       "coolant_flow_regime": regimes[index] if len(regimes) == len(x) else "",
+                       "wall_solution_available": len(hot_wall) == len(x) and math.isfinite(float(hot_wall[index])),
+                       "numerically_converged": thermal.get("converged", ""),
+                       "physical_validity": thermal.get("physical_validity", "not_assessed"), "warnings": warnings,
+                       "model_and_property_sources": sources}
+                row.update({key: float(values[index]) if len(values) == len(x) and math.isfinite(float(values[index])) else ""
+                            for key, values in arrays.items()})
+                writer.writerow(row)
 
     @staticmethod
     def _representative_indices(count: int, limit: int = 30) -> list[int]:
@@ -622,7 +894,7 @@ class ThermalResultsPage(ResultPage):
             padding=(9, 7),
         )
         table_box.pack(fill="x", pady=(10, 0))
-        columns = ("x", "q", "Twg", "Twi", "Twc", "Tc", "pc", "wc", "rho")
+        columns = ("x", "q", "Twg", "Twi", "Twc", "Tc", "pc", "wc", "rho", "quality", "regime")
         headings = {
             "x": "Axial x (mm)",
             "q": "Heat flux (MW/m²)",
@@ -633,6 +905,8 @@ class ThermalResultsPage(ResultPage):
             "pc": "pc (bar)",
             "wc": "wc (m/s)",
             "rho": "rho (kg/m³)",
+            "quality": "Vapor x (0–1)",
+            "regime": "Flow / boiling status",
         }
         tree = ttk.Treeview(
             table_box,
@@ -642,7 +916,7 @@ class ThermalResultsPage(ResultPage):
         )
         self.axial_tree = tree
         tree.pack(fill="x")
-        for column, width in zip(columns, (82, 112, 70, 70, 70, 70, 75, 75, 92)):
+        for column, width in zip(columns, (82, 112, 70, 70, 70, 70, 75, 75, 92, 82, 135)):
             tree.heading(column, text=headings[column])
             tree.column(column, width=width, anchor="e")
 
@@ -655,7 +929,9 @@ class ThermalResultsPage(ResultPage):
             "pc": _array(thermal, "coolant_pressure_bar"),
             "wc": _array(thermal, "coolant_velocity_m_s"),
             "rho": _array(thermal, "coolant_density_kg_m3"),
+            "quality": _coolant_quality_array(thermal),
         }
+        regimes = _get(thermal, "coolant_flow_regime", default=[]) or []
 
         def value_at(key: str, index: int) -> float:
             values = arrays[key]
@@ -679,8 +955,11 @@ class ThermalResultsPage(ResultPage):
                     display(value_at("pc", index), 3),
                     display(value_at("wc", index), 3),
                     display(value_at("rho", index), 2),
+                    display(value_at("quality", index), 4),
+                    str(regimes[index]) if len(regimes) == len(x) and regimes[index] else "—",
                 ),
             )
+        fit_tree_columns(tree)
 
     def _smooth_values(self, values: np.ndarray) -> np.ndarray:
         if not self.smooth.get() or len(values) < 7:
@@ -716,6 +995,12 @@ class ThermalResultsPage(ResultPage):
         # the same x transform instead of merely sharing nominal x limits.
         self.axis = self.figure.add_subplot(111)
         self.contour_axis = self.axis.twinx()
+        for index, (left, right, _identifier) in enumerate(_thermal_two_phase_regions(thermal, x)):
+            # This transparent axis sits above the grey contour fill, so the
+            # phase highlight stays visible even where the contour overlaps it.
+            self.contour_axis.axvspan(left, right, facecolor="#f5b041", edgecolor="#b36a00",
+                                     alpha=0.18, linewidth=0.7, hatch="//", zorder=2,
+                                     label="Two-phase coolant" if index == 0 else "_nolegend_")
         series = (
             ("Twi", ("twi_k", "Twi_K", "Twi"), "#ff22d3"),
             ("Twg", ("twg_k", "Twg_K", "Twg"), COLORS["plot_hot"]),
@@ -792,9 +1077,8 @@ class ThermalResultsPage(ResultPage):
         self.contour_axis.spines["right"].set_color(COLORS["border"])
         self.contour_axis.set_zorder(self.axis.get_zorder() + 0.1)
         if plotted_temperatures:
-            finite_values = np.concatenate(
-                [values[np.isfinite(values)] for values in plotted_temperatures if np.isfinite(values).any()]
-            )
+            finite_series = [values[np.isfinite(values)] for values in plotted_temperatures if np.isfinite(values).any()]
+            finite_values = np.concatenate(finite_series) if finite_series else np.array([])
             if len(finite_values):
                 low = float(np.min(finite_values))
                 high = float(np.max(finite_values))
@@ -806,6 +1090,9 @@ class ThermalResultsPage(ResultPage):
                 self.axis.axvline(float(value), color=COLORS["success"], linewidth=0.8, linestyle="--")
                 self.axis.text(float(value), 0.5, text, color=COLORS["success"], rotation=90, transform=self.axis.get_xaxis_transform(), va="center", fontsize=8)
         lines, labels = self.axis.get_legend_handles_labels()
+        phase_handles, phase_labels = self.contour_axis.get_legend_handles_labels()
+        lines.extend(phase_handles)
+        labels.extend(phase_labels)
         if lines:
             self.axis.legend(lines, labels, loc="upper right", ncol=min(4, len(lines)), frameon=False, fontsize=8)
         self.axis.text(
@@ -844,7 +1131,11 @@ class ThermalResultsPage(ResultPage):
     def _set_temperature_limits(self) -> None:
         """Anchor the temperature scale at absolute zero with a readable top."""
 
-        if self._temperature_data_bounds is None or self.contour_axis is None:
+        if self._temperature_data_bounds is None:
+            if self.axis is not None:
+                self.axis.set_ylim(0.0, 1.0)
+            return
+        if self.contour_axis is None:
             return
         low, high = self._temperature_data_bounds
         data_span = max(1.0, high - low)
@@ -886,7 +1177,11 @@ class ThermodynamicsResultsPage(ResultPage):
 
     def __init__(self, master: tk.Misc) -> None:
         super().__init__(master)
-        self.shell = ttk.Frame(self, style="Surface.TFrame", padding=18)
+        # Keep the 13-row station table free of an unnecessary internal
+        # scrollbar, while allowing the complete table + plot report to remain
+        # usable at LPA's minimum window height.
+        self.scroll = ScrollableFrame(self, padding=18)
+        self.shell = self.scroll.body
         self.property_var = tk.StringVar(self, value="Temperature")
 
     def set_result(self, data: dict[str, Any]) -> None:
@@ -894,7 +1189,8 @@ class ThermodynamicsResultsPage(ResultPage):
         self.empty.pack_forget()
         for child in self.shell.winfo_children():
             child.destroy()
-        self.shell.pack(fill="both", expand=True)
+        self.scroll.pack(fill="both", expand=True)
+        self.scroll.scroll_to_top()
         header = self._header(
             self.shell,
             self.title,
@@ -912,6 +1208,7 @@ class ThermodynamicsResultsPage(ResultPage):
         )
         combo.pack(side="left")
         combo.bind("<<ComboboxSelected>>", lambda _e: self._draw_plot(data))
+        self._result_diagnostics(self.shell, data)
         self._build_table(data)
         self.plot_frame = ttk.LabelFrame(self.shell, text="  Axial property plot  ", padding=8)
         self.plot_frame.pack(fill="both", expand=True, pady=(12, 0))
@@ -939,15 +1236,12 @@ class ThermodynamicsResultsPage(ResultPage):
         frame = ttk.LabelFrame(self.shell, text="  Station properties  ", padding=8)
         frame.pack(fill="x")
         tree = ttk.Treeview(frame, columns=columns, show="headings", height=len(THERMO_PROPERTIES))
-        tree.pack(side="left", fill="both", expand=True)
-        scrollbar = ttk.Scrollbar(frame, orient="vertical", command=tree.yview)
-        scrollbar.pack(side="right", fill="y")
-        tree.configure(yscrollcommand=scrollbar.set)
+        tree.pack(fill="both", expand=True)
         for column in columns:
             tree.heading(column, text=column)
-            tree.column(column, anchor="e" if column not in ("Property", "Unit") else "w", width=145, minwidth=75)
-        tree.column("Property", width=170)
-        tree.column("Unit", width=95)
+            tree.column(column, anchor="e" if column not in ("Property", "Unit") else "w", width=130, minwidth=70)
+        tree.column("Property", width=155)
+        tree.column("Unit", width=85)
         for key, label, unit in THERMO_PROPERTIES:
             values: list[str] = []
             for _, aliases in canonical:
@@ -955,6 +1249,7 @@ class ThermodynamicsResultsPage(ResultPage):
                 value = _get(station, key, default=math.nan)
                 values.append("—" if not math.isfinite(_number(value)) else f"{_number(value):.6g}")
             tree.insert("", "end", values=(label, unit, *values))
+        fit_tree_columns(tree)
 
     def _draw_plot(self, data: Any) -> None:
         if not hasattr(self, "plot_frame"):
@@ -977,9 +1272,171 @@ class ThermodynamicsResultsPage(ResultPage):
         FigurePanel(self.plot_frame, figure).pack(fill="both", expand=True)
 
 
+class AmbientConditionPerformancePage(ResultPage):
+    title = "Ambient Condition Performance"
+    page_description = (
+        "Fixed-hardware performance by ambient pressure and U.S. Standard Atmosphere 1976 "
+        "altitude (-5 to approximately 86 km)."
+    )
+
+    def __init__(self, master: tk.Misc) -> None:
+        super().__init__(master)
+        self.shell = ttk.Frame(self, style="Surface.TFrame", padding=18)
+
+    @staticmethod
+    def _display(value: Any, digits: int) -> str:
+        number = _number(value)
+        return "—" if not math.isfinite(number) else f"{number:.{digits}f}"
+
+    def set_result(self, data: dict[str, Any]) -> None:
+        super().set_result(data)
+        self.empty.pack_forget()
+        for child in self.shell.winfo_children():
+            child.destroy()
+        self.shell.pack(fill="both", expand=True)
+        self._update_page_context(self.title, self.page_description)
+        self._film_display_control(self.shell)
+        self._result_diagnostics(self.shell, data)
+        pressure_rows = _get(data, "ambient.pressure_rows", default=[])
+        altitude_rows = _get(data, "ambient.altitude_rows", default=[])
+        pressure_rows = self._select_sweep_rows(pressure_rows) if isinstance(pressure_rows, list) else []
+        altitude_rows = self._select_sweep_rows(altitude_rows) if isinstance(altitude_rows, list) else []
+        if not pressure_rows and not altitude_rows:
+            ttk.Label(
+                self.shell,
+                text="Ambient-condition analysis was not selected. Enable it under Input → Thrust Chamber.",
+                style="Warning.TLabel",
+            ).pack(fill="x")
+            return
+
+        notebook = ttk.Notebook(self.shell)
+        notebook.pack(fill="both", expand=True)
+        pressure_tab = ttk.Frame(notebook, style="Surface.TFrame", padding=8)
+        altitude_tab = ttk.Frame(notebook, style="Surface.TFrame", padding=8)
+        notebook.add(pressure_tab, text="Ambient pressure")
+        notebook.add(altitude_tab, text="Standard altitude")
+        self._build_pressure_table(pressure_tab, pressure_rows)
+        self._build_altitude_table(altitude_tab, altitude_rows)
+
+    def _build_pressure_table(self, parent: ttk.Frame, rows: list[Any]) -> None:
+        if not rows:
+            ttk.Label(parent, text="No ambient-pressure points are available.", style="Muted.TLabel").pack(pady=30)
+            return
+        columns = (
+            "Ambient atm",
+            "Ambient bar",
+            "ISA altitude km",
+            "Thrust N",
+            "Isp s",
+            "ṁ kg/s",
+            "Cf",
+            "Source",
+        )
+        frame = ttk.Frame(parent, style="Surface.TFrame")
+        frame.pack(fill="both", expand=True)
+        tree = ttk.Treeview(frame, columns=columns, show="headings")
+        tree.pack(side="left", fill="both", expand=True)
+        scrollbar = ttk.Scrollbar(frame, orient="vertical", command=tree.yview)
+        scrollbar.pack(side="right", fill="y")
+        tree.configure(yscrollcommand=scrollbar.set)
+        widths = (95, 95, 105, 105, 90, 100, 80, 130)
+        for column, width in zip(columns, widths):
+            tree.heading(column, text=column)
+            tree.column(column, width=width, minwidth=65, anchor="e")
+        tree.column("Source", anchor="w")
+        for item in rows:
+            row = _mapping(item)
+            tree.insert(
+                "",
+                "end",
+                values=(
+                    self._display(row.get("ambient_pressure_atm"), 6),
+                    self._display(row.get("ambient_pressure_bar"), 6),
+                    self._display(row.get("standard_altitude_km"), 3),
+                    self._display(row.get("thrust_n"), 4),
+                    self._display(row.get("isp_s"), 4),
+                    self._display(row.get("mass_flow_kg_s"), 6),
+                    self._display(row.get("thrust_coefficient"), 5),
+                    str(row.get("status", "OK")),
+                ),
+            )
+        fit_tree_columns(tree)
+        ttk.Button(
+            parent,
+            text="Export CSV…",
+            command=lambda: self._export(rows, "ambient-pressure-performance.csv"),
+        ).pack(anchor="e", pady=(9, 0))
+
+    def _build_altitude_table(self, parent: ttk.Frame, rows: list[Any]) -> None:
+        if not rows:
+            ttk.Label(parent, text="No standard-atmosphere points are available.", style="Muted.TLabel").pack(pady=30)
+            return
+        columns = (
+            "Altitude km",
+            "Ambient atm",
+            "Temperature K",
+            "Density kg/m³",
+            "Thrust N",
+            "Isp s",
+            "Cf",
+            "Source",
+        )
+        frame = ttk.Frame(parent, style="Surface.TFrame")
+        frame.pack(fill="both", expand=True)
+        tree = ttk.Treeview(frame, columns=columns, show="headings")
+        tree.pack(side="left", fill="both", expand=True)
+        scrollbar = ttk.Scrollbar(frame, orient="vertical", command=tree.yview)
+        scrollbar.pack(side="right", fill="y")
+        tree.configure(yscrollcommand=scrollbar.set)
+        widths = (100, 95, 105, 110, 105, 90, 80, 130)
+        for column, width in zip(columns, widths):
+            tree.heading(column, text=column)
+            tree.column(column, width=width, minwidth=65, anchor="e")
+        tree.column("Source", anchor="w")
+        for item in rows:
+            row = _mapping(item)
+            tree.insert(
+                "",
+                "end",
+                values=(
+                    self._display(row.get("standard_altitude_km"), 3),
+                    self._display(row.get("ambient_pressure_atm"), 6),
+                    self._display(row.get("standard_temperature_k"), 3),
+                    self._display(row.get("standard_density_kg_m3"), 6),
+                    self._display(row.get("thrust_n"), 4),
+                    self._display(row.get("isp_s"), 4),
+                    self._display(row.get("thrust_coefficient"), 5),
+                    str(row.get("status", "OK")),
+                ),
+            )
+        fit_tree_columns(tree)
+        ttk.Button(
+            parent,
+            text="Export CSV…",
+            command=lambda: self._export(rows, "altitude-performance.csv"),
+        ).pack(anchor="e", pady=(9, 0))
+
+    def _export(self, rows: list[Any], initialfile: str) -> None:
+        path = filedialog.asksaveasfilename(
+            parent=self,
+            title="Export ambient-condition performance",
+            defaultextension=".csv",
+            initialfile=initialfile,
+            filetypes=(("CSV table", "*.csv"), ("All files", "*.*")),
+        )
+        if not path:
+            return
+        mappings = [_mapping(row) for row in rows]
+        keys = sorted({key for row in mappings for key in row})
+        with Path(path).open("w", newline="", encoding="utf-8-sig") as stream:
+            writer = csv.DictWriter(stream, fieldnames=keys)
+            writer.writeheader()
+            writer.writerows(mappings)
+
+
 class ThrottledPerformancePage(ResultPage):
     title = "Throttled Performance"
-    page_description = "Performance across requested throttle and ambient-pressure settings."
+    page_description = "Performance across requested throttle settings."
 
     def __init__(self, master: tk.Misc) -> None:
         super().__init__(master)
@@ -992,9 +1449,12 @@ class ThrottledPerformancePage(ResultPage):
             child.destroy()
         self.shell.pack(fill="both", expand=True)
         self._update_page_context(self.title, self.page_description)
+        self._film_display_control(self.shell)
+        self._result_diagnostics(self.shell, data)
         rows = _get(data, "throttle", "throttled_performance", "sweeps.throttle", default=[])
         if isinstance(rows, dict):
             rows = rows.get("rows", [])
+        rows = self._select_sweep_rows(rows)
         if not rows:
             ttk.Label(
                 self.shell,
@@ -1010,10 +1470,11 @@ class ThrottledPerformancePage(ResultPage):
         scrollbar = ttk.Scrollbar(frame, orient="vertical", command=tree.yview)
         scrollbar.pack(side="right", fill="y")
         tree.configure(yscrollcommand=scrollbar.set)
-        for column in columns:
+        widths = (85, 90, 90, 115, 90, 100, 75, 135)
+        for column, width in zip(columns, widths):
             tree.heading(column, text=column)
-            tree.column(column, width=120, anchor="e", minwidth=75)
-        tree.column("Status", width=150, anchor="w")
+            tree.column(column, width=width, anchor="e", minwidth=65)
+        tree.column("Status", anchor="w")
         for item in rows:
             row = _mapping(item)
             tree.insert(
@@ -1023,13 +1484,14 @@ class ThrottledPerformancePage(ResultPage):
                     f"{_number(_get(row, 'throttle_pct', 'throttle', default=0)):.3f}",
                     f"{_number(_get(row, 'ambient_atm', 'ambient_pressure_atm', default=0)):.4f}",
                     f"{_number(_get(row, 'chamber_pressure_bar', 'pc_bar', default=0)):.4f}",
-                    f"{_number(_get(row, 'thrust_n', 'thrust', default=0)):.4f}",
-                    f"{_number(_get(row, 'isp_s', 'specific_impulse_s', default=0)):.4f}",
-                    f"{_number(_get(row, 'mass_flow_kg_s', 'mdot_kg_s', default=0)):.6f}",
-                    f"{_number(_get(row, 'thrust_coefficient', 'cf', default=0)):.5f}",
+                    _display_number(_get(row, 'thrust_n', 'thrust'), 4),
+                    _display_number(_get(row, 'isp_s', 'specific_impulse_s'), 4),
+                    _display_number(_get(row, 'mass_flow_kg_s', 'mdot_kg_s'), 6),
+                    _display_number(_get(row, 'thrust_coefficient', 'cf'), 5),
                     str(_get(row, "status", default="OK")),
                 ),
             )
+        fit_tree_columns(tree)
         ttk.Button(self.shell, text="Export CSV…", command=lambda: self._export(rows)).pack(anchor="e", pady=(9, 0))
 
     def _export(self, rows: list[Any]) -> None:

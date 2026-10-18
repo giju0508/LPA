@@ -1,19 +1,21 @@
 """Axisymmetric thrust-chamber contour generation.
 
-The bell implementation is a Rao-like quadratic-parabola construction.  It
-uses the conventional 15-degree conical length reference and tangent
-intersection construction.  Tn and Te are currently selected by an LPA
-empirical estimate, not by Rocket Propulsion Analysis (RPA)'s undocumented
-automatic-angle logic; the returned metadata records that provenance.
+The bell implementation uses NASA SP-125's Rao parabolic approximation:
+a circular throat blend and a quadratic parabola with the specified endpoint
+tangents.  Automatic wall angles come from the published chart within its
+domain and verified RPA flow relations outside it; explicit angle pairs are
+also supported.  The reference
+15-degree cone includes the same rounded throat as the bell.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from math import asin, cos, pi, radians, sin, sqrt, tan
+from math import asin, atan, cos, degrees, isfinite, pi, radians, sin, sqrt, tan
 
 from ._numerics import linspace
 from .models import LengthMode, NozzleContourType, Resolution, ThrustChamberInput
+from .rao import rao_angles, select_rao_angles
 
 
 def math_asin_clamped(value: float) -> float:
@@ -74,13 +76,9 @@ def _point_count(value: Resolution | str | int) -> int:
 
 
 def _rao_angles(expansion_ratio: float, length_fraction: float) -> tuple[float, float]:
-    """Return LPA's empirical Tn/Te estimate (not an RPA-equivalent solver)."""
+    """Return automatic wall angles in degrees, including outside the chart."""
 
-    ratio_term = min(1.0, max(0.0, (sqrt(expansion_ratio) - sqrt(4.0)) / 8.0))
-    length_term = min(1.2, max(0.5, length_fraction))
-    initial = 31.5 - 4.5 * ratio_term - 9.0 * (length_term - 0.8)
-    exit_angle = 11.5 - 4.0 * ratio_term - 13.0 * (length_term - 0.8)
-    return max(20.0, min(36.0, initial)), max(4.0, min(16.0, exit_angle))
+    return rao_angles(expansion_ratio, length_fraction)
 
 
 def _quadratic_bezier(
@@ -89,12 +87,15 @@ def _quadratic_bezier(
     end: tuple[float, float],
     count: int,
 ) -> tuple[tuple[float, float], ...]:
+    if count < 2:
+        raise ValueError("a quadratic parabola requires at least two points")
     points: list[tuple[float, float]] = []
     for t_value in linspace(0.0, 1.0, count):
         inverse = 1.0 - t_value
         x_value = inverse * inverse * start[0] + 2 * inverse * t_value * control[0] + t_value**2 * end[0]
         y_value = inverse * inverse * start[1] + 2 * inverse * t_value * control[1] + t_value**2 * end[1]
         points.append((x_value, y_value))
+    points[0], points[-1] = start, end
     return tuple(points)
 
 
@@ -128,11 +129,75 @@ def _section_intervals(
     return intervals[0], intervals[1], intervals[2]
 
 
+def _convergent_volume_m3(
+    *,
+    chamber_radius: float,
+    throat_radius: float,
+    chamber_blend_radius: float,
+    throat_blend_radius: float,
+    straight_axial_length: float,
+    contraction_angle: float,
+) -> float:
+    """Return the exact volume of the arc-line-arc converging section."""
+
+    sine = sin(contraction_angle)
+    cosine = cos(contraction_angle)
+    cosine_squared_integral = (
+        contraction_angle / 2.0
+        + sin(2.0 * contraction_angle) / 4.0
+    )
+    cosine_cubed_integral = sine - sine**3 / 3.0
+
+    def arc_volume(
+        *, radius_offset: float, arc_radius: float, cosine_sign: float
+    ) -> float:
+        # r(theta) = radius_offset +/- arc_radius*cos(theta),
+        # dx = arc_radius*cos(theta)dtheta for theta in [0, beta].
+        return pi * arc_radius * (
+            radius_offset**2 * sine
+            + 2.0
+            * cosine_sign
+            * radius_offset
+            * arc_radius
+            * cosine_squared_integral
+            + arc_radius**2 * cosine_cubed_integral
+        )
+
+    chamber_arc_volume = arc_volume(
+        radius_offset=chamber_radius - chamber_blend_radius,
+        arc_radius=chamber_blend_radius,
+        cosine_sign=1.0,
+    )
+    throat_arc_volume = arc_volume(
+        radius_offset=throat_radius + throat_blend_radius,
+        arc_radius=throat_blend_radius,
+        cosine_sign=-1.0,
+    )
+    straight_start_radius = chamber_radius - chamber_blend_radius * (1.0 - cosine)
+    straight_end_radius = throat_radius + throat_blend_radius * (1.0 - cosine)
+    straight_volume = (
+        pi
+        * straight_axial_length
+        / 3.0
+        * (
+            straight_start_radius**2
+            + straight_start_radius * straight_end_radius
+            + straight_end_radius**2
+        )
+    )
+    return chamber_arc_volume + straight_volume + throat_arc_volume
+
+
 def generate_contour(
     chamber: ThrustChamberInput,
     throat_diameter_mm: float,
     expansion_ratio: float,
     resolution: Resolution | str | int = Resolution.MEDIUM,
+    *,
+    exit_mach: float | None = None,
+    throat_isentropic_exponent: float | None = None,
+    exit_isentropic_exponent: float | None = None,
+    nozzle_flow_source: str | None = None,
 ) -> ContourResult:
     """Generate a cylindrical chamber, convergent and nozzle contour.
 
@@ -140,10 +205,10 @@ def generate_contour(
     are SI; millimetre convenience properties are included on ``ContourResult``.
     """
 
-    if throat_diameter_mm <= 0:
-        raise ValueError("throat diameter must be positive")
-    if expansion_ratio <= 1:
-        raise ValueError("expansion ratio must be greater than 1")
+    if not isfinite(throat_diameter_mm) or throat_diameter_mm <= 0:
+        raise ValueError("throat diameter must be finite and positive")
+    if not isfinite(expansion_ratio) or expansion_ratio <= 1:
+        raise ValueError("expansion ratio must be finite and greater than 1")
     count = _point_count(resolution)
     throat_radius = throat_diameter_mm / 2000.0
     contraction_area_ratio = chamber.resolved_contraction_area_ratio(throat_diameter_mm)
@@ -173,20 +238,43 @@ def generate_contour(
         (upstream_radius + chamber_blend_radius) * sin(beta)
         + straight_axial_length
     )
+    natural_convergent_volume = _convergent_volume_m3(
+        chamber_radius=chamber_radius,
+        throat_radius=throat_radius,
+        chamber_blend_radius=chamber_blend_radius,
+        throat_blend_radius=upstream_radius,
+        straight_axial_length=straight_axial_length,
+        contraction_angle=beta,
+    )
+    throat_area = pi * throat_radius**2
+    chamber_area = pi * chamber_radius**2
     if chamber.length.mode is LengthMode.DIRECT:
         cylindrical_length = chamber.length.cylindrical_length_mm / 1000.0  # type: ignore[operator]
         total_chamber_length = chamber.length.chamber_length_mm / 1000.0  # type: ignore[operator]
         convergent_length = total_chamber_length - cylindrical_length
     else:
-        # LPA follows the requested convention: L* volume uses the cylindrical
-        # area and excludes the contraction volume.
-        cylindrical_length = (
-            chamber.length.characteristic_length_mm
-            / 1000.0
-            / contraction_area_ratio
+        # L* = (Vcyl + Vconv) / At.  The converging-section volume follows the
+        # actual arc-line-arc contour, so only the remaining target volume is
+        # assigned to the cylindrical chamber.
+        target_chamber_volume = (
+            chamber.length.characteristic_length_mm / 1000.0 * throat_area
         )  # type: ignore[operator]
+        cylindrical_volume = target_chamber_volume - natural_convergent_volume
+        if cylindrical_volume <= 0.0:
+            minimum_lstar_mm = natural_convergent_volume / throat_area * 1000.0
+            raise ValueError(
+                "characteristic length L* must exceed "
+                f"{minimum_lstar_mm:.3f} mm for the selected converging geometry"
+            )
+        cylindrical_length = cylindrical_volume / chamber_area
         convergent_length = natural_convergent_length
         total_chamber_length = cylindrical_length + convergent_length
+
+    axial_scale = convergent_length / natural_convergent_length
+    cylindrical_volume = chamber_area * cylindrical_length
+    convergent_volume = natural_convergent_volume * axial_scale
+    chamber_volume = cylindrical_volume + convergent_volume
+    resolved_characteristic_length_mm = chamber_volume / throat_area * 1000.0
 
     throat_blend_radius = chamber.nozzle.throat_radius_ratio * throat_radius
     conical_15_length = (
@@ -195,6 +283,8 @@ def generate_contour(
     )
     if chamber.nozzle.contour_type is NozzleContourType.CONICAL:
         half_angle = radians(chamber.nozzle.conical_half_angle_deg)
+        if exit_radius <= throat_radius + throat_blend_radius * (1.0 - cos(half_angle)):
+            raise ValueError("conical nozzle exit is inside the throat blend; increase Ae/At, reduce Rn/Rt, or reduce the half angle")
         nozzle_length = (
             (exit_radius - throat_radius) / tan(half_angle)
             + throat_blend_radius * tan(half_angle / 2.0)
@@ -215,7 +305,6 @@ def generate_contour(
 
     convergent_x = linspace(cylindrical_length, total_chamber_length, convergent_count)
     convergent_r: list[float] = []
-    axial_scale = convergent_length / natural_convergent_length
     first_arc_end = chamber_blend_radius * sin(beta)
     straight_end = first_arc_end + straight_axial_length
     for x_value in convergent_x:
@@ -244,16 +333,34 @@ def generate_contour(
         "convergent_length_mm": convergent_length * 1000.0,
         "natural_convergent_length_mm": natural_convergent_length * 1000.0,
         "convergent_axial_scale": axial_scale,
+        "actual_contraction_angle_deg": degrees(atan(tan(beta) / axial_scale)),
+        "convergent_arc_form": "circular" if abs(axial_scale - 1.0) < 1e-12 else "elliptical",
         "nozzle_length_mm": nozzle_length * 1000.0,
-        "characteristic_volume_convention": "cylindrical_area_excluding_contraction",
+        "conical_15_length_mm": conical_15_length * 1000.0,
+        "cylindrical_volume_m3": cylindrical_volume,
+        "convergent_volume_m3": convergent_volume,
+        "chamber_volume_m3": chamber_volume,
+        "characteristic_length_mm": resolved_characteristic_length_mm,
+        "characteristic_volume_convention": "cylinder_plus_converging_section",
         "R2/R2max": chamber.chamber_radius_ratio,
         "R1/Rt": chamber.throat_upstream_radius_ratio,
         "Rn/Rt": chamber.nozzle.throat_radius_ratio,
-        "R1_mm": upstream_radius * 1000.0,
-        "R2_mm": chamber_blend_radius * 1000.0,
+        "R1_mm": upstream_radius * axial_scale**2 * 1000.0,
+        "R2_mm": chamber_blend_radius * axial_scale**2 * 1000.0,
+        "requested_R1_mm": upstream_radius * 1000.0,
+        "requested_R2_mm": chamber_blend_radius * 1000.0,
+        "throat_upstream_curvature_radius_mm": upstream_radius * axial_scale**2 * 1000.0,
+        "chamber_blend_curvature_radius_mm": chamber_blend_radius * axial_scale**2 * 1000.0,
         "R2max_mm": maximum_chamber_blend_radius * 1000.0,
         "Rn_mm": throat_blend_radius * 1000.0,
     }
+    if abs(axial_scale - 1.0) > 1e-12:
+        metadata["convergent_geometry_warning"] = (
+            "Direct chamber lengths scale the convergent axially: its arcs are elliptical, "
+            f"actual straight angle is {metadata['actual_contraction_angle_deg']:.6g} deg, "
+            f"and endpoint curvature radii R1/R2 are {metadata['R1_mm']:.6g}/{metadata['R2_mm']:.6g} mm. "
+            "R1/R2 are endpoint curvatures, not constant radii of circular arcs."
+        )
     if chamber.nozzle.contour_type is NozzleContourType.CONICAL:
         x_values = linspace(0.0, nozzle_length, nozzle_count)
         half_angle = radians(chamber.nozzle.conical_half_angle_deg)
@@ -272,7 +379,34 @@ def generate_contour(
         metadata["nozzle_exit_angle_deg"] = chamber.nozzle.conical_half_angle_deg
     else:
         length_fraction = chamber.nozzle.bell_length_percent / 100.0
-        initial_angle_deg, exit_angle_deg = _rao_angles(expansion_ratio, length_fraction)
+        angle_selection = None
+        if (chamber.nozzle.rao_initial_angle_deg is None) != (chamber.nozzle.rao_exit_angle_deg is None):
+            raise ValueError("specify both Rao angles Tn and Te, or leave both automatic")
+        if chamber.nozzle.rao_initial_angle_deg is None:
+            angle_selection = select_rao_angles(
+                expansion_ratio, length_fraction,
+                throat_radius_ratio=chamber.nozzle.throat_radius_ratio,
+                exit_mach=exit_mach,
+                throat_isentropic_exponent=throat_isentropic_exponent,
+                exit_isentropic_exponent=exit_isentropic_exponent,
+                flow_source=nozzle_flow_source,
+            )
+            initial_angle_deg = angle_selection.initial_angle_deg
+            exit_angle_deg = angle_selection.exit_angle_deg
+            angle_method = angle_selection.method
+            angle_source = angle_selection.source
+        else:
+            initial_angle_deg = chamber.nozzle.rao_initial_angle_deg
+            exit_angle_deg = chamber.nozzle.rao_exit_angle_deg
+            angle_method = "user_specified"
+            angle_source = "Explicit Tn and Te inputs"
+        if (
+            exit_angle_deg is None
+            or not isfinite(initial_angle_deg)
+            or not isfinite(exit_angle_deg)
+            or not 0.0 <= exit_angle_deg < initial_angle_deg < 90.0
+        ):
+            raise ValueError("Rao wall angles must satisfy 0 <= Te < Tn < 90 degrees")
         initial_angle = radians(initial_angle_deg)
         exit_angle = radians(exit_angle_deg)
         blend_radius = throat_blend_radius
@@ -281,16 +415,39 @@ def generate_contour(
         exit_point = (nozzle_length, exit_radius)
         initial_slope = tan(initial_angle)
         exit_slope = tan(exit_angle)
-        control_x = (
-            exit_radius
-            - blend_y
-            + initial_slope * blend_x
-            - exit_slope * nozzle_length
+        geometry_description = (
+            f"Ae/At={expansion_ratio:g}, Le/Lc15={length_fraction * 100:g}%, "
+            f"Rn/Rt={chamber.nozzle.throat_radius_ratio:g}, "
+            f"Tn={initial_angle_deg:g} deg, Te={exit_angle_deg:g} deg"
+        )
+        if blend_x >= nozzle_length or blend_y >= exit_radius:
+            raise ValueError(
+                "Rao throat arc must end upstream of and below the nozzle exit "
+                f"({geometry_description}); adjust Rn/Rt, length or wall angles"
+            )
+        chord_slope = (exit_radius - blend_y) / (nozzle_length - blend_x)
+        if not exit_slope < chord_slope < initial_slope:
+            raise ValueError(
+                "Rao wall angles cannot form a downstream bell parabola: "
+                "the N-to-exit slope must lie strictly between tan(Te) and tan(Tn) "
+                f"({geometry_description}); adjust Rn/Rt, length or wall angles"
+            )
+        # Keep the exact intersection of the two endpoint tangents.  Moving Q
+        # would change the actual exit angle while still reporting the old Te.
+        control_x = blend_x + (
+            exit_radius - blend_y - exit_slope * (nozzle_length - blend_x)
         ) / (initial_slope - exit_slope)
-        control_x = min(nozzle_length * 0.92, max(blend_x * 1.05, control_x))
-        control_y = blend_y + initial_slope * (control_x - blend_x)
-        arc_count = max(5, round(nozzle_count * blend_x / nozzle_length))
-        bezier_count = nozzle_count - arc_count + 1
+        control_y = exit_radius - exit_slope * (nozzle_length - control_x)
+        if not blend_x < control_x < nozzle_length or not blend_y < control_y <= exit_radius:
+            raise ValueError(f"Rao tangent intersection is outside the bell ({geometry_description})")
+        # Adjacent sections share N.  Fix the total interval count and reserve
+        # four intervals for each curve, even for a very short throat blend.
+        arc_intervals = min(
+            nozzle_intervals - 4,
+            max(4, round(nozzle_intervals * blend_x / nozzle_length)),
+        )
+        arc_count = arc_intervals + 1
+        bezier_count = nozzle_intervals - arc_intervals + 1
         arc_angles = linspace(0.0, initial_angle, arc_count)
         arc = tuple(
             (
@@ -307,12 +464,38 @@ def generate_contour(
             {
                 "nozzle_initial_angle_deg": initial_angle_deg,
                 "nozzle_exit_angle_deg": exit_angle_deg,
-                "rao_angle_method": "lpa_empirical_approximation_not_rpa",
+                "rao_angle_method": angle_method,
+                "rao_angle_source": angle_source,
                 "rao_length_fraction": length_fraction,
+                "rao_expansion_ratio": expansion_ratio,
+                "rao_start_x_mm": blend_x * 1000.0,
+                "rao_start_radius_mm": blend_y * 1000.0,
                 "rao_control_x_mm": control_x * 1000.0,
                 "rao_control_radius_mm": control_y * 1000.0,
             }
         )
+        if angle_selection is not None:
+            metadata.update({
+                "rao_initial_preference_deg": angle_selection.initial_preference_deg,
+                "rao_exit_preference_deg": angle_selection.exit_preference_deg,
+                "rao_geometry_adjusted": float(angle_selection.geometry_adjusted),
+                "rao_flow_source": angle_selection.flow_source,
+            })
+            if angle_selection.exit_mach is not None:
+                metadata.update({
+                    "rao_flow_exit_mach": angle_selection.exit_mach,
+                    "rao_flow_throat_isentropic_exponent": angle_selection.throat_isentropic_exponent,
+                    "rao_flow_exit_isentropic_exponent": angle_selection.exit_isentropic_exponent,
+                })
+            if angle_selection.geometry_adjusted:
+                metadata["rao_angle_warning"] = (
+                    "Automatic Rao angles were adjusted to satisfy the selected nozzle "
+                    "length and throat blend: RPA flow preferences "
+                    f"Tn={angle_selection.initial_preference_deg:.6g} deg, "
+                    f"Te={angle_selection.exit_preference_deg:.6g} deg; applied "
+                    f"Tn={initial_angle_deg:.6g} deg, Te={exit_angle_deg:.6g} deg. "
+                    "The requested Le/Lc15 and Rn/Rt are preserved."
+                )
 
     # Boundary samples are shared by adjacent sections; remove the duplicates.
     x_values = cylinder_x + convergent_x[1:] + tuple(

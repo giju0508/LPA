@@ -34,7 +34,7 @@ def test_cfg_round_trip_preserves_schema_version_and_unicode(tmp_path) -> None:
     assert save_project(target, project) == target
     payload = json.loads(target.read_text(encoding="utf-8"))
     assert payload["schema"] == PROJECT_SCHEMA == "lpa-project/1"
-    assert payload["application_version"] == __version__ == "0.7.0"
+    assert payload["application_version"] == __version__
     assert payload["engine"]["engine_name"] == "CFG round-trip 엔진"
     assert load_project(target) == project
 

@@ -1,0 +1,69 @@
+[
+  {
+    "package": "rocketcea",
+    "version": "1.2.3",
+    "license_files": [
+      "third_party_licenses\\rocketcea\\LICENSE.txt"
+    ]
+  },
+  {
+    "package": "CoolProp",
+    "version": "8.0.0",
+    "license_files": [
+      "third_party_licenses\\CoolProp\\licenses\\LICENSE"
+    ]
+  },
+  {
+    "package": "numpy",
+    "version": "2.4.2",
+    "license_files": [
+      "third_party_licenses\\numpy\\licenses\\LICENSE.txt",
+      "third_party_licenses\\numpy\\licenses\\numpy\\_core\\include\\numpy\\libdivide\\LICENSE.txt",
+      "third_party_licenses\\numpy\\licenses\\numpy\\_core\\src\\common\\pythoncapi-compat\\COPYING",
+      "third_party_licenses\\numpy\\licenses\\numpy\\_core\\src\\highway\\LICENSE",
+      "third_party_licenses\\numpy\\licenses\\numpy\\_core\\src\\multiarray\\dragon4_LICENSE.txt",
+      "third_party_licenses\\numpy\\licenses\\numpy\\_core\\src\\npysort\\x86-simd-sort\\LICENSE.md",
+      "third_party_licenses\\numpy\\licenses\\numpy\\_core\\src\\umath\\svml\\LICENSE",
+      "third_party_licenses\\numpy\\licenses\\numpy\\fft\\pocketfft\\LICENSE.md",
+      "third_party_licenses\\numpy\\licenses\\numpy\\linalg\\lapack_lite\\LICENSE.txt",
+      "third_party_licenses\\numpy\\licenses\\numpy\\ma\\LICENSE",
+      "third_party_licenses\\numpy\\licenses\\numpy\\random\\LICENSE.md",
+      "third_party_licenses\\numpy\\licenses\\numpy\\random\\src\\distributions\\LICENSE.md",
+      "third_party_licenses\\numpy\\licenses\\numpy\\random\\src\\mt19937\\LICENSE.md",
+      "third_party_licenses\\numpy\\licenses\\numpy\\random\\src\\pcg64\\LICENSE.md",
+      "third_party_licenses\\numpy\\licenses\\numpy\\random\\src\\philox\\LICENSE.md",
+      "third_party_licenses\\numpy\\licenses\\numpy\\random\\src\\sfc64\\LICENSE.md",
+      "third_party_licenses\\numpy\\licenses\\numpy\\random\\src\\splitmix64\\LICENSE.md"
+    ]
+  },
+  {
+    "package": "scipy",
+    "version": "1.17.0",
+    "license_files": [
+      "third_party_licenses\\scipy\\LICENSE.txt"
+    ]
+  },
+  {
+    "package": "matplotlib",
+    "version": "3.10.8",
+    "license_files": [
+      "third_party_licenses\\matplotlib\\LICENSE"
+    ]
+  },
+  {
+    "package": "ht",
+    "version": "1.2.0",
+    "license_files": [
+      "third_party_licenses\\ht\\licenses\\AUTHORS",
+      "third_party_licenses\\ht\\licenses\\LICENSE.txt"
+    ]
+  },
+  {
+    "package": "fluids",
+    "version": "1.3.1",
+    "license_files": [
+      "third_party_licenses\\fluids\\licenses\\AUTHORS",
+      "third_party_licenses\\fluids\\licenses\\LICENSE.txt"
+    ]
+  }
+]

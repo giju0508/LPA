@@ -1,0 +1,2057 @@
+{
+  "schema": "rpa-rao-reference/1",
+  "capture_date_kst": "2026-10-08",
+  "producer": {
+    "installation_bundle": "RPA 4.0.13",
+    "installed_path": "C:/RPA-4.0.13",
+    "interface": "Official bundled RPA-Script.exe ConfigFile / PropulsionAnalysis / NozzleDesign APIs",
+    "artifacts": [
+      {
+        "file": "RPA.exe",
+        "pe_file_version": "4.0.13.0",
+        "pe_product_version": "4.0.13.0",
+        "sha256": "c785520499fab8509719a3b022f36f960076bd91edd4dea2661a6115c5a80d1c"
+      },
+      {
+        "file": "RPA-Script.exe",
+        "pe_file_version": "4.0.8.0",
+        "pe_product_version": "4.0.8.0",
+        "sha256": "0f50371a3627c61fcacaf5ff310cde66bde91895586b26a0b641d81559116aa9"
+      },
+      {
+        "file": "nozzle4.dll",
+        "pe_file_version": "4.0.0.0",
+        "pe_product_version": "4.0.0.0",
+        "sha256": "86183ae009ff6ea17554555501b62425c780779a730c853e66bdf03050dec097"
+      },
+      {
+        "file": "performance4.dll",
+        "pe_file_version": "4.0.0.0",
+        "pe_product_version": "4.0.0.0",
+        "sha256": "42c3364388a81ba91f2da3b791374c3a81d91687dd16d18a542007c07221e349"
+      },
+      {
+        "file": "rpa-shared4.dll",
+        "pe_file_version": "4.0.0.0",
+        "pe_product_version": "4.0.0.0",
+        "sha256": "884669951bf59d71478645fc03b8a97716eff4cf53831a7793d81ed3b5a3542a"
+      }
+    ]
+  },
+  "provenance": {
+    "configuration_api_example": "examples/scripting/config_file_4.js",
+    "bell_length_key_example": "examples/scripting/migrate_cfg.js lines 443-444",
+    "bell_length_field": "thrustChamberSize.nozzleGeometry.parabolicContour.LeC15 (percent)",
+    "nozzle_results": "getNozzleSize(false, 50); wall angles in radians",
+    "isentropic_exponent": "getPerformanceAnalysis().getChamber().getDerivatives(\"thr\").getK() / getNozzleExit().getK()",
+    "cp_cv_gamma": "getDerivatives(...).getGamma()",
+    "angle_policy": "No Tn or Te fields in any captured configuration; both automatic",
+    "script_sources": [
+      "tmp/rpa_rao_grid_thermo.js",
+      "tmp/rpa_rao_state_thermo.js"
+    ],
+    "raw_outputs": [
+      "tmp/rpa_rao_grid_thermo.stdout",
+      "tmp/rpa_rao_state_thermo.stdout"
+    ],
+    "qualification": "Observed behavior of the installed RPA bundle; these measurements do not represent a published proprietary-source formula. Runtime LPA numerical results can differ through the thermochemical model."
+  },
+  "cases": [
+    {
+      "id": "area_1_bell80",
+      "configuration": {
+        "version": 4,
+        "application": "RPA",
+        "engineDefinition": {
+          "name": "A-1",
+          "description": "A-1",
+          "chamberPressure": {
+            "value": 1095,
+            "units": "psi"
+          },
+          "bipropellantMixture": {
+            "oxidizer": [
+              {
+                "name": "O2(L)",
+                "massFraction": 1
+              }
+            ],
+            "fuel": [
+              {
+                "name": "RP-1",
+                "massFraction": 1
+              }
+            ],
+            "mixtureRatio": {
+              "value": 2.35
+            }
+          }
+        },
+        "nozzleConditions": {
+          "nozzleInletConditions": {
+            "areaRatio": 1.6
+          },
+          "nozzleExitConditions": {
+            "areaRatio": 1.0001
+          },
+          "equilibriumFlow": {
+            "shifting": false
+          },
+          "reactionEficiency": {
+            "estimateReactionEfficiency": true
+          },
+          "nozzleEficiency": {
+            "estimateBellNozzleEfficicncy": true
+          },
+          "nozzleFlowEffcets": {
+            "multiphase": true,
+            "ionization": true
+          }
+        },
+        "thrustChamberSize": {
+          "sizing": {
+            "numberOfChambers": 1,
+            "throatDiameter": {
+              "value": 20,
+              "units": "mm"
+            }
+          },
+          "combustionChamberGeometry": {
+            "chamberLength": {
+              "type": "Lstar",
+              "value": {
+                "value": 45,
+                "units": "in"
+              }
+            },
+            "contractionAngle": 20,
+            "R2toR2max": 0.4,
+            "R1toRt": 0.75
+          },
+          "nozzleGeometry": {
+            "parabolicContour": {
+              "LeC15": 80
+            },
+            "RntoRt": 0.382
+          }
+        }
+      },
+      "measurements": {
+        "expansion_ratio": 1,
+        "requested_length_fraction": 0.8,
+        "actual_length_fraction": 0.8,
+        "throat_diameter_m": 0.02,
+        "nozzle_length_m": 0.00040233003262708073,
+        "throat_radius_ratio": 0.382,
+        "exit_mach": 1.000007133268033,
+        "throat_isentropic_exponent": 1.1456299159642813,
+        "exit_isentropic_exponent": 1.1456299159642838,
+        "throat_cp_cv_gamma": 1.1703921018075687,
+        "initial_angle_deg": 3.197653962893785e-07,
+        "exit_angle_deg": 2.877888566604407e-07,
+        "initial_angle_rad": 5.580958999194113e-09,
+        "exit_angle_rad": 5.022863099274702e-09,
+        "exit_temperature_k": 3394.6273303974094,
+        "continuous_parabola_tangent_feasible": false,
+        "exit_cp_cv_gamma": 1.1703921018075645,
+        "chamber_isentropic_exponent": 1.1466688100051858,
+        "chamber_cp_cv_gamma": 1.178126015492654
+      }
+    },
+    {
+      "id": "area_1.1_bell80",
+      "configuration": {
+        "version": 4,
+        "application": "RPA",
+        "engineDefinition": {
+          "name": "A-1",
+          "description": "A-1",
+          "chamberPressure": {
+            "value": 1095,
+            "units": "psi"
+          },
+          "bipropellantMixture": {
+            "oxidizer": [
+              {
+                "name": "O2(L)",
+                "massFraction": 1
+              }
+            ],
+            "fuel": [
+              {
+                "name": "RP-1",
+                "massFraction": 1
+              }
+            ],
+            "mixtureRatio": {
+              "value": 2.35
+            }
+          }
+        },
+        "nozzleConditions": {
+          "nozzleInletConditions": {
+            "areaRatio": 1.6
+          },
+          "nozzleExitConditions": {
+            "areaRatio": 1.1
+          },
+          "equilibriumFlow": {
+            "shifting": false
+          },
+          "reactionEficiency": {
+            "estimateReactionEfficiency": true
+          },
+          "nozzleEficiency": {
+            "estimateBellNozzleEfficicncy": true
+          },
+          "nozzleFlowEffcets": {
+            "multiphase": true,
+            "ionization": true
+          }
+        },
+        "thrustChamberSize": {
+          "sizing": {
+            "numberOfChambers": 1,
+            "throatDiameter": {
+              "value": 20,
+              "units": "mm"
+            }
+          },
+          "combustionChamberGeometry": {
+            "chamberLength": {
+              "type": "Lstar",
+              "value": {
+                "value": 45,
+                "units": "in"
+              }
+            },
+            "contractionAngle": 20,
+            "R2toR2max": 0.4,
+            "R1toRt": 0.75
+          },
+          "nozzleGeometry": {
+            "parabolicContour": {
+              "LeC15": 80
+            },
+            "RntoRt": 0.382
+          }
+        }
+      },
+      "measurements": {
+        "expansion_ratio": 1.1,
+        "requested_length_fraction": 0.8,
+        "actual_length_fraction": 4.308450664009823,
+        "throat_diameter_m": 0.02,
+        "nozzle_length_m": 0.01001492270776063,
+        "throat_radius_ratio": 0.382,
+        "exit_mach": 1.3415167812736157,
+        "throat_isentropic_exponent": 1.1456299159642813,
+        "exit_isentropic_exponent": 1.146981781084678,
+        "throat_cp_cv_gamma": 1.1703921018075687,
+        "initial_angle_deg": 2.8446517904558797,
+        "exit_angle_deg": 2.560186611410292,
+        "initial_angle_rad": 0.049648539816206906,
+        "exit_angle_rad": 0.04468368583458622,
+        "exit_temperature_k": 3245.8077930067693,
+        "continuous_parabola_tangent_feasible": true,
+        "exit_cp_cv_gamma": 1.1665306640951563,
+        "chamber_isentropic_exponent": 1.1466688100051858,
+        "chamber_cp_cv_gamma": 1.178126015492654
+      }
+    },
+    {
+      "id": "area_1.5_bell80",
+      "configuration": {
+        "version": 4,
+        "application": "RPA",
+        "engineDefinition": {
+          "name": "A-1",
+          "description": "A-1",
+          "chamberPressure": {
+            "value": 1095,
+            "units": "psi"
+          },
+          "bipropellantMixture": {
+            "oxidizer": [
+              {
+                "name": "O2(L)",
+                "massFraction": 1
+              }
+            ],
+            "fuel": [
+              {
+                "name": "RP-1",
+                "massFraction": 1
+              }
+            ],
+            "mixtureRatio": {
+              "value": 2.35
+            }
+          }
+        },
+        "nozzleConditions": {
+          "nozzleInletConditions": {
+            "areaRatio": 1.6
+          },
+          "nozzleExitConditions": {
+            "areaRatio": 1.5
+          },
+          "equilibriumFlow": {
+            "shifting": false
+          },
+          "reactionEficiency": {
+            "estimateReactionEfficiency": true
+          },
+          "nozzleEficiency": {
+            "estimateBellNozzleEfficicncy": true
+          },
+          "nozzleFlowEffcets": {
+            "multiphase": true,
+            "ionization": true
+          }
+        },
+        "thrustChamberSize": {
+          "sizing": {
+            "numberOfChambers": 1,
+            "throatDiameter": {
+              "value": 20,
+              "units": "mm"
+            }
+          },
+          "combustionChamberGeometry": {
+            "chamberLength": {
+              "type": "Lstar",
+              "value": {
+                "value": 45,
+                "units": "in"
+              }
+            },
+            "contractionAngle": 20,
+            "R2toR2max": 0.4,
+            "R1toRt": 0.75
+          },
+          "nozzleGeometry": {
+            "parabolicContour": {
+              "LeC15": 80
+            },
+            "RntoRt": 0.382
+          }
+        }
+      },
+      "measurements": {
+        "expansion_ratio": 1.5,
+        "requested_length_fraction": 0.8,
+        "actual_length_fraction": 1.8831196514027693,
+        "throat_diameter_m": 0.02,
+        "nozzle_length_m": 0.016741885295043238,
+        "throat_radius_ratio": 0.382,
+        "exit_mach": 1.7483125082928213,
+        "throat_isentropic_exponent": 1.1456299159642813,
+        "exit_isentropic_exponent": 1.1525395507584741,
+        "throat_cp_cv_gamma": 1.1703921018075687,
+        "initial_angle_deg": 7.841204689612083,
+        "exit_angle_deg": 7.057084220650875,
+        "initial_angle_rad": 0.13685483915655086,
+        "exit_angle_rad": 0.12316935524089578,
+        "exit_temperature_k": 3027.6917025227535,
+        "continuous_parabola_tangent_feasible": true,
+        "exit_cp_cv_gamma": 1.1651392086169108,
+        "chamber_isentropic_exponent": 1.1466688100051858,
+        "chamber_cp_cv_gamma": 1.178126015492654
+      }
+    },
+    {
+      "id": "area_2_bell80",
+      "configuration": {
+        "version": 4,
+        "application": "RPA",
+        "engineDefinition": {
+          "name": "A-1",
+          "description": "A-1",
+          "chamberPressure": {
+            "value": 1095,
+            "units": "psi"
+          },
+          "bipropellantMixture": {
+            "oxidizer": [
+              {
+                "name": "O2(L)",
+                "massFraction": 1
+              }
+            ],
+            "fuel": [
+              {
+                "name": "RP-1",
+                "massFraction": 1
+              }
+            ],
+            "mixtureRatio": {
+              "value": 2.35
+            }
+          }
+        },
+        "nozzleConditions": {
+          "nozzleInletConditions": {
+            "areaRatio": 1.6
+          },
+          "nozzleExitConditions": {
+            "areaRatio": 2
+          },
+          "equilibriumFlow": {
+            "shifting": false
+          },
+          "reactionEficiency": {
+            "estimateReactionEfficiency": true
+          },
+          "nozzleEficiency": {
+            "estimateBellNozzleEfficicncy": true
+          },
+          "nozzleFlowEffcets": {
+            "multiphase": true,
+            "ionization": true
+          }
+        },
+        "thrustChamberSize": {
+          "sizing": {
+            "numberOfChambers": 1,
+            "throatDiameter": {
+              "value": 20,
+              "units": "mm"
+            }
+          },
+          "combustionChamberGeometry": {
+            "chamberLength": {
+              "type": "Lstar",
+              "value": {
+                "value": 45,
+                "units": "in"
+              }
+            },
+            "contractionAngle": 20,
+            "R2toR2max": 0.4,
+            "R1toRt": 0.75
+          },
+          "nozzleGeometry": {
+            "parabolicContour": {
+              "LeC15": 80
+            },
+            "RntoRt": 0.382
+          }
+        }
+      },
+      "measurements": {
+        "expansion_ratio": 2,
+        "requested_length_fraction": 0.8,
+        "actual_length_fraction": 1.3394380133903974,
+        "throat_diameter_m": 0.02,
+        "nozzle_length_m": 0.02137953781774785,
+        "throat_radius_ratio": 0.382,
+        "exit_mach": 2.01476358751029,
+        "throat_isentropic_exponent": 1.1456299159642813,
+        "exit_isentropic_exponent": 1.1600342199919473,
+        "throat_cp_cv_gamma": 1.1703921018075687,
+        "initial_angle_deg": 11.26336818436319,
+        "exit_angle_deg": 10.137031365926871,
+        "initial_angle_rad": 0.19658285968151334,
+        "exit_angle_rad": 0.17692457371336204,
+        "exit_temperature_k": 2862.352182114137,
+        "continuous_parabola_tangent_feasible": true,
+        "exit_cp_cv_gamma": 1.1683525794175922,
+        "chamber_isentropic_exponent": 1.1466688100051858,
+        "chamber_cp_cv_gamma": 1.178126015492654
+      }
+    },
+    {
+      "id": "area_3_bell80",
+      "configuration": {
+        "version": 4,
+        "application": "RPA",
+        "engineDefinition": {
+          "name": "A-1",
+          "description": "A-1",
+          "chamberPressure": {
+            "value": 1095,
+            "units": "psi"
+          },
+          "bipropellantMixture": {
+            "oxidizer": [
+              {
+                "name": "O2(L)",
+                "massFraction": 1
+              }
+            ],
+            "fuel": [
+              {
+                "name": "RP-1",
+                "massFraction": 1
+              }
+            ],
+            "mixtureRatio": {
+              "value": 2.35
+            }
+          }
+        },
+        "nozzleConditions": {
+          "nozzleInletConditions": {
+            "areaRatio": 1.6
+          },
+          "nozzleExitConditions": {
+            "areaRatio": 3
+          },
+          "equilibriumFlow": {
+            "shifting": false
+          },
+          "reactionEficiency": {
+            "estimateReactionEfficiency": true
+          },
+          "nozzleEficiency": {
+            "estimateBellNozzleEfficicncy": true
+          },
+          "nozzleFlowEffcets": {
+            "multiphase": true,
+            "ionization": true
+          }
+        },
+        "thrustChamberSize": {
+          "sizing": {
+            "numberOfChambers": 1,
+            "throatDiameter": {
+              "value": 20,
+              "units": "mm"
+            }
+          },
+          "combustionChamberGeometry": {
+            "chamberLength": {
+              "type": "Lstar",
+              "value": {
+                "value": 45,
+                "units": "in"
+              }
+            },
+            "contractionAngle": 20,
+            "R2toR2max": 0.4,
+            "R1toRt": 0.75
+          },
+          "nozzleGeometry": {
+            "parabolicContour": {
+              "LeC15": 80
+            },
+            "RntoRt": 0.382
+          }
+        }
+      },
+      "measurements": {
+        "expansion_ratio": 3,
+        "requested_length_fraction": 0.8,
+        "actual_length_fraction": 0.9917171692752048,
+        "throat_diameter_m": 0.02,
+        "nozzle_length_m": 0.027592963933321602,
+        "throat_radius_ratio": 0.382,
+        "exit_mach": 2.332508684209067,
+        "throat_isentropic_exponent": 1.1456299159642813,
+        "exit_isentropic_exponent": 1.1736013697749315,
+        "throat_cp_cv_gamma": 1.1703921018075687,
+        "initial_angle_deg": 15.268214435645753,
+        "exit_angle_deg": 13.741392992081177,
+        "initial_angle_rad": 0.26648061280254626,
+        "exit_angle_rad": 0.23983255152229163,
+        "exit_temperature_k": 2643.5478641229915,
+        "continuous_parabola_tangent_feasible": true,
+        "exit_cp_cv_gamma": 1.1778911907304568,
+        "chamber_isentropic_exponent": 1.1466688100051858,
+        "chamber_cp_cv_gamma": 1.178126015492654
+      }
+    },
+    {
+      "id": "area_4_bell80",
+      "configuration": {
+        "version": 4,
+        "application": "RPA",
+        "engineDefinition": {
+          "name": "A-1",
+          "description": "A-1",
+          "chamberPressure": {
+            "value": 1095,
+            "units": "psi"
+          },
+          "bipropellantMixture": {
+            "oxidizer": [
+              {
+                "name": "O2(L)",
+                "massFraction": 1
+              }
+            ],
+            "fuel": [
+              {
+                "name": "RP-1",
+                "massFraction": 1
+              }
+            ],
+            "mixtureRatio": {
+              "value": 2.35
+            }
+          }
+        },
+        "nozzleConditions": {
+          "nozzleInletConditions": {
+            "areaRatio": 1.6
+          },
+          "nozzleExitConditions": {
+            "areaRatio": 4
+          },
+          "equilibriumFlow": {
+            "shifting": false
+          },
+          "reactionEficiency": {
+            "estimateReactionEfficiency": true
+          },
+          "nozzleEficiency": {
+            "estimateBellNozzleEfficicncy": true
+          },
+          "nozzleFlowEffcets": {
+            "multiphase": true,
+            "ionization": true
+          }
+        },
+        "thrustChamberSize": {
+          "sizing": {
+            "numberOfChambers": 1,
+            "throatDiameter": {
+              "value": 20,
+              "units": "mm"
+            }
+          },
+          "combustionChamberGeometry": {
+            "chamberLength": {
+              "type": "Lstar",
+              "value": {
+                "value": 45,
+                "units": "in"
+              }
+            },
+            "contractionAngle": 20,
+            "R2toR2max": 0.4,
+            "R1toRt": 0.75
+          },
+          "nozzleGeometry": {
+            "parabolicContour": {
+              "LeC15": 80
+            },
+            "RntoRt": 0.382
+          }
+        }
+      },
+      "measurements": {
+        "expansion_ratio": 4,
+        "requested_length_fraction": 0.8,
+        "actual_length_fraction": 0.8482878185980213,
+        "throat_diameter_m": 0.02,
+        "nozzle_length_m": 0.03208514696666299,
+        "throat_radius_ratio": 0.382,
+        "exit_mach": 2.5392017718205357,
+        "throat_isentropic_exponent": 1.1456299159642813,
+        "exit_isentropic_exponent": 1.1840415127366877,
+        "throat_cp_cv_gamma": 1.1703921018075687,
+        "initial_angle_deg": 17.781217875367407,
+        "exit_angle_deg": 16.003096087830667,
+        "initial_angle_rad": 0.31034079693963196,
+        "exit_angle_rad": 0.2793067172456688,
+        "exit_temperature_k": 2491.9777645828144,
+        "continuous_parabola_tangent_feasible": true,
+        "exit_cp_cv_gamma": 1.1865538994986913,
+        "chamber_isentropic_exponent": 1.1466688100051858,
+        "chamber_cp_cv_gamma": 1.178126015492654
+      }
+    },
+    {
+      "id": "area_5_bell80",
+      "configuration": {
+        "version": 4,
+        "application": "RPA",
+        "engineDefinition": {
+          "name": "A-1",
+          "description": "A-1",
+          "chamberPressure": {
+            "value": 1095,
+            "units": "psi"
+          },
+          "bipropellantMixture": {
+            "oxidizer": [
+              {
+                "name": "O2(L)",
+                "massFraction": 1
+              }
+            ],
+            "fuel": [
+              {
+                "name": "RP-1",
+                "massFraction": 1
+              }
+            ],
+            "mixtureRatio": {
+              "value": 2.35
+            }
+          }
+        },
+        "nozzleConditions": {
+          "nozzleInletConditions": {
+            "areaRatio": 1.6
+          },
+          "nozzleExitConditions": {
+            "areaRatio": 5
+          },
+          "equilibriumFlow": {
+            "shifting": false
+          },
+          "reactionEficiency": {
+            "estimateReactionEfficiency": true
+          },
+          "nozzleEficiency": {
+            "estimateBellNozzleEfficicncy": true
+          },
+          "nozzleFlowEffcets": {
+            "multiphase": true,
+            "ionization": true
+          }
+        },
+        "thrustChamberSize": {
+          "sizing": {
+            "numberOfChambers": 1,
+            "throatDiameter": {
+              "value": 20,
+              "units": "mm"
+            }
+          },
+          "combustionChamberGeometry": {
+            "chamberLength": {
+              "type": "Lstar",
+              "value": {
+                "value": 45,
+                "units": "in"
+              }
+            },
+            "contractionAngle": 20,
+            "R2toR2max": 0.4,
+            "R1toRt": 0.75
+          },
+          "nozzleGeometry": {
+            "parabolicContour": {
+              "LeC15": 80
+            },
+            "RntoRt": 0.382
+          }
+        }
+      },
+      "measurements": {
+        "expansion_ratio": 5,
+        "requested_length_fraction": 0.8,
+        "actual_length_fraction": 0.8,
+        "throat_diameter_m": 0.02,
+        "nozzle_length_m": 0.03730687798173204,
+        "throat_radius_ratio": 0.382,
+        "exit_mach": 2.694955055902935,
+        "throat_isentropic_exponent": 1.1456299159642813,
+        "exit_isentropic_exponent": 1.1917256119704527,
+        "throat_cp_cv_gamma": 1.1703921018075687,
+        "initial_angle_deg": 19.61526917977198,
+        "exit_angle_deg": 17.664649785979012,
+        "initial_angle_rad": 0.34235103085198854,
+        "exit_angle_rad": 0.30830629997704545,
+        "exit_temperature_k": 2376.031168146345,
+        "continuous_parabola_tangent_feasible": true,
+        "exit_cp_cv_gamma": 1.193320157778485,
+        "chamber_isentropic_exponent": 1.1466688100051858,
+        "chamber_cp_cv_gamma": 1.178126015492654
+      }
+    },
+    {
+      "id": "area_14_bell80",
+      "configuration": {
+        "version": 4,
+        "application": "RPA",
+        "engineDefinition": {
+          "name": "A-1",
+          "description": "A-1",
+          "chamberPressure": {
+            "value": 1095,
+            "units": "psi"
+          },
+          "bipropellantMixture": {
+            "oxidizer": [
+              {
+                "name": "O2(L)",
+                "massFraction": 1
+              }
+            ],
+            "fuel": [
+              {
+                "name": "RP-1",
+                "massFraction": 1
+              }
+            ],
+            "mixtureRatio": {
+              "value": 2.35
+            }
+          }
+        },
+        "nozzleConditions": {
+          "nozzleInletConditions": {
+            "areaRatio": 1.6
+          },
+          "nozzleExitConditions": {
+            "areaRatio": 14
+          },
+          "equilibriumFlow": {
+            "shifting": false
+          },
+          "reactionEficiency": {
+            "estimateReactionEfficiency": true
+          },
+          "nozzleEficiency": {
+            "estimateBellNozzleEfficicncy": true
+          },
+          "nozzleFlowEffcets": {
+            "multiphase": true,
+            "ionization": true
+          }
+        },
+        "thrustChamberSize": {
+          "sizing": {
+            "numberOfChambers": 1,
+            "throatDiameter": {
+              "value": 20,
+              "units": "mm"
+            }
+          },
+          "combustionChamberGeometry": {
+            "chamberLength": {
+              "type": "Lstar",
+              "value": {
+                "value": 45,
+                "units": "in"
+              }
+            },
+            "contractionAngle": 20,
+            "R2toR2max": 0.4,
+            "R1toRt": 0.75
+          },
+          "nozzleGeometry": {
+            "parabolicContour": {
+              "LeC15": 80
+            },
+            "RntoRt": 0.382
+          }
+        }
+      },
+      "measurements": {
+        "expansion_ratio": 14,
+        "requested_length_fraction": 0.8,
+        "actual_length_fraction": 0.8,
+        "throat_diameter_m": 0.02,
+        "nozzle_length_m": 0.08225836734772203,
+        "throat_radius_ratio": 0.382,
+        "exit_mach": 3.4090815290172305,
+        "throat_isentropic_exponent": 1.1456299159642813,
+        "exit_isentropic_exponent": 1.213778276408283,
+        "throat_cp_cv_gamma": 1.1703921018075687,
+        "initial_angle_deg": 27.29194525833441,
+        "exit_angle_deg": 13.760652394374487,
+        "initial_angle_rad": 0.4763343040319899,
+        "exit_angle_rad": 0.24016869150427603,
+        "exit_temperature_k": 1880.5352287126586,
+        "continuous_parabola_tangent_feasible": true,
+        "exit_cp_cv_gamma": 1.2139032655035806,
+        "chamber_isentropic_exponent": 1.1466688100051858,
+        "chamber_cp_cv_gamma": 1.178126015492654
+      }
+    },
+    {
+      "id": "area_50_bell80",
+      "configuration": {
+        "version": 4,
+        "application": "RPA",
+        "engineDefinition": {
+          "name": "A-1",
+          "description": "A-1",
+          "chamberPressure": {
+            "value": 1095,
+            "units": "psi"
+          },
+          "bipropellantMixture": {
+            "oxidizer": [
+              {
+                "name": "O2(L)",
+                "massFraction": 1
+              }
+            ],
+            "fuel": [
+              {
+                "name": "RP-1",
+                "massFraction": 1
+              }
+            ],
+            "mixtureRatio": {
+              "value": 2.35
+            }
+          }
+        },
+        "nozzleConditions": {
+          "nozzleInletConditions": {
+            "areaRatio": 1.6
+          },
+          "nozzleExitConditions": {
+            "areaRatio": 50
+          },
+          "equilibriumFlow": {
+            "shifting": false
+          },
+          "reactionEficiency": {
+            "estimateReactionEfficiency": true
+          },
+          "nozzleEficiency": {
+            "estimateBellNozzleEfficicncy": true
+          },
+          "nozzleFlowEffcets": {
+            "multiphase": true,
+            "ionization": true
+          }
+        },
+        "thrustChamberSize": {
+          "sizing": {
+            "numberOfChambers": 1,
+            "throatDiameter": {
+              "value": 20,
+              "units": "mm"
+            }
+          },
+          "combustionChamberGeometry": {
+            "chamberLength": {
+              "type": "Lstar",
+              "value": {
+                "value": 45,
+                "units": "in"
+              }
+            },
+            "contractionAngle": 20,
+            "R2toR2max": 0.4,
+            "R1toRt": 0.75
+          },
+          "nozzleGeometry": {
+            "parabolicContour": {
+              "LeC15": 80
+            },
+            "RntoRt": 0.382
+          }
+        }
+      },
+      "measurements": {
+        "expansion_ratio": 50,
+        "requested_length_fraction": 0.8,
+        "actual_length_fraction": 0.8,
+        "throat_diameter_m": 0.02,
+        "nozzle_length_m": 0.1816625982732508,
+        "throat_radius_ratio": 0.382,
+        "exit_mach": 4.331897212306841,
+        "throat_isentropic_exponent": 1.1456299159642813,
+        "exit_isentropic_exponent": 1.217651886702603,
+        "throat_cp_cv_gamma": 1.1703921018075687,
+        "initial_angle_deg": 35.449744477897895,
+        "exit_angle_deg": 10.82464524975929,
+        "initial_angle_rad": 0.6187147601299965,
+        "exit_angle_rad": 0.18892569996866354,
+        "exit_temperature_k": 1398.1183063612189,
+        "continuous_parabola_tangent_feasible": true,
+        "exit_cp_cv_gamma": 1.217653811749919,
+        "chamber_isentropic_exponent": 1.1466688100051858,
+        "chamber_cp_cv_gamma": 1.178126015492654
+      }
+    },
+    {
+      "id": "area_100_bell80",
+      "configuration": {
+        "version": 4,
+        "application": "RPA",
+        "engineDefinition": {
+          "name": "A-1",
+          "description": "A-1",
+          "chamberPressure": {
+            "value": 1095,
+            "units": "psi"
+          },
+          "bipropellantMixture": {
+            "oxidizer": [
+              {
+                "name": "O2(L)",
+                "massFraction": 1
+              }
+            ],
+            "fuel": [
+              {
+                "name": "RP-1",
+                "massFraction": 1
+              }
+            ],
+            "mixtureRatio": {
+              "value": 2.35
+            }
+          }
+        },
+        "nozzleConditions": {
+          "nozzleInletConditions": {
+            "areaRatio": 1.6
+          },
+          "nozzleExitConditions": {
+            "areaRatio": 100
+          },
+          "equilibriumFlow": {
+            "shifting": false
+          },
+          "reactionEficiency": {
+            "estimateReactionEfficiency": true
+          },
+          "nozzleEficiency": {
+            "estimateBellNozzleEfficicncy": true
+          },
+          "nozzleFlowEffcets": {
+            "multiphase": true,
+            "ionization": true
+          }
+        },
+        "thrustChamberSize": {
+          "sizing": {
+            "numberOfChambers": 1,
+            "throatDiameter": {
+              "value": 20,
+              "units": "mm"
+            }
+          },
+          "combustionChamberGeometry": {
+            "chamberLength": {
+              "type": "Lstar",
+              "value": {
+                "value": 45,
+                "units": "in"
+              }
+            },
+            "contractionAngle": 20,
+            "R2toR2max": 0.4,
+            "R1toRt": 0.75
+          },
+          "nozzleGeometry": {
+            "parabolicContour": {
+              "LeC15": 80
+            },
+            "RntoRt": 0.382
+          }
+        }
+      },
+      "measurements": {
+        "expansion_ratio": 100,
+        "requested_length_fraction": 0.8,
+        "actual_length_fraction": 0.8,
+        "throat_diameter_m": 0.02,
+        "nozzle_length_m": 0.26910998817758625,
+        "throat_radius_ratio": 0.382,
+        "exit_mach": 4.859997335927519,
+        "throat_isentropic_exponent": 1.1456299159642813,
+        "exit_isentropic_exponent": 1.212837777340548,
+        "throat_cp_cv_gamma": 1.1703921018075687,
+        "initial_angle_deg": 39.33153881321709,
+        "exit_angle_deg": 9.69648412234297,
+        "initial_angle_rad": 0.6864648521665812,
+        "exit_angle_rad": 0.16923557380223747,
+        "exit_temperature_k": 1195.084050053532,
+        "continuous_parabola_tangent_feasible": true,
+        "exit_cp_cv_gamma": 1.2128379408616263,
+        "chamber_isentropic_exponent": 1.1466688100051858,
+        "chamber_cp_cv_gamma": 1.178126015492654
+      }
+    },
+    {
+      "id": "area_250_bell80",
+      "configuration": {
+        "version": 4,
+        "application": "RPA",
+        "engineDefinition": {
+          "name": "A-1",
+          "description": "A-1",
+          "chamberPressure": {
+            "value": 1095,
+            "units": "psi"
+          },
+          "bipropellantMixture": {
+            "oxidizer": [
+              {
+                "name": "O2(L)",
+                "massFraction": 1
+              }
+            ],
+            "fuel": [
+              {
+                "name": "RP-1",
+                "massFraction": 1
+              }
+            ],
+            "mixtureRatio": {
+              "value": 2.35
+            }
+          }
+        },
+        "nozzleConditions": {
+          "nozzleInletConditions": {
+            "areaRatio": 1.6
+          },
+          "nozzleExitConditions": {
+            "areaRatio": 250
+          },
+          "equilibriumFlow": {
+            "shifting": false
+          },
+          "reactionEficiency": {
+            "estimateReactionEfficiency": true
+          },
+          "nozzleEficiency": {
+            "estimateBellNozzleEfficicncy": true
+          },
+          "nozzleFlowEffcets": {
+            "multiphase": true,
+            "ionization": true
+          }
+        },
+        "thrustChamberSize": {
+          "sizing": {
+            "numberOfChambers": 1,
+            "throatDiameter": {
+              "value": 20,
+              "units": "mm"
+            }
+          },
+          "combustionChamberGeometry": {
+            "chamberLength": {
+              "type": "Lstar",
+              "value": {
+                "value": 45,
+                "units": "in"
+              }
+            },
+            "contractionAngle": 20,
+            "R2toR2max": 0.4,
+            "R1toRt": 0.75
+          },
+          "nozzleGeometry": {
+            "parabolicContour": {
+              "LeC15": 80
+            },
+            "RntoRt": 0.382
+          }
+        }
+      },
+      "measurements": {
+        "expansion_ratio": 250,
+        "requested_length_fraction": 0.8,
+        "actual_length_fraction": 0.8,
+        "throat_diameter_m": 0.02,
+        "nozzle_length_m": 0.44261715938761287,
+        "throat_radius_ratio": 0.382,
+        "exit_mach": 5.583344203125879,
+        "throat_isentropic_exponent": 1.1456299159642813,
+        "exit_isentropic_exponent": 1.2003361252791662,
+        "throat_cp_cv_gamma": 1.1703921018075687,
+        "initial_angle_deg": 43.88066156477206,
+        "exit_angle_deg": 8.536737896810342,
+        "initial_angle_rad": 0.7658620222585995,
+        "exit_angle_rad": 0.1489941836791164,
+        "exit_temperature_k": 981.438454023475,
+        "continuous_parabola_tangent_feasible": true,
+        "exit_cp_cv_gamma": 1.2003371456770315,
+        "chamber_isentropic_exponent": 1.1466688100051858,
+        "chamber_cp_cv_gamma": 1.178126015492654
+      }
+    },
+    {
+      "id": "area_1000_bell80",
+      "configuration": {
+        "version": 4,
+        "application": "RPA",
+        "engineDefinition": {
+          "name": "A-1",
+          "description": "A-1",
+          "chamberPressure": {
+            "value": 1095,
+            "units": "psi"
+          },
+          "bipropellantMixture": {
+            "oxidizer": [
+              {
+                "name": "O2(L)",
+                "massFraction": 1
+              }
+            ],
+            "fuel": [
+              {
+                "name": "RP-1",
+                "massFraction": 1
+              }
+            ],
+            "mixtureRatio": {
+              "value": 2.35
+            }
+          }
+        },
+        "nozzleConditions": {
+          "nozzleInletConditions": {
+            "areaRatio": 1.6
+          },
+          "nozzleExitConditions": {
+            "areaRatio": 1000
+          },
+          "equilibriumFlow": {
+            "shifting": false
+          },
+          "reactionEficiency": {
+            "estimateReactionEfficiency": true
+          },
+          "nozzleEficiency": {
+            "estimateBellNozzleEfficicncy": true
+          },
+          "nozzleFlowEffcets": {
+            "multiphase": true,
+            "ionization": true
+          }
+        },
+        "thrustChamberSize": {
+          "sizing": {
+            "numberOfChambers": 1,
+            "throatDiameter": {
+              "value": 20,
+              "units": "mm"
+            }
+          },
+          "combustionChamberGeometry": {
+            "chamberLength": {
+              "type": "Lstar",
+              "value": {
+                "value": 45,
+                "units": "in"
+              }
+            },
+            "contractionAngle": 20,
+            "R2toR2max": 0.4,
+            "R1toRt": 0.75
+          },
+          "nozzleGeometry": {
+            "parabolicContour": {
+              "LeC15": 80
+            },
+            "RntoRt": 0.382
+          }
+        }
+      },
+      "measurements": {
+        "expansion_ratio": 1000,
+        "requested_length_fraction": 0.8,
+        "actual_length_fraction": 0.8,
+        "throat_diameter_m": 0.02,
+        "nozzle_length_m": 0.9146883952031498,
+        "throat_radius_ratio": 0.382,
+        "exit_mach": 6.697239227014925,
+        "throat_isentropic_exponent": 1.1456299159642813,
+        "exit_isentropic_exponent": 1.179633633746409,
+        "throat_cp_cv_gamma": 1.1703921018075687,
+        "initial_angle_deg": 49.50541651040733,
+        "exit_angle_deg": 8.0,
+        "initial_angle_rad": 0.8640325156777695,
+        "exit_angle_rad": 0.13962634015954636,
+        "exit_temperature_k": 749.1733451586391,
+        "continuous_parabola_tangent_feasible": true,
+        "exit_cp_cv_gamma": 1.1799685076471549,
+        "chamber_isentropic_exponent": 1.1466688100051858,
+        "chamber_cp_cv_gamma": 1.178126015492654
+      }
+    },
+    {
+      "id": "a1_baseline",
+      "configuration": {
+        "version": 4,
+        "application": "RPA",
+        "engineDefinition": {
+          "name": "A-1",
+          "description": "A-1",
+          "chamberPressure": {
+            "value": 75.5,
+            "units": "bar"
+          },
+          "bipropellantMixture": {
+            "oxidizer": [
+              {
+                "name": "O2(L)",
+                "massFraction": 1
+              }
+            ],
+            "fuel": [
+              {
+                "name": "RP-1",
+                "massFraction": 1
+              }
+            ],
+            "mixtureRatio": {
+              "value": 2.35
+            }
+          }
+        },
+        "nozzleConditions": {
+          "nozzleInletConditions": {
+            "areaRatio": 1.6
+          },
+          "nozzleExitConditions": {
+            "areaRatio": 14.0
+          },
+          "equilibriumFlow": {
+            "shifting": false
+          },
+          "reactionEficiency": {
+            "estimateReactionEfficiency": true
+          },
+          "nozzleEficiency": {
+            "estimateBellNozzleEfficicncy": true
+          },
+          "nozzleFlowEffcets": {
+            "multiphase": true,
+            "ionization": true
+          }
+        },
+        "thrustChamberSize": {
+          "sizing": {
+            "numberOfChambers": 1,
+            "throatDiameter": {
+              "value": 20,
+              "units": "mm"
+            }
+          },
+          "combustionChamberGeometry": {
+            "chamberLength": {
+              "type": "Lstar",
+              "value": {
+                "value": 45,
+                "units": "in"
+              }
+            },
+            "contractionAngle": 20,
+            "R2toR2max": 0.4,
+            "R1toRt": 0.75
+          },
+          "nozzleGeometry": {
+            "parabolicContour": {
+              "LeC15": 80
+            },
+            "RntoRt": 0.382
+          }
+        }
+      },
+      "measurements": {
+        "expansion_ratio": 14,
+        "requested_length_fraction": 0.8,
+        "actual_length_fraction": 0.8,
+        "throat_diameter_m": 0.02,
+        "nozzle_length_m": 0.08225836734772203,
+        "throat_radius_ratio": 0.382,
+        "exit_mach": 3.4090827926482783,
+        "throat_isentropic_exponent": 1.1456301875999315,
+        "exit_isentropic_exponent": 1.2137783429517253,
+        "throat_cp_cv_gamma": 1.1703921752824418,
+        "initial_angle_deg": 27.291944335267566,
+        "exit_angle_deg": 13.760646564117758,
+        "initial_angle_rad": 0.4763342879214342,
+        "exit_angle_rad": 0.24016858974709987,
+        "exit_temperature_k": 1880.5344200879836,
+        "continuous_parabola_tangent_feasible": true
+      }
+    },
+    {
+      "id": "rp1_pc20",
+      "configuration": {
+        "version": 4,
+        "application": "RPA",
+        "engineDefinition": {
+          "name": "A-1",
+          "description": "A-1",
+          "chamberPressure": {
+            "value": 20,
+            "units": "bar"
+          },
+          "bipropellantMixture": {
+            "oxidizer": [
+              {
+                "name": "O2(L)",
+                "massFraction": 1
+              }
+            ],
+            "fuel": [
+              {
+                "name": "RP-1",
+                "massFraction": 1
+              }
+            ],
+            "mixtureRatio": {
+              "value": 2.35
+            }
+          }
+        },
+        "nozzleConditions": {
+          "nozzleInletConditions": {
+            "areaRatio": 1.6
+          },
+          "nozzleExitConditions": {
+            "areaRatio": 14.0
+          },
+          "equilibriumFlow": {
+            "shifting": false
+          },
+          "reactionEficiency": {
+            "estimateReactionEfficiency": true
+          },
+          "nozzleEficiency": {
+            "estimateBellNozzleEfficicncy": true
+          },
+          "nozzleFlowEffcets": {
+            "multiphase": true,
+            "ionization": true
+          }
+        },
+        "thrustChamberSize": {
+          "sizing": {
+            "numberOfChambers": 1,
+            "throatDiameter": {
+              "value": 20,
+              "units": "mm"
+            }
+          },
+          "combustionChamberGeometry": {
+            "chamberLength": {
+              "type": "Lstar",
+              "value": {
+                "value": 45,
+                "units": "in"
+              }
+            },
+            "contractionAngle": 20,
+            "R2toR2max": 0.4,
+            "R1toRt": 0.75
+          },
+          "nozzleGeometry": {
+            "parabolicContour": {
+              "LeC15": 80
+            },
+            "RntoRt": 0.382
+          }
+        }
+      },
+      "measurements": {
+        "expansion_ratio": 14,
+        "requested_length_fraction": 0.8,
+        "actual_length_fraction": 0.8,
+        "throat_diameter_m": 0.02,
+        "nozzle_length_m": 0.08225836734772203,
+        "throat_radius_ratio": 0.382,
+        "exit_mach": 3.3513899302960177,
+        "throat_isentropic_exponent": 1.1349993451747906,
+        "exit_isentropic_exponent": 1.2094402807755709,
+        "throat_cp_cv_gamma": 1.1682430025585873,
+        "initial_angle_deg": 27.235084338874767,
+        "exit_angle_deg": 14.047890831745558,
+        "initial_angle_rad": 0.47534189377170777,
+        "exit_angle_rad": 0.24518194797468476,
+        "exit_temperature_k": 1918.2820426478938,
+        "continuous_parabola_tangent_feasible": true
+      }
+    },
+    {
+      "id": "rp1_frozen_throat",
+      "configuration": {
+        "version": 4,
+        "application": "RPA",
+        "engineDefinition": {
+          "name": "A-1",
+          "description": "A-1",
+          "chamberPressure": {
+            "value": 20,
+            "units": "bar"
+          },
+          "bipropellantMixture": {
+            "oxidizer": [
+              {
+                "name": "O2(L)",
+                "massFraction": 1
+              }
+            ],
+            "fuel": [
+              {
+                "name": "RP-1",
+                "massFraction": 1
+              }
+            ],
+            "mixtureRatio": {
+              "value": 2.35
+            }
+          }
+        },
+        "nozzleConditions": {
+          "nozzleInletConditions": {
+            "areaRatio": 1.6
+          },
+          "nozzleExitConditions": {
+            "areaRatio": 14.0
+          },
+          "equilibriumFlow": {
+            "frozenAtAreaRatio": 1
+          },
+          "reactionEficiency": {
+            "estimateReactionEfficiency": true
+          },
+          "nozzleEficiency": {
+            "estimateBellNozzleEfficicncy": true
+          },
+          "nozzleFlowEffcets": {
+            "multiphase": true,
+            "ionization": true
+          }
+        },
+        "thrustChamberSize": {
+          "sizing": {
+            "numberOfChambers": 1,
+            "throatDiameter": {
+              "value": 20,
+              "units": "mm"
+            }
+          },
+          "combustionChamberGeometry": {
+            "chamberLength": {
+              "type": "Lstar",
+              "value": {
+                "value": 45,
+                "units": "in"
+              }
+            },
+            "contractionAngle": 20,
+            "R2toR2max": 0.4,
+            "R1toRt": 0.75
+          },
+          "nozzleGeometry": {
+            "parabolicContour": {
+              "LeC15": 80
+            },
+            "RntoRt": 0.382
+          }
+        }
+      },
+      "measurements": {
+        "expansion_ratio": 14,
+        "requested_length_fraction": 0.8,
+        "actual_length_fraction": 0.8,
+        "throat_diameter_m": 0.02,
+        "nozzle_length_m": 0.08225836734772203,
+        "throat_radius_ratio": 0.382,
+        "exit_mach": 3.582216465396819,
+        "throat_isentropic_exponent": 1.1349993451747906,
+        "exit_isentropic_exponent": 1.2518928957138211,
+        "throat_cp_cv_gamma": 1.1682430025585873,
+        "initial_angle_deg": 29.565664572496495,
+        "exit_angle_deg": 12.6781484578026,
+        "initial_angle_rad": 0.5160181923303055,
+        "exit_angle_rad": 0.22127543364529673,
+        "exit_temperature_k": 1490.7237825812601,
+        "continuous_parabola_tangent_feasible": true
+      }
+    },
+    {
+      "id": "rp1_shifting_true",
+      "configuration": {
+        "version": 4,
+        "application": "RPA",
+        "engineDefinition": {
+          "name": "A-1",
+          "description": "A-1",
+          "chamberPressure": {
+            "value": 20,
+            "units": "bar"
+          },
+          "bipropellantMixture": {
+            "oxidizer": [
+              {
+                "name": "O2(L)",
+                "massFraction": 1
+              }
+            ],
+            "fuel": [
+              {
+                "name": "RP-1",
+                "massFraction": 1
+              }
+            ],
+            "mixtureRatio": {
+              "value": 2.35
+            }
+          }
+        },
+        "nozzleConditions": {
+          "nozzleInletConditions": {
+            "areaRatio": 1.6
+          },
+          "nozzleExitConditions": {
+            "areaRatio": 14.0
+          },
+          "equilibriumFlow": {
+            "shifting": true
+          },
+          "reactionEficiency": {
+            "estimateReactionEfficiency": true
+          },
+          "nozzleEficiency": {
+            "estimateBellNozzleEfficicncy": true
+          },
+          "nozzleFlowEffcets": {
+            "multiphase": true,
+            "ionization": true
+          }
+        },
+        "thrustChamberSize": {
+          "sizing": {
+            "numberOfChambers": 1,
+            "throatDiameter": {
+              "value": 20,
+              "units": "mm"
+            }
+          },
+          "combustionChamberGeometry": {
+            "chamberLength": {
+              "type": "Lstar",
+              "value": {
+                "value": 45,
+                "units": "in"
+              }
+            },
+            "contractionAngle": 20,
+            "R2toR2max": 0.4,
+            "R1toRt": 0.75
+          },
+          "nozzleGeometry": {
+            "parabolicContour": {
+              "LeC15": 80
+            },
+            "RntoRt": 0.382
+          }
+        }
+      },
+      "measurements": {
+        "expansion_ratio": 14,
+        "requested_length_fraction": 0.8,
+        "actual_length_fraction": 0.8,
+        "throat_diameter_m": 0.02,
+        "nozzle_length_m": 0.08225836734772203,
+        "throat_radius_ratio": 0.382,
+        "exit_mach": 3.3513899302960177,
+        "throat_isentropic_exponent": 1.1349993451747906,
+        "exit_isentropic_exponent": 1.2094402807755709,
+        "throat_cp_cv_gamma": 1.1682430025585873,
+        "initial_angle_deg": 27.235084338874767,
+        "exit_angle_deg": 14.047890831745558,
+        "initial_angle_rad": 0.47534189377170777,
+        "exit_angle_rad": 0.24518194797468476,
+        "exit_temperature_k": 1918.2820426478938,
+        "continuous_parabola_tangent_feasible": true
+      }
+    },
+    {
+      "id": "ethanol_pc20",
+      "configuration": {
+        "version": 4,
+        "application": "RPA",
+        "engineDefinition": {
+          "name": "A-1",
+          "description": "A-1",
+          "chamberPressure": {
+            "value": 20,
+            "units": "bar"
+          },
+          "bipropellantMixture": {
+            "oxidizer": [
+              {
+                "name": "O2(L)",
+                "massFraction": 1
+              }
+            ],
+            "fuel": [
+              {
+                "name": "C2H5OH(L)",
+                "massFraction": 1
+              }
+            ],
+            "mixtureRatio": {
+              "value": 1.4
+            }
+          }
+        },
+        "nozzleConditions": {
+          "nozzleInletConditions": {
+            "areaRatio": 1.6
+          },
+          "nozzleExitConditions": {
+            "areaRatio": 14.0
+          },
+          "equilibriumFlow": {
+            "shifting": true
+          },
+          "reactionEficiency": {
+            "estimateReactionEfficiency": true
+          },
+          "nozzleEficiency": {
+            "estimateBellNozzleEfficicncy": true
+          },
+          "nozzleFlowEffcets": {
+            "multiphase": true,
+            "ionization": true
+          }
+        },
+        "thrustChamberSize": {
+          "sizing": {
+            "numberOfChambers": 1,
+            "throatDiameter": {
+              "value": 20,
+              "units": "mm"
+            }
+          },
+          "combustionChamberGeometry": {
+            "chamberLength": {
+              "type": "Lstar",
+              "value": {
+                "value": 45,
+                "units": "in"
+              }
+            },
+            "contractionAngle": 20,
+            "R2toR2max": 0.4,
+            "R1toRt": 0.75
+          },
+          "nozzleGeometry": {
+            "parabolicContour": {
+              "LeC15": 80
+            },
+            "RntoRt": 0.382
+          }
+        }
+      },
+      "measurements": {
+        "expansion_ratio": 14,
+        "requested_length_fraction": 0.8,
+        "actual_length_fraction": 0.8,
+        "throat_diameter_m": 0.02,
+        "nozzle_length_m": 0.08225836734772203,
+        "throat_radius_ratio": 0.382,
+        "exit_mach": 3.4786414648291824,
+        "throat_isentropic_exponent": 1.1511275173693443,
+        "exit_isentropic_exponent": 1.215711145029886,
+        "throat_cp_cv_gamma": 1.1617192915500818,
+        "initial_angle_deg": 27.6939053775279,
+        "exit_angle_deg": 13.466890590677878,
+        "initial_angle_rad": 0.4833498315736251,
+        "exit_angle_rad": 0.23504158081317295,
+        "exit_temperature_k": 1495.2305188128084,
+        "continuous_parabola_tangent_feasible": true
+      }
+    },
+    {
+      "id": "hydrogen_pc20",
+      "configuration": {
+        "version": 4,
+        "application": "RPA",
+        "engineDefinition": {
+          "name": "A-1",
+          "description": "A-1",
+          "chamberPressure": {
+            "value": 20,
+            "units": "bar"
+          },
+          "bipropellantMixture": {
+            "oxidizer": [
+              {
+                "name": "O2(L)",
+                "massFraction": 1
+              }
+            ],
+            "fuel": [
+              {
+                "name": "H2(L)",
+                "massFraction": 1
+              }
+            ],
+            "mixtureRatio": {
+              "value": 5
+            }
+          }
+        },
+        "nozzleConditions": {
+          "nozzleInletConditions": {
+            "areaRatio": 1.6
+          },
+          "nozzleExitConditions": {
+            "areaRatio": 14.0
+          },
+          "equilibriumFlow": {
+            "shifting": true
+          },
+          "reactionEficiency": {
+            "estimateReactionEfficiency": true
+          },
+          "nozzleEficiency": {
+            "estimateBellNozzleEfficicncy": true
+          },
+          "nozzleFlowEffcets": {
+            "multiphase": true,
+            "ionization": true
+          }
+        },
+        "thrustChamberSize": {
+          "sizing": {
+            "numberOfChambers": 1,
+            "throatDiameter": {
+              "value": 20,
+              "units": "mm"
+            }
+          },
+          "combustionChamberGeometry": {
+            "chamberLength": {
+              "type": "Lstar",
+              "value": {
+                "value": 45,
+                "units": "in"
+              }
+            },
+            "contractionAngle": 20,
+            "R2toR2max": 0.4,
+            "R1toRt": 0.75
+          },
+          "nozzleGeometry": {
+            "parabolicContour": {
+              "LeC15": 80
+            },
+            "RntoRt": 0.382
+          }
+        }
+      },
+      "measurements": {
+        "expansion_ratio": 14,
+        "requested_length_fraction": 0.8,
+        "actual_length_fraction": 0.8,
+        "throat_diameter_m": 0.02,
+        "nozzle_length_m": 0.08225836734772203,
+        "throat_radius_ratio": 0.382,
+        "exit_mach": 3.4735120325255453,
+        "throat_isentropic_exponent": 1.1506955316201606,
+        "exit_isentropic_exponent": 1.2471080771772673,
+        "throat_cp_cv_gamma": 1.1648393239459403,
+        "initial_angle_deg": 27.666572438359882,
+        "exit_angle_deg": 13.120569399445296,
+        "initial_angle_rad": 0.4828727817908959,
+        "exit_angle_rad": 0.22899713575673547,
+        "exit_temperature_k": 1515.434600310672,
+        "continuous_parabola_tangent_feasible": true
+      }
+    },
+    {
+      "id": "rp1_rn0191",
+      "configuration": {
+        "version": 4,
+        "application": "RPA",
+        "engineDefinition": {
+          "name": "A-1",
+          "description": "A-1",
+          "chamberPressure": {
+            "value": 20,
+            "units": "bar"
+          },
+          "bipropellantMixture": {
+            "oxidizer": [
+              {
+                "name": "O2(L)",
+                "massFraction": 1
+              }
+            ],
+            "fuel": [
+              {
+                "name": "RP-1",
+                "massFraction": 1
+              }
+            ],
+            "mixtureRatio": {
+              "value": 2.35
+            }
+          }
+        },
+        "nozzleConditions": {
+          "nozzleInletConditions": {
+            "areaRatio": 1.6
+          },
+          "nozzleExitConditions": {
+            "areaRatio": 14.0
+          },
+          "equilibriumFlow": {
+            "shifting": false
+          },
+          "reactionEficiency": {
+            "estimateReactionEfficiency": true
+          },
+          "nozzleEficiency": {
+            "estimateBellNozzleEfficicncy": true
+          },
+          "nozzleFlowEffcets": {
+            "multiphase": true,
+            "ionization": true
+          }
+        },
+        "thrustChamberSize": {
+          "sizing": {
+            "numberOfChambers": 1,
+            "throatDiameter": {
+              "value": 20,
+              "units": "mm"
+            }
+          },
+          "combustionChamberGeometry": {
+            "chamberLength": {
+              "type": "Lstar",
+              "value": {
+                "value": 45,
+                "units": "in"
+              }
+            },
+            "contractionAngle": 20,
+            "R2toR2max": 0.4,
+            "R1toRt": 0.75
+          },
+          "nozzleGeometry": {
+            "parabolicContour": {
+              "LeC15": 80
+            },
+            "RntoRt": 0.191
+          }
+        }
+      },
+      "measurements": {
+        "expansion_ratio": 14,
+        "requested_length_fraction": 0.8,
+        "actual_length_fraction": 0.8,
+        "throat_diameter_m": 0.02,
+        "nozzle_length_m": 0.0820572023314085,
+        "throat_radius_ratio": 0.191,
+        "exit_mach": 3.3513899302960177,
+        "throat_isentropic_exponent": 1.1349993451747906,
+        "exit_isentropic_exponent": 1.2094402807755709,
+        "throat_cp_cv_gamma": 1.1682430025585873,
+        "initial_angle_deg": 27.235084338874767,
+        "exit_angle_deg": 14.047890831745558,
+        "initial_angle_rad": 0.47534189377170777,
+        "exit_angle_rad": 0.24518194797468476,
+        "exit_temperature_k": 1918.2820426478938,
+        "continuous_parabola_tangent_feasible": true
+      }
+    },
+    {
+      "id": "rp1_rn0800",
+      "configuration": {
+        "version": 4,
+        "application": "RPA",
+        "engineDefinition": {
+          "name": "A-1",
+          "description": "A-1",
+          "chamberPressure": {
+            "value": 20,
+            "units": "bar"
+          },
+          "bipropellantMixture": {
+            "oxidizer": [
+              {
+                "name": "O2(L)",
+                "massFraction": 1
+              }
+            ],
+            "fuel": [
+              {
+                "name": "RP-1",
+                "massFraction": 1
+              }
+            ],
+            "mixtureRatio": {
+              "value": 2.35
+            }
+          }
+        },
+        "nozzleConditions": {
+          "nozzleInletConditions": {
+            "areaRatio": 1.6
+          },
+          "nozzleExitConditions": {
+            "areaRatio": 14.0
+          },
+          "equilibriumFlow": {
+            "shifting": false
+          },
+          "reactionEficiency": {
+            "estimateReactionEfficiency": true
+          },
+          "nozzleEficiency": {
+            "estimateBellNozzleEfficicncy": true
+          },
+          "nozzleFlowEffcets": {
+            "multiphase": true,
+            "ionization": true
+          }
+        },
+        "thrustChamberSize": {
+          "sizing": {
+            "numberOfChambers": 1,
+            "throatDiameter": {
+              "value": 20,
+              "units": "mm"
+            }
+          },
+          "combustionChamberGeometry": {
+            "chamberLength": {
+              "type": "Lstar",
+              "value": {
+                "value": 45,
+                "units": "in"
+              }
+            },
+            "contractionAngle": 20,
+            "R2toR2max": 0.4,
+            "R1toRt": 0.75
+          },
+          "nozzleGeometry": {
+            "parabolicContour": {
+              "LeC15": 80
+            },
+            "RntoRt": 0.8
+          }
+        }
+      },
+      "measurements": {
+        "expansion_ratio": 14,
+        "requested_length_fraction": 0.8,
+        "actual_length_fraction": 0.8,
+        "throat_diameter_m": 0.02,
+        "nozzle_length_m": 0.08269861329965429,
+        "throat_radius_ratio": 0.8,
+        "exit_mach": 3.3513899302960177,
+        "throat_isentropic_exponent": 1.1349993451747906,
+        "exit_isentropic_exponent": 1.2094402807755709,
+        "throat_cp_cv_gamma": 1.1682430025585873,
+        "initial_angle_deg": 27.235084338874767,
+        "exit_angle_deg": 14.047890831745558,
+        "initial_angle_rad": 0.47534189377170777,
+        "exit_angle_rad": 0.24518194797468476,
+        "exit_temperature_k": 1918.2820426478938,
+        "continuous_parabola_tangent_feasible": true
+      }
+    }
+  ]
+}

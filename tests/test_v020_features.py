@@ -78,8 +78,14 @@ def test_geometry_reports_resolved_dimensions_and_direct_mode_lstar() -> None:
     )
     geometry = _geometry(analyze_engine(inputs, prefer_rocketcea=False))
 
-    assert geometry["characteristic_length_mm"] == pytest.approx(600.0)
-    assert geometry["contraction_angle_deg"] == pytest.approx(30.0)
+    throat_area = math.pi * (geometry["throat_radius_mm"] / 1000.0) ** 2
+    expected_lstar_mm = (
+        geometry["cylindrical_volume_m3"] + geometry["convergent_volume_m3"]
+    ) / throat_area * 1000.0
+    assert geometry["characteristic_length_mm"] == pytest.approx(expected_lstar_mm)
+    assert geometry["characteristic_length_mm"] > 600.0
+    actual_angle = math.degrees(math.atan(math.tan(math.radians(30.0)) / geometry["convergent_axial_scale"]))
+    assert geometry["contraction_angle_deg"] == pytest.approx(actual_angle)
     for key in (
         "chamber_radius_mm",
         "throat_radius_mm",

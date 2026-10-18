@@ -14,7 +14,9 @@ import atexit
 import ctypes
 import os
 import re
+import shutil
 import threading
+import uuid
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -43,12 +45,62 @@ class _DriveAlias:
 _runtime_home: Path | None = None
 _runtime_import_home: str | None = None
 _runtime_drive_alias: _DriveAlias | None = None
+_process_data_directory: str | None = None
+_process_data_physical_path: Path | None = None
+_process_data_parent: Path | None = None
+
+
+def _cleanup_process_directory() -> None:
+    """Best-effort cleanup of this run only; never traverse other runs.
+
+    Windows may retain a FORTRAN unit until process teardown. In that case
+    leave its directory in place rather than touching another process's data.
+    """
+    target, parent = _process_data_physical_path, _process_data_parent
+    if target is None or parent is None or not target.exists():
+        return
+    try:
+        resolved = target.resolve()
+        if target.is_symlink() or resolved.parent != parent or not target.name.startswith(f"lpa-run-{os.getpid()}-"):
+            return
+        shutil.rmtree(resolved)
+    except OSError:
+        pass
+
+
+def configure_rocketcea_process_directory(cea_module: object) -> str:
+    """Isolate mutable CEA files while preserving the safe profile alias.
+
+    RocketCEA's constructor copies its bundled immutable databases and seed
+    files into this directory. Each process/run receives its own temp.dat and
+    f.out. The one-process lock in performance.py protects its shared arrays.
+    """
+    global _process_data_directory, _process_data_physical_path, _process_data_parent
+    with _IMPORT_LOCK:
+        if _process_data_directory is None:
+            physical_home = _runtime_home or Path.home().resolve()
+            alias_home = _runtime_import_home or str(physical_home)
+            parent = (physical_home / "RocketCEA").resolve()
+            parent.mkdir(parents=True, exist_ok=True)
+            name = f"lpa-run-{os.getpid()}-{uuid.uuid4().hex[:12]}"
+            target = parent / name
+            target.mkdir(exist_ok=False)
+            _process_data_physical_path = target
+            _process_data_parent = parent
+            _process_data_directory = str(Path(alias_home) / "RocketCEA" / name)
+            atexit.register(_cleanup_process_directory)
+        # RocketCEA 1.2.3 has no callable set_data_dir API. Its constructor
+        # explicitly uses this documented module directory for all work files.
+        setattr(cea_module, "ROCKETCEA_DATA_DIR", _process_data_directory)
+        return _process_data_directory
 
 
 def _is_fortran_safe_path(path: str | os.PathLike[str]) -> bool:
     """Return whether the legacy CEA interface can safely parse this path."""
-
-    return bool(_SAFE_FORTRAN_PATH.fullmatch(os.fspath(path)))
+    text = os.fspath(path)
+    # CEA's prefix buffer is CHARACTER*196. Leave room for RocketCEA and the
+    # PID/UUID run directory plus the trailing separator/blank and file name.
+    return len(text) <= 128 and bool(_SAFE_FORTRAN_PATH.fullmatch(text))
 
 
 def _define_dos_device():  # type: ignore[no-untyped-def]

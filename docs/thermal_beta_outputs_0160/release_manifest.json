@@ -1,0 +1,20 @@
+{
+  "version": "0.16.0b1",
+  "artifacts": [
+    {
+      "file": "LPA.exe",
+      "bytes": 81826612,
+      "sha256": "c97aeebca800873fd1ba6792a78452a0f67ca3bd72bd8509bc01298185c606a4"
+    },
+    {
+      "file": "LPA-0.16.0b1-Windows-x64-Beta.zip",
+      "bytes": 81212520,
+      "sha256": "cd4dbfe7304349adfd246201961b519c20bc363f923948fcba1c60aebd06fea9"
+    },
+    {
+      "file": "rocketcea-1.2.3.tar.gz",
+      "bytes": 69126862,
+      "sha256": "66f306407f11ba36186342dc2716417d3a5c9d94c95b0c5663380091bb11caa9"
+    }
+  ]
+}

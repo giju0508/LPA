@@ -36,6 +36,8 @@ def _configure_windows_dpi() -> None:
 def main() -> int:
     _configure_windows_app_identity()
     _configure_windows_dpi()
+    from lpa.logging_config import configure_logging
+    configure_logging()
     from lpa.app import run
 
     run()

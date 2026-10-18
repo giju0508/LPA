@@ -1,0 +1,348 @@
+{
+  "CoolProp_version": "8.0.0",
+  "benchmark_definition": "Independent 50 mm cylindrical thermal test, 20 mm hot radius, constant-gamma screening gas model; not hot-fire validation",
+  "coolant_cases": [
+    {
+      "coolant": "H2O",
+      "inlet_T_K": 290.0,
+      "inlet_p_bar": 40.0,
+      "mass_flow_kg_s": 0.5,
+      "physical_validity": "screening",
+      "numerical_converged": true,
+      "solved_stations": 120,
+      "outlet_T_K": 301.58097041414203,
+      "outlet_p_bar": 39.86010838712626,
+      "energy_residual_W": 5.779157436336391e-05,
+      "elapsed_s": 0.04813440004363656,
+      "physical_issues": [
+        "gas cp derived from constant gamma/R; combustion-product cp not supplied",
+        "gas viscosity uses air Sutherland fallback; combustion-product transport not supplied",
+        "gas Prandtl uses constant 0.70 fallback; combustion-product transport not supplied"
+      ]
+    },
+    {
+      "coolant": "LOX",
+      "inlet_T_K": 90.0,
+      "inlet_p_bar": 40.0,
+      "mass_flow_kg_s": 0.5,
+      "physical_validity": "unsupported",
+      "numerical_converged": true,
+      "solved_stations": 120,
+      "outlet_T_K": 122.28535935654119,
+      "outlet_p_bar": 39.916400659829584,
+      "energy_residual_W": 1.678236003499478e-07,
+      "elapsed_s": 0.04007279989309609,
+      "physical_issues": [
+        "water: coolant-side wall exceeds saturation/bubble temperature; subcooled boiling/CHF/dryout unsupported",
+        "gas cp derived from constant gamma/R; combustion-product cp not supplied",
+        "gas viscosity uses air Sutherland fallback; combustion-product transport not supplied",
+        "gas Prandtl uses constant 0.70 fallback; combustion-product transport not supplied"
+      ]
+    },
+    {
+      "coolant": "LCH4",
+      "inlet_T_K": 111.0,
+      "inlet_p_bar": 60.0,
+      "mass_flow_kg_s": 0.5,
+      "physical_validity": "unsupported",
+      "numerical_converged": true,
+      "solved_stations": 120,
+      "outlet_T_K": 129.9638795714602,
+      "outlet_p_bar": 59.79795597902627,
+      "energy_residual_W": 1.025910023599863e-09,
+      "elapsed_s": 1.19302500016056,
+      "physical_issues": [
+        "water: supercritical convection/heat-transfer deterioration requires validated variable-property correlation",
+        "water: wall/bulk temperature straddles pseudocritical cp peak; heat-transfer deterioration correlation unsupported",
+        "gas cp derived from constant gamma/R; combustion-product cp not supplied",
+        "gas viscosity uses air Sutherland fallback; combustion-product transport not supplied",
+        "gas Prandtl uses constant 0.70 fallback; combustion-product transport not supplied"
+      ]
+    },
+    {
+      "coolant": "LH2",
+      "inlet_T_K": 21.0,
+      "inlet_p_bar": 20.0,
+      "mass_flow_kg_s": 0.1,
+      "physical_validity": "unsupported",
+      "numerical_converged": true,
+      "solved_stations": 120,
+      "outlet_T_K": 38.12105534745945,
+      "outlet_p_bar": 19.942490229510174,
+      "energy_residual_W": -7.657217793166637e-08,
+      "elapsed_s": 0.09504329995252192,
+      "physical_issues": [
+        "water: normal-hydrogen EOS assumed; ortho/para composition and conversion heat not modelled",
+        "water: supercritical convection/heat-transfer deterioration requires validated variable-property correlation",
+        "water: wall/bulk temperature straddles pseudocritical cp peak; heat-transfer deterioration correlation unsupported",
+        "water outlet: normal-hydrogen EOS assumed; ortho/para composition and conversion heat not modelled",
+        "gas cp derived from constant gamma/R; combustion-product cp not supplied",
+        "gas viscosity uses air Sutherland fallback; combustion-product transport not supplied",
+        "gas Prandtl uses constant 0.70 fallback; combustion-product transport not supplied"
+      ]
+    },
+    {
+      "coolant": "N2O",
+      "inlet_T_K": 285.0,
+      "inlet_p_bar": 60.0,
+      "mass_flow_kg_s": 0.5,
+      "physical_validity": "unsupported",
+      "numerical_converged": true,
+      "solved_stations": 120,
+      "outlet_T_K": 299.32572646250674,
+      "outlet_p_bar": 59.87398332361477,
+      "energy_residual_W": 1.9388971850275993e-07,
+      "elapsed_s": 0.038205199874937534,
+      "physical_issues": [
+        "water: conductivity unavailable in EOS; screening transport/property used",
+        "water: viscosity unavailable in EOS; screening transport/property used",
+        "water: coolant-side wall exceeds saturation/bubble temperature; subcooled boiling/CHF/dryout unsupported",
+        "water: reactive coolant decomposition/material compatibility not modelled; temperature alone is not a stability criterion",
+        "water outlet: conductivity unavailable in EOS; screening transport/property used",
+        "water outlet: viscosity unavailable in EOS; screening transport/property used",
+        "gas cp derived from constant gamma/R; combustion-product cp not supplied",
+        "gas viscosity uses air Sutherland fallback; combustion-product transport not supplied",
+        "gas Prandtl uses constant 0.70 fallback; combustion-product transport not supplied"
+      ]
+    },
+    {
+      "coolant": "Ethanol (70%)",
+      "inlet_T_K": 293.15,
+      "inlet_p_bar": 40.0,
+      "mass_flow_kg_s": 0.5,
+      "physical_validity": "screening",
+      "numerical_converged": true,
+      "solved_stations": 120,
+      "outlet_T_K": 306.685540653247,
+      "outlet_p_bar": 39.84367572713115,
+      "energy_residual_W": 1.7898855730891228e-09,
+      "elapsed_s": 0.2110167001374066,
+      "physical_issues": [
+        "water: mixture EOS/transport require composition-specific validation",
+        "water: mixture bubble-temperature diagnostic uses pressure rounded down by at most 0.1 bar",
+        "water outlet: mixture EOS/transport require composition-specific validation",
+        "water outlet: mixture bubble-temperature diagnostic uses pressure rounded down by at most 0.1 bar",
+        "gas cp derived from constant gamma/R; combustion-product cp not supplied",
+        "gas viscosity uses air Sutherland fallback; combustion-product transport not supplied",
+        "gas Prandtl uses constant 0.70 fallback; combustion-product transport not supplied"
+      ]
+    },
+    {
+      "coolant": "LNG",
+      "inlet_T_K": 111.66,
+      "inlet_p_bar": 60.0,
+      "mass_flow_kg_s": 0.5,
+      "physical_validity": "unsupported",
+      "numerical_converged": true,
+      "solved_stations": 120,
+      "outlet_T_K": 131.27590158237288,
+      "outlet_p_bar": 59.80495672875601,
+      "energy_residual_W": 8.36735125631094e-11,
+      "elapsed_s": 4.9941560998559,
+      "physical_issues": [
+        "water: viscosity unavailable in EOS; screening transport/property used",
+        "water: mixture EOS/transport require composition-specific validation",
+        "water: mixture bubble-temperature diagnostic uses pressure rounded down by at most 0.1 bar",
+        "water: mixture retrograde phase envelope above critical pressure not validated",
+        "water: supercritical convection/heat-transfer deterioration requires validated variable-property correlation",
+        "water: hydrocarbon cracking/coking and deposit resistance/lifetime require fuel/material-specific validation",
+        "water outlet: viscosity unavailable in EOS; screening transport/property used",
+        "water outlet: mixture EOS/transport require composition-specific validation",
+        "water outlet: mixture bubble-temperature diagnostic uses pressure rounded down by at most 0.1 bar",
+        "water outlet: mixture retrograde phase envelope above critical pressure not validated",
+        "gas cp derived from constant gamma/R; combustion-product cp not supplied",
+        "gas viscosity uses air Sutherland fallback; combustion-product transport not supplied",
+        "gas Prandtl uses constant 0.70 fallback; combustion-product transport not supplied"
+      ]
+    },
+    {
+      "coolant": "H2O2 (90%)",
+      "inlet_T_K": 293.15,
+      "inlet_p_bar": 40.0,
+      "mass_flow_kg_s": 0.5,
+      "physical_validity": "screening",
+      "numerical_converged": true,
+      "solved_stations": 120,
+      "outlet_T_K": 309.2672277510453,
+      "outlet_p_bar": 39.89324122023775,
+      "energy_residual_W": -1.8189894035458565e-11,
+      "elapsed_s": 0.03152429987676442,
+      "physical_issues": [
+        "water: H2O2 (90%): no validated pressure/phase equation of state; screening only",
+        "water: reactive coolant decomposition/material compatibility not modelled; temperature alone is not a stability criterion",
+        "water: pressure-independent screening coolant properties",
+        "water outlet: pressure-independent screening coolant properties",
+        "gas cp derived from constant gamma/R; combustion-product cp not supplied",
+        "gas viscosity uses air Sutherland fallback; combustion-product transport not supplied",
+        "gas Prandtl uses constant 0.70 fallback; combustion-product transport not supplied"
+      ]
+    }
+  ],
+  "pressure_state_matrix": [
+    {
+      "coolant": "GOX",
+      "temperature_K": 300.0,
+      "pressure_bar": 10.0,
+      "density_kg_m3": 12.90729376276355,
+      "phase": "supercritical_gas",
+      "source": "CoolProp HEOS: Oxygen",
+      "critical_T_K": 154.59938983528554,
+      "critical_p_bar": 50.46410521187217
+    },
+    {
+      "coolant": "GOX",
+      "temperature_K": 300.0,
+      "pressure_bar": 30.0,
+      "density_kg_m3": 39.17092833411212,
+      "phase": "supercritical_gas",
+      "source": "CoolProp HEOS: Oxygen",
+      "critical_T_K": 154.59938983528554,
+      "critical_p_bar": 50.46410521187217
+    },
+    {
+      "coolant": "GOX",
+      "temperature_K": 300.0,
+      "pressure_bar": 100.0,
+      "density_kg_m3": 134.57393573305146,
+      "phase": "supercritical",
+      "source": "CoolProp HEOS: Oxygen",
+      "critical_T_K": 154.59938983528554,
+      "critical_p_bar": 50.46410521187217
+    },
+    {
+      "coolant": "GCH4",
+      "temperature_K": 300.0,
+      "pressure_bar": 10.0,
+      "density_kg_m3": 6.54154365368275,
+      "phase": "supercritical_gas",
+      "source": "CoolProp HEOS: Methane",
+      "critical_T_K": 190.56400265128698,
+      "critical_p_bar": 45.99200474282439
+    },
+    {
+      "coolant": "GCH4",
+      "temperature_K": 300.0,
+      "pressure_bar": 30.0,
+      "density_kg_m3": 20.299520213386693,
+      "phase": "supercritical_gas",
+      "source": "CoolProp HEOS: Methane",
+      "critical_T_K": 190.56400265128698,
+      "critical_p_bar": 45.99200474282439
+    },
+    {
+      "coolant": "GCH4",
+      "temperature_K": 300.0,
+      "pressure_bar": 100.0,
+      "density_kg_m3": 75.17548583388302,
+      "phase": "supercritical",
+      "source": "CoolProp HEOS: Methane",
+      "critical_T_K": 190.56400265128698,
+      "critical_p_bar": 45.99200474282439
+    },
+    {
+      "coolant": "GH2",
+      "temperature_K": 300.0,
+      "pressure_bar": 10.0,
+      "density_kg_m3": 0.8034764427488551,
+      "phase": "supercritical_gas",
+      "source": "CoolProp HEOS: Hydrogen",
+      "critical_T_K": 33.1443326883113,
+      "critical_p_bar": 12.963576060553084
+    },
+    {
+      "coolant": "GH2",
+      "temperature_K": 300.0,
+      "pressure_bar": 30.0,
+      "density_kg_m3": 2.382508909501659,
+      "phase": "supercritical",
+      "source": "CoolProp HEOS: Hydrogen",
+      "critical_T_K": 33.1443326883113,
+      "critical_p_bar": 12.963576060553084
+    },
+    {
+      "coolant": "GH2",
+      "temperature_K": 300.0,
+      "pressure_bar": 100.0,
+      "density_kg_m3": 7.625441552934133,
+      "phase": "supercritical",
+      "source": "CoolProp HEOS: Hydrogen",
+      "critical_T_K": 33.1443326883113,
+      "critical_p_bar": 12.963576060553084
+    }
+  ],
+  "radiation_sensitivity_3400K": {
+    "model": "grey-gas radiation emissivity sensitivity, fully re-solved wall/coolant balance",
+    "interpretation": "specified scenario envelope; not validated spectral emissivity or a statistical uncertainty interval",
+    "cases": [
+      {
+        "gas_emissivity": 0.02,
+        "peak_hot_wall_temperature_k": 526.0511384640319,
+        "peak_heat_flux_w_m2": 27490548.73445227,
+        "coolant_outlet_temperature_k": {
+          "water": 310.82618665048085
+        },
+        "physical_validity": "screening",
+        "physical_issues": [
+          "gas cp derived from constant gamma/R; combustion-product cp not supplied",
+          "gas viscosity uses air Sutherland fallback; combustion-product transport not supplied",
+          "gas Prandtl uses constant 0.70 fallback; combustion-product transport not supplied",
+          "gas radiation uses specified grey emissivity; species/pressure/path-dependent spectral model not validated"
+        ],
+        "converged": true,
+        "energy_balance_by_segment": {
+          "water": {
+            "heat_pickup_w": 172670.6753045742,
+            "coolant_enthalpy_rise_w": 172670.6753044499,
+            "residual_w": 1.2430245988070965e-07
+          }
+        }
+      },
+      {
+        "gas_emissivity": 0.08,
+        "peak_hot_wall_temperature_k": 528.3332696843202,
+        "peak_heat_flux_w_m2": 27757997.04056887,
+        "coolant_outlet_temperature_k": {
+          "water": 311.02775077692826
+        },
+        "physical_validity": "screening",
+        "physical_issues": [
+          "gas cp derived from constant gamma/R; combustion-product cp not supplied",
+          "gas viscosity uses air Sutherland fallback; combustion-product transport not supplied",
+          "gas Prandtl uses constant 0.70 fallback; combustion-product transport not supplied",
+          "gas radiation uses specified grey emissivity; species/pressure/path-dependent spectral model not validated"
+        ],
+        "converged": true,
+        "energy_balance_by_segment": {
+          "water": {
+            "heat_pickup_w": 174348.25895698954,
+            "coolant_enthalpy_rise_w": 174348.2589570198,
+            "residual_w": -3.026798367500305e-08
+          }
+        }
+      },
+      {
+        "gas_emissivity": 0.16,
+        "peak_hot_wall_temperature_k": 531.3763764535814,
+        "peak_heat_flux_w_m2": 28114689.98529651,
+        "coolant_outlet_temperature_k": {
+          "water": 311.29654545066603
+        },
+        "physical_validity": "screening",
+        "physical_issues": [
+          "gas cp derived from constant gamma/R; combustion-product cp not supplied",
+          "gas viscosity uses air Sutherland fallback; combustion-product transport not supplied",
+          "gas Prandtl uses constant 0.70 fallback; combustion-product transport not supplied",
+          "gas radiation uses specified grey emissivity; species/pressure/path-dependent spectral model not validated"
+        ],
+        "converged": true,
+        "energy_balance_by_segment": {
+          "water": {
+            "heat_pickup_w": 176585.4145960204,
+            "coolant_enthalpy_rise_w": 176585.4145962566,
+            "residual_w": -2.3620668798685074e-07
+          }
+        }
+      }
+    ]
+  }
+}

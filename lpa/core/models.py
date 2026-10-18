@@ -12,6 +12,8 @@ from enum import Enum
 from math import isfinite
 from typing import Iterable, TypeVar
 
+from .composition import aqueous_composition, mass_fraction, solution_name
+
 
 class _ValueEnum(str, Enum):
     """String enum whose values are stable for project files."""
@@ -23,6 +25,8 @@ class _ValueEnum(str, Enum):
 class Oxidizer(_ValueEnum):
     LOX = "LOX"
     GOX = "GOX"
+    H2O2 = "H2O2"
+    # Retained for Python API and old project compatibility; hidden in the UI.
     H2O2_70 = "H2O2 (70%)"
     H2O2_80 = "H2O2 (80%)"
     H2O2_90 = "H2O2 (90%)"
@@ -31,6 +35,9 @@ class Oxidizer(_ValueEnum):
 
 
 class Fuel(_ValueEnum):
+    ETHANOL = "Ethanol"
+    IPA = "IPA"
+    LNG = "LNG"
     ETHANOL_70 = "Ethanol (70%)"
     ETHANOL_80 = "Ethanol (80%)"
     ETHANOL_90 = "Ethanol (90%)"
@@ -63,6 +70,8 @@ class Coolant(_ValueEnum):
     LH2 = "LH2"
     GH2 = "GH2"
     PROPANE = "Propane"
+    IPA = "IPA"
+    LNG = "LNG"
     WATER = "H2O"
 
 
@@ -155,6 +164,27 @@ def _positive(value: float, field_name: str, *, allow_zero: bool = False) -> Non
         raise ValueError(f"{field_name} must be finite and {relation}")
 
 
+def _integer(value: object, field_name: str, minimum: int = 1) -> int:
+    try:
+        number = float(value)
+    except (TypeError, ValueError, OverflowError) as error:
+        raise ValueError(f"{field_name} must be a finite integer >= {minimum}") from error
+    if isinstance(value, bool) or not isfinite(number) or not number.is_integer() or number < minimum:
+        raise ValueError(f"{field_name} must be a finite integer >= {minimum}")
+    return int(number)
+
+
+def _coolant(value: Coolant | str) -> Coolant | str:
+    aqueous = aqueous_composition(value)
+    if aqueous is not None:
+        name = solution_name(aqueous[0], aqueous[1] if aqueous[1] is not None else 1.0)
+        try:
+            return Coolant(name)
+        except ValueError:
+            return name
+    return _enum(value, Coolant, "coolant")
+
+
 @dataclass(slots=True)
 class RangeSpec:
     minimum: float
@@ -166,9 +196,7 @@ class RangeSpec:
             raise ValueError("range limits must be finite")
         if self.maximum <= self.minimum:
             raise ValueError("range maximum must be greater than minimum")
-        if isinstance(self.points, bool) or self.points < 2:
-            raise ValueError("range points must be an integer >= 2")
-        self.points = int(self.points)
+        self.points = _integer(self.points, "range points", 2)
 
     def values(self) -> tuple[float, ...]:
         step = (self.maximum - self.minimum) / (self.points - 1)
@@ -183,6 +211,12 @@ class EngineDefinition:
     mixture_ratio: float = 2.5
     oxidizer: Oxidizer | str = Oxidizer.LOX
     fuel: Fuel | str = Fuel.RP1
+    oxidizer_mass_fraction: float | None = None
+    fuel_mass_fraction: float | None = None
+    oxidizer_temperature_k: float | None = None
+    fuel_temperature_k: float | None = None
+    oxidizer_pressure_bar: float | None = None
+    fuel_pressure_bar: float | None = None
 
     def __post_init__(self) -> None:
         self.name = self.name.strip()
@@ -190,8 +224,36 @@ class EngineDefinition:
             raise ValueError("engine name cannot be empty")
         _positive(self.chamber_pressure_bar, "chamber pressure")
         _positive(self.mixture_ratio, "mixture ratio")
+        for kind in ("oxidizer", "fuel"):
+            for suffix in ("temperature_k", "pressure_bar"):
+                supplied = getattr(self, f"{kind}_{suffix}")
+                if supplied is not None:
+                    _positive(supplied, f"{kind} supply {suffix}")
+            supplied_pressure = getattr(self, f"{kind}_pressure_bar")
+            if supplied_pressure is not None and supplied_pressure < self.chamber_pressure_bar:
+                raise ValueError(f"{kind} supply pressure must not be below chamber pressure")
         self.oxidizer = _enum(self.oxidizer, Oxidizer, "oxidizer")
         self.fuel = _enum(self.fuel, Fuel, "fuel")
+        for kind, enum_type in (("oxidizer", Oxidizer), ("fuel", Fuel)):
+            value = getattr(self, kind)
+            aqueous = aqueous_composition(value)
+            specified = getattr(self, f"{kind}_mass_fraction")
+            if aqueous is not None:
+                base, legacy_fraction = aqueous
+                if legacy_fraction is not None and specified is not None:
+                    if abs(float(specified) - legacy_fraction) > 1e-12:
+                        raise ValueError(f"{kind} name and mass fraction disagree")
+                fraction = mass_fraction(
+                    specified if specified is not None else (
+                        legacy_fraction if legacy_fraction is not None else 1.0
+                    ), f"{kind} mass fraction",
+                )
+                setattr(self, kind, enum_type(base))
+            else:
+                fraction = mass_fraction(1.0 if specified is None else specified)
+                if fraction != 1.0:
+                    raise ValueError(f"water dilution is not supported for {value}")
+            setattr(self, f"{kind}_mass_fraction", fraction)
 
 
 @dataclass(slots=True)
@@ -203,7 +265,7 @@ class NozzleExitCondition:
     def __post_init__(self) -> None:
         self.mode = _enum(self.mode, ExitConditionMode, "exit condition mode")
         if self.mode is ExitConditionMode.EXPANSION_RATIO:
-            if self.expansion_area_ratio is None or self.expansion_area_ratio <= 1.0:
+            if self.expansion_area_ratio is None or not isfinite(self.expansion_area_ratio) or self.expansion_area_ratio <= 1.0:
                 raise ValueError("expansion area ratio must be greater than 1")
         elif self.ambient_pressure_atm is None:
             raise ValueError("ambient pressure is required")
@@ -220,10 +282,10 @@ class EquilibriumFlow:
     def __post_init__(self) -> None:
         self.mode = _enum(self.mode, EquilibriumMode, "equilibrium mode")
         if self.mode is EquilibriumMode.FROZEN_PRESSURE:
-            if self.freeze_pressure_ratio is None or self.freeze_pressure_ratio <= 1:
+            if self.freeze_pressure_ratio is None or not isfinite(self.freeze_pressure_ratio) or self.freeze_pressure_ratio <= 1:
                 raise ValueError("freeze pressure ratio must be greater than 1")
         if self.mode is EquilibriumMode.FROZEN_AREA:
-            if self.freeze_area_ratio is None or self.freeze_area_ratio < 1:
+            if self.freeze_area_ratio is None or not isfinite(self.freeze_area_ratio) or self.freeze_area_ratio < 1:
                 raise ValueError("freeze area ratio must be at least 1")
 
 
@@ -331,6 +393,8 @@ class NozzleGeometry:
     conical_half_angle_deg: float = 15.0
     bell_length_percent: float = 80.0
     throat_radius_ratio: float = 0.382
+    rao_initial_angle_deg: float | None = None
+    rao_exit_angle_deg: float | None = None
 
     def __post_init__(self) -> None:
         self.contour_type = _enum(self.contour_type, NozzleContourType, "contour type")
@@ -339,6 +403,15 @@ class NozzleGeometry:
         if not 50 <= self.bell_length_percent <= 120:
             raise ValueError("bell length must be between 50% and 120% of a 15 degree cone")
         _positive(self.throat_radius_ratio, "Rn/Rt")
+        if (self.rao_initial_angle_deg is None) != (self.rao_exit_angle_deg is None):
+            raise ValueError("specify both Rao angles Tn and Te, or leave both automatic")
+        if self.rao_initial_angle_deg is not None and self.rao_exit_angle_deg is not None:
+            if not (
+                isfinite(self.rao_initial_angle_deg)
+                and isfinite(self.rao_exit_angle_deg)
+                and 0 <= self.rao_exit_angle_deg < self.rao_initial_angle_deg < 90
+            ):
+                raise ValueError("Rao angles must be finite and satisfy 0 <= Te < Tn < 90 degrees")
 
 
 @dataclass(slots=True)
@@ -493,11 +566,10 @@ class CoolantDefinition:
     relative_mass_flow_percent: float
 
     def __post_init__(self) -> None:
-        self.coolant = _enum(self.coolant, Coolant, "coolant")
+        self.coolant = _coolant(self.coolant)
         _positive(self.inlet_pressure_bar, "coolant inlet pressure")
         _positive(self.inlet_temperature_k, "coolant inlet temperature")
-        if not 0 < self.relative_mass_flow_percent <= 100:
-            raise ValueError("coolant relative mass flow must be in (0, 100]")
+        _positive(self.relative_mass_flow_percent, "coolant relative mass flow")
 
 
 @dataclass(slots=True)
@@ -525,9 +597,7 @@ class RegenSegment:
         if not self.segment_id:
             raise ValueError("regen segment id cannot be empty")
         _positive(self.wall_thickness_mm, "wall thickness")
-        if isinstance(self.channel_count, bool) or self.channel_count < 1:
-            raise ValueError("channel count must be an integer >= 1")
-        self.channel_count = int(self.channel_count)
+        self.channel_count = _integer(self.channel_count, "channel count")
         if (self.coolant is None) == (self.inherit_coolant_from is None):
             raise ValueError("define coolant or inherit it from exactly one regen segment")
         if self.material is not None:
@@ -564,7 +634,7 @@ class FilmSegment:
         self.segment_id = self.segment_id.strip()
         if not self.segment_id:
             raise ValueError("film segment id cannot be empty")
-        self.coolant = _enum(self.coolant, Coolant, "film coolant")
+        self.coolant = _coolant(self.coolant)
         location_modes = sum(
             (
                 bool(self.chamber_contraction_boundary),
@@ -586,9 +656,7 @@ class FilmSegment:
             raise ValueError("film mass flow percentage must be in (0, 100)")
         if not 0 < self.discharge_coefficient <= 1:
             raise ValueError("film discharge coefficient must be in (0, 1]")
-        if isinstance(self.orifice_count, bool) or self.orifice_count < 1:
-            raise ValueError("film orifice count must be an integer >= 1")
-        self.orifice_count = int(self.orifice_count)
+        self.orifice_count = _integer(self.orifice_count, "film orifice count")
 
 
 @dataclass(slots=True)

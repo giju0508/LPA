@@ -266,6 +266,12 @@ def material_reference_metadata() -> dict[str, dict[str, object]]:
             "notes": material.reference.notes,
             "manufacturing_condition": material.manufacturing_condition,
             "valid_temperature_range_k": material.valid_temperature_range_k,
+            "curve_provenance": (
+                "engineering screening elevated-temperature curve"
+                if name in {"CuCrZr","C103"} else
+                "digitized selected LPBF experimental series" if name=="AlSi10Mg" else
+                "published supplier/NASA tabulation"
+            ),
         }
         for name, material in MATERIALS.items()
     }

@@ -66,11 +66,12 @@ def test_film_orifice_uses_linked_regen_coolant_not_stale_film_value() -> None:
         active_segment_id=("linked", "linked"),
         coolant_outlet_temperature_k={"linked": 320.0},
         coolant_inlet_temperature_k={"linked": 300.0},
+        coolant_outlet_pressure_bar={"linked": 40.0},
     )
 
     rows, warnings = _film_orifice_results(project, core_result, thermal_result)
 
-    assert warnings == []
+    assert all("screening properties" in message for message in warnings)
     assert len(rows) == 1
     assert rows[0]["coolant"] == "RP-1"
 

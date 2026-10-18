@@ -1,0 +1,96 @@
+{
+  "schema": "rpa-bartz-fixed-wall-reference/1",
+  "capture_date_kst": "2026-10-19",
+  "producer": {
+    "installation_bundle": "RPA 4.0.13",
+    "installed_path": "C:/RPA-4.0.13",
+    "interface": "RPA-Script.exe --stream; TheoreticalPerformance and HeatTransferAnalysis",
+    "capture_script": "tests/fixtures/rpa_bartz_fixed_wall_capture.js",
+    "script_pe_version": "4.0.8.0",
+    "script_sha256": "0f50371a3627c61fcacaf5ff310cde66bde91895586b26a0b641d81559116aa9"
+  },
+  "configuration": {
+    "oxidizer": "O2",
+    "fuel": "CH4",
+    "chamber_pressure_pa": 1000000.0,
+    "mixture_ratio": 2.6,
+    "contraction_area_ratio": 4.0,
+    "expansion_area_ratio": 4.0,
+    "throat_diameter_m": 0.03179,
+    "characteristic_length_m": 1.0,
+    "contraction_angle_deg": 30.0,
+    "upstream_throat_radius_ratio": 1.5,
+    "chamber_blend_radius_ratio": 0.5,
+    "downstream_throat_radius_ratio": 0.382,
+    "nozzle_type": "CONICAL",
+    "nozzle_half_angle_deg": 15.0,
+    "reaction_efficiency": 1.0,
+    "divergence_efficiency": 1.0,
+    "friction_efficiency": 1.0,
+    "multiphase_efficiency": 1.0,
+    "ionization": true,
+    "multiphase": false,
+    "condensed": false,
+    "fixed_wall_temperature_k": 1000.0,
+    "radiation": false,
+    "film": false,
+    "apply_cooling": false,
+    "points": 60,
+    "actual_station_count": 61,
+    "approach": "BARTZ"
+  },
+  "gas_reference": {
+    "stagnation_temperature_k": 3192.9965760812092,
+    "characteristic_velocity_m_s": 1883.6171302283724,
+    "frozen_specific_heat_j_kgk": 2520.1734502493637,
+    "frozen_prandtl": 0.6218543302906612,
+    "viscosity_pa_s": 0.00009984919088066013,
+    "gas_constant_j_kgk": 450.90711762116376,
+    "equilibrium_specific_heat_j_kgk": 6474.196608625256,
+    "equilibrium_prandtl": 0.4287482728725398,
+    "equilibrium_isentropic_exponent": 1.140424913310424,
+    "qualification": "Direct RPA injector getters. Frozen Cp/(Cp-R) is calculated by LPA; the RPA internal Bartz transport/gamma implementation is not published."
+  },
+  "stations": [
+    {
+      "name": "chamber",
+      "x_m": 0.0,
+      "area_ratio": 4.0,
+      "mach": 0.1509388438926254,
+      "heat_transfer_coefficient_w_m2k": 1664.0369331610734,
+      "convective_heat_flux_w_m2": 3647414.418762775
+    },
+    {
+      "name": "throat",
+      "x_m": 0.2669826007325168,
+      "area_ratio": 1.0,
+      "mach": 1.0000003840651346,
+      "heat_transfer_coefficient_w_m2k": 5637.8246073570235,
+      "convective_heat_flux_w_m2": 12118422.737012237
+    },
+    {
+      "name": "exit",
+      "x_m": 0.3271029278024,
+      "area_ratio": 4.0,
+      "mach": 2.5432745536638857,
+      "heat_transfer_coefficient_w_m2k": 1418.2731995882505,
+      "convective_heat_flux_w_m2": 2844866.864808981
+    }
+  ],
+  "curvature_probe": {
+    "baseline_throat_h_w_m2k": 5637.8246073570235,
+    "upstream_radius_ratio_0_382_throat_h_w_m2k": 6464.193533891669,
+    "downstream_radius_ratio_1_5_throat_h_w_m2k": 5637.8246073570235
+  },
+  "ievlev_throat_heat_flux_w_m2": 5997687.97265549,
+  "acceptance": {
+    "relative_h_difference_max": 0.03,
+    "relative_q_difference_max": 0.03,
+    "meaning": "External fixed-wall software regression for this defined case only; not a universal Bartz error bound or hot-fire validation. No fitted heat-transfer multiplier."
+  },
+  "sources": [
+    "https://rocket-propulsion.com/downloads/pub/RPA_ThermalAnalysis.pdf",
+    "https://rocket-propulsion.com/downloads/4/docs/RPA_4_User_Manual.pdf",
+    "https://ntrs.nasa.gov/api/citations/20220017723/downloads/2022-11-21_NTP-NNE-MaterialTrade_Paper.pdf?attachment=true"
+  ]
+}

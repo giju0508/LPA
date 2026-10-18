@@ -3,7 +3,7 @@
 
 from pathlib import Path
 
-from PyInstaller.utils.hooks import collect_all
+from PyInstaller.utils.hooks import collect_all, copy_metadata
 
 
 ROOT = Path(SPECPATH).resolve()
@@ -56,13 +56,25 @@ datas = [
     (str(RESOURCE_DIR / "rao_contour_reference.png"), "lpa/resources"),
 ]
 datas += rocketcea_datas
+coolprop_datas, coolprop_binaries, coolprop_hiddenimports = collect_all(
+    "CoolProp", include_py_files=False,
+    filter_submodules=lambda name: not any(part in name for part in (".Plots", ".tests")),
+    on_error="raise",
+)
+datas += coolprop_datas
+# scipy.optimize is used by the pseudocritical Cp-peak diagnostic. Preserve
+# its bundled license notices along with the runtime collected by its hooks.
+datas += copy_metadata("scipy")
+datas += copy_metadata("ht")
+datas += copy_metadata("fluids")
+datas += copy_metadata("rocketcea")
 
 a = Analysis(
     [str(ROOT / "main.py")],
     pathex=[str(ROOT)],
-    binaries=rocketcea_binaries,
+    binaries=rocketcea_binaries + coolprop_binaries,
     datas=datas,
-    hiddenimports=rocketcea_hiddenimports + [
+    hiddenimports=rocketcea_hiddenimports + coolprop_hiddenimports + [
         "rocketcea.cea_obj",
         "rocketcea.cea_obj_w_units",
         "rocketcea.py_cea",

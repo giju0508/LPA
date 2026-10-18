@@ -9,8 +9,59 @@ through equivalently named fields on a dictionary coolant definition.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from math import exp, isfinite
+from dataclasses import dataclass, replace
+from math import exp, floor, isfinite, log, nan
+from functools import lru_cache
+from threading import local
+
+from ..core.composition import aqueous_composition, solution_name
+
+
+@dataclass(frozen=True, slots=True)
+class CoolantPhaseState:
+    """One equilibrium phase, without an invented two-phase bulk transport law."""
+
+    density_kg_m3: float
+    specific_heat_j_kgk: float
+    conductivity_w_mk: float
+    viscosity_pa_s: float
+    temperature_k: float
+    pressure_pa: float
+    enthalpy_j_kg: float
+    molar_mass_kg_mol: float
+    phase: str
+    source: str
+    speed_of_sound_m_s: float = nan
+    specific_heat_cv_j_kgk: float = nan
+    issues: tuple[str, ...] = ()
+
+    @property
+    def prandtl(self) -> float:
+        return self.specific_heat_j_kgk * self.viscosity_pa_s / self.conductivity_w_mk
+
+
+@dataclass(frozen=True, slots=True)
+class CoolantTransportLimits:
+    property_name: str
+    minimum_temperature_k: float = nan
+    maximum_temperature_k: float = nan
+    maximum_pressure_pa: float = nan
+    references: tuple[str, ...] = ()
+    notes: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class CoolantPropertyLimits:
+    name: str
+    backend: str
+    minimum_temperature_k: float
+    maximum_temperature_k: float
+    maximum_pressure_pa: float
+    thermodynamic_source: str
+    transport_source: str
+    references: tuple[str, ...]
+    notes: tuple[str, ...] = ()
+    transport_limits: tuple[CoolantTransportLimits, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -19,6 +70,28 @@ class CoolantState:
     specific_heat_j_kgk: float
     conductivity_w_mk: float
     viscosity_pa_s: float
+    temperature_k: float = nan
+    pressure_pa: float = nan
+    enthalpy_j_kg: float = nan
+    phase: str = "unknown"
+    source: str = "screening"
+    saturation_temperature_k: float = nan
+    saturation_pressure_pa: float = nan
+    critical_temperature_k: float = nan
+    critical_pressure_pa: float = nan
+    pseudocritical_temperature_k: float = nan
+    speed_of_sound_m_s: float = nan
+    specific_heat_cv_j_kgk: float = nan
+    gas_constant_j_kgk: float = nan
+    issues: tuple[str, ...] = ()
+    vapor_quality_mass_fraction: float = nan
+    saturated_liquid: CoolantPhaseState | None = None
+    saturated_vapor: CoolantPhaseState | None = None
+    surface_tension_n_m: float = nan
+    thermodynamic_source: str = "screening"
+    transport_source: str = "screening"
+    property_limits: CoolantPropertyLimits | None = None
+    equilibrium_energy_residual_j_kg: float = nan
 
     @property
     def prandtl(self) -> float:
@@ -53,7 +126,37 @@ class CoolantPropertyModel:
             specific_heat_j_kgk=self.specific_heat_j_kgk * cp_factor,
             conductivity_w_mk=self.conductivity_w_mk * conductivity_factor,
             viscosity_pa_s=self.viscosity_pa_s * viscosity_factor,
+            temperature_k=temperature_k,
+            enthalpy_j_kg=self.screening_enthalpy(temperature_k),
+            issues=("pressure-independent screening coolant properties",),
         )
+
+    def screening_enthalpy(self, temperature_k: float) -> float:
+        """Integral of the documented screening cp, with a consistent datum."""
+        delta = float(temperature_k) - self.reference_temperature_k
+        slope = self.cp_slope_per_k
+        if slope and 1.0 + slope * delta < 0.5:
+            crossing = -0.5 / slope
+            return self.specific_heat_j_kgk * (
+                crossing + 0.5 * slope * crossing**2 + 0.5 * (delta - crossing)
+            )
+        return self.specific_heat_j_kgk * (delta + 0.5 * slope * delta**2)
+
+    def at_state(self, temperature_k: float, pressure_pa: float, *, backend: str = "HEOS") -> CoolantState:
+        return coolant_state(self.name, temperature_k, pressure_pa, backend=backend)
+
+    def at_enthalpy(self, enthalpy_j_kg: float, pressure_pa: float, *, backend: str = "HEOS") -> CoolantState:
+        return coolant_state_from_enthalpy(self.name, enthalpy_j_kg, pressure_pa, backend=backend)
+
+    def screening_at_enthalpy(self, enthalpy_j_kg: float, pressure_pa: float) -> CoolantState:
+        temperature=self.reference_temperature_k
+        for _ in range(40):
+            state=self.at_temperature(temperature)
+            residual=state.enthalpy_j_kg-enthalpy_j_kg
+            if abs(residual)<max(1.0,abs(enthalpy_j_kg))*1e-10:
+                return replace(state,pressure_pa=pressure_pa)
+            temperature=max(1.0,temperature-residual/state.specific_heat_j_kgk)
+        raise ValueError("custom screening enthalpy inversion failed")
 
 
 # Representative compressed-liquid values near the listed reference
@@ -94,6 +197,16 @@ COOLANT_MODELS: dict[str, CoolantPropertyModel] = {
         volumetric_expansion_per_k=3.0e-3,
         viscosity_decay_per_k=1.8e-2,
         notes="Saturated/subcooled liquid methane screening values.",
+    ),
+    "LNG": CoolantPropertyModel(
+        "LNG", 111.66, 450.0, 3400.0, 0.185, 1.3e-4,
+        volumetric_expansion_per_k=3.0e-3,
+        viscosity_decay_per_k=1.8e-2,
+        notes="Typical commercial LNG (Wartsila); density 450 kg/m3. Other properties are liquid-mixture screening estimates.",
+    ),
+    "IPA (100%)": CoolantPropertyModel(
+        "IPA (100%)", 293.15, 785.0, 2680.0, 0.135, 2.04e-3,
+        notes="Liquid isopropanol near 20 C; aqueous mixtures use ideal screening mixing rules.",
     ),
     "GCH4": CoolantPropertyModel(
         "GCH4", 300.0, 20.0, 2300.0, 0.050, 1.15e-5,
@@ -162,6 +275,9 @@ _ALIASES = {
     "rp1": "RP-1",
     "jeta1": "Jet A-1",
     "lch4": "LCH4",
+    "lng": "LNG",
+    "ipa": "IPA (100%)",
+    "ipa100": "IPA (100%)",
     "gch4": "GCH4",
     "lh2": "LH2",
     "gh2": "GH2",
@@ -183,8 +299,612 @@ def _normalise_name(value: object) -> str:
 
 
 def get_coolant_model(name: object) -> CoolantPropertyModel:
+    aqueous = aqueous_composition(name)
+    if aqueous:
+        base, fraction = aqueous
+        fraction = 1.0 if fraction is None else fraction
+        canonical = solution_name(base, fraction)
+        if canonical in COOLANT_MODELS:
+            return COOLANT_MODELS[canonical]
+        water = COOLANT_MODELS["H2O"]
+        # Preserve existing screening anchors for peroxide and ethanol.
+        # Below 70%, and for IPA, use ideal-volume density, mass-based cp,
+        # linear conductivity and logarithmic viscosity screening estimates.
+        if base in {"H2O2", "Ethanol"} and fraction >= 0.70:
+            anchors = (0.70, 0.80, 0.90, 1.0)
+            lower = max(value for value in anchors if value <= fraction)
+            upper = min(value for value in anchors if value >= fraction)
+            left = COOLANT_MODELS[solution_name(base, lower)]
+            right = COOLANT_MODELS[solution_name(base, upper)]
+            weight = (fraction - lower) / (upper - lower)
+            density = left.density_kg_m3 + weight * (right.density_kg_m3 - left.density_kg_m3)
+        else:
+            left = water
+            right = COOLANT_MODELS[solution_name(base, 0.70 if base != "IPA" else 1.0)]
+            weight = fraction / (0.70 if base != "IPA" else 1.0)
+            density = 1.0 / ((1.0 - weight) / left.density_kg_m3 + weight / right.density_kg_m3)
+        return replace(
+            right, name=canonical, density_kg_m3=density,
+            specific_heat_j_kgk=(1.0 - weight) * left.specific_heat_j_kgk + weight * right.specific_heat_j_kgk,
+            conductivity_w_mk=(1.0 - weight) * left.conductivity_w_mk + weight * right.conductivity_w_mk,
+            viscosity_pa_s=exp((1.0 - weight) * log(left.viscosity_pa_s) + weight * log(right.viscosity_pa_s)),
+            notes="Aqueous mass-fraction interpolation; screening only, no excess mixing or phase-change model.",
+        )
     key = _ALIASES.get(_normalise_name(name))
     if key is None:
         options = ", ".join(COOLANT_MODELS)
         raise KeyError(f"unknown coolant {name!r}; choose one of: {options}")
     return COOLANT_MODELS[key]
+
+
+_EOS_FLUIDS = {
+    "H2O": "Water", "LOX": "Oxygen", "GOX": "Oxygen",
+    "LCH4": "Methane", "GCH4": "Methane", "LH2": "Hydrogen",
+    "GH2": "Hydrogen", "N2O": "NitrousOxide", "Propane": "Propane",
+    "Ethanol (100%)": "Ethanol",
+}
+_EOS_LOCAL = local()
+
+
+def _eos_definition(name: str) -> tuple[str, tuple[float, ...], bool] | None:
+    if name in _EOS_FLUIDS:
+        return _EOS_FLUIDS[name], (), False
+    aqueous = aqueous_composition(name)
+    if aqueous and aqueous[0] == "Ethanol":
+        fraction = 1.0 if aqueous[1] is None else aqueous[1]
+        if fraction == 1.0:
+            return "Ethanol", (), False
+        return "Ethanol&Water", (fraction, 1.0-fraction), False
+    if name == "LNG":
+        from ..core.propellants import LNG_COMPONENTS
+        return (
+            "Methane&Ethane&Propane&n-Butane&Nitrogen",
+            tuple(row[1] for row in LNG_COMPONENTS), True,
+        )
+    return None
+
+
+def _backend_name(backend: str) -> str:
+    value = str(backend).upper()
+    if value in {"COOLPROP", "HEOS"}:
+        return "HEOS"
+    if value == "REFPROP":
+        return value
+    raise ValueError("coolant backend must be HEOS/coolprop or REFPROP")
+
+
+def _abstract_state(name: str, *, saturation: bool | str = False, backend: str = "HEOS") -> object:
+    import CoolProp
+    backend = _backend_name(backend)
+    definition = _eos_definition(name)
+    if definition is None:
+        raise ValueError(f"no validated equation of state for {name}")
+    cache = getattr(_EOS_LOCAL, "states", None)
+    if cache is None:
+        cache = _EOS_LOCAL.states = {}
+    key = (name, backend, saturation)
+    if key not in cache:
+        fluid, fractions, mole_basis = definition
+        state = CoolProp.AbstractState(backend, fluid)
+        if fractions:
+            (state.set_mole_fractions if mole_basis else state.set_mass_fractions)(fractions)
+        cache[key] = state
+    return cache[key]
+
+
+@lru_cache(maxsize=128)
+def coolant_property_limits(name: object, *, backend: str = "HEOS") -> CoolantPropertyLimits:
+    """EOS bounds are distinct from the validity of each transport correlation.
+
+    These limits do not assert that every mixture, phase, or transport property
+    has been experimentally validated throughout the bounding rectangle.
+    REFPROP requires a separately installed licensed library and fluid files.
+    """
+    canonical = get_coolant_model(name).name
+    backend = _backend_name(backend)
+    state = _abstract_state(canonical, backend=backend, saturation="limits")
+    definition = _eos_definition(canonical)
+    assert definition is not None
+    fluid, fractions, _ = definition
+    maximum = float(state.Tmax())
+    maximum_pressure = float(state.pmax())
+    notes = ["EOS limits do not imply validation of viscosity or thermal conductivity."]
+    # CoolProp permits extrapolation of IAPWS-95 to 2000 K. The IAPWS release
+    # validates the stable fluid region only through 1273 K and 1000 MPa.
+    if fluid == "Water":
+        maximum = min(maximum, 1273.0)
+        notes.append("IAPWS-95 stable-fluid validity cap: 1273 K; melting boundary still applies.")
+    if fractions:
+        notes.append("Mixture limits also depend on composition and phase-envelope convergence.")
+        # CoolProp exposes composition-weighted mixture Tmax/pmax; that can
+        # exceed a constituent EOS limit (Et70 advertises Tmax about 1356 K
+        # despite pure ethanol's 650 K limit). Do not authorize that extrapolation.
+        import CoolProp
+        for component in fluid.split("&"):
+            constituent = CoolProp.AbstractState(backend, component)
+            maximum = min(maximum, float(constituent.Tmax()))
+            maximum_pressure = min(maximum_pressure, float(constituent.pmax()))
+        notes.append("Upper bounds conservatively include every constituent EOS limit; mixture freezing is not modelled.")
+    if fluid == "Ethanol":
+        notes.append("Ethanol conductivity correlation: triple point to 600 K, up to 245 MPa.")
+    references = (
+        "https://coolprop.org/fluid_properties/Mixtures.html",
+        "https://coolprop.org/coolprop/REFPROP.html",
+    ) if fractions else (f"https://coolprop.org/fluid_properties/fluids/{fluid}.html",)
+    if fluid == "Water":
+        references += ("https://iapws.org/technical-guidance/release/IAPWS-95",)
+    if canonical == "LNG":
+        references += (
+            "https://www.nist.gov/publications/eos-lng-fundamental-equation-state-calculation-thermodynamic-properties-liquefied",
+        )
+    transport_limits = tuple(
+        CoolantTransportLimits(
+            property_name,
+            references=references,
+            notes=("No common validated T/P rectangle is asserted; inspect the individual correlation and phase.",),
+        )
+        for property_name in ("conductivity_w_mk", "viscosity_pa_s")
+    )
+    if fluid == "Ethanol":
+        transport_limits = (
+            CoolantTransportLimits(
+                "conductivity_w_mk", 159.1, 600.0, 245e6,
+                ("https://doi.org/10.1063/1.4797368",),
+                ("Reference conductivity correlation; excludes unvalidated extrapolation.",),
+            ),
+            transport_limits[1],
+        )
+    return CoolantPropertyLimits(
+        canonical, backend, float(state.Tmin()), maximum, maximum_pressure,
+        f"CoolProp {backend}: {fluid}",
+        "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+        references, tuple(notes), transport_limits,
+    )
+
+
+def _validate_eos_range(name: str, temperature_k: float, pressure_pa: float, backend: str) -> CoolantPropertyLimits:
+    limits = coolant_property_limits(name, backend=backend)
+    if not limits.minimum_temperature_k <= temperature_k <= limits.maximum_temperature_k:
+        raise ValueError(
+            f"EOS temperature {temperature_k:g} K outside documented bounds "
+            f"[{limits.minimum_temperature_k:g}, {limits.maximum_temperature_k:g}] K"
+        )
+    if pressure_pa > limits.maximum_pressure_pa:
+        raise ValueError(
+            f"EOS pressure {pressure_pa:g} Pa exceeds documented maximum {limits.maximum_pressure_pa:g} Pa"
+        )
+    return limits
+
+
+@lru_cache(maxsize=128)
+def _critical_values(name: str, backend: str = "HEOS") -> tuple[float, float]:
+    try:
+        state = _abstract_state(name, saturation="critical", backend=backend)
+        definition = _eos_definition(name)
+        if definition is not None and definition[1]:
+            stable = [point for point in state.all_critical_points() if point.stable and point.p > 0]
+            if len(stable) == 1:
+                return float(stable[0].T), float(stable[0].p)
+            return nan, nan
+        return float(state.T_critical()), float(state.p_critical())
+    except (ValueError, ImportError, OSError):
+        return nan, nan
+
+
+@lru_cache(maxsize=8192)
+def _saturation_at_pressure(name: str, pressure_pa: float, backend: str = "HEOS") -> float:
+    import CoolProp.CoolProp as CP
+    try:
+        state = _abstract_state(name, saturation=True, backend=backend)
+        state.unspecify_phase()
+        state.update(CP.PQ_INPUTS, pressure_pa, 0.0)
+        return float(state.T())
+    except (ValueError, ImportError, OSError):
+        return nan
+
+
+@lru_cache(maxsize=8192)
+def _saturation_at_temperature(name: str, temperature_k: float, backend: str = "HEOS") -> float:
+    import CoolProp.CoolProp as CP
+    try:
+        state = _abstract_state(name, saturation=True, backend=backend)
+        state.unspecify_phase()
+        state.update(CP.QT_INPUTS, 0.0, temperature_k)
+        return float(state.p())
+    except (ValueError, ImportError, OSError):
+        return nan
+
+
+def coolant_saturation_pressure(name: object, temperature_k: float, *, backend: str = "HEOS") -> float:
+    """Bubble pressure (pure-fluid saturation pressure); nan if unavailable."""
+    canonical = get_coolant_model(name).name
+    if not isfinite(temperature_k) or temperature_k <= 0:
+        raise ValueError("saturation temperature must be finite and positive")
+    return _saturation_at_temperature(canonical, float(temperature_k), _backend_name(backend))
+
+
+@lru_cache(maxsize=8192)
+def _mixture_boundaries(name: str, pressure_pa: float, backend: str) -> tuple[float, float, float, float] | None:
+    """Exact-pressure bubble/dew T and feed-specific h, without reusing bulk state."""
+    import CoolProp.CoolProp as CP
+    _, pc = _critical_values(name, backend)
+    if not isfinite(pc) or pressure_pa >= .98 * pc:
+        return None  # No claim about retrograde regions or a near-critical envelope.
+    try:
+        state = _abstract_state(name, saturation="boundaries", backend=backend)
+        state.unspecify_phase()
+        state.update(CP.PQ_INPUTS, pressure_pa, 0.0)
+        bubble_t, bubble_h = float(state.T()), float(state.hmass())
+        state.update(CP.PQ_INPUTS, pressure_pa, 1.0)
+        dew_t, dew_h = float(state.T()), float(state.hmass())
+        if bubble_t <= dew_t and bubble_h < dew_h:
+            return bubble_t, dew_t, bubble_h, dew_h
+    except (ValueError, ImportError, OSError):
+        pass
+    return None
+
+
+def _update_pressure_temperature(name: str, state: object, pressure_pa: float,
+                                 temperature_k: float, *, backend: str = "HEOS") -> None:
+    """Avoid blind mixture roots where a bubble/dew flash proves the phase.
+
+    LNG at 150 K / 25 bar otherwise selects a spurious gas root with Cp around
+    1.2 MJ/(kg K), although its bubble temperature is 174 K. Phase selection
+    therefore uses the operating-pressure boundary, not a 0.1 Pc temperature.
+    """
+    import CoolProp.CoolProp as CP
+    state.unspecify_phase()
+    definition = _eos_definition(name)
+    if definition is not None and definition[1]:
+        boundaries = _mixture_boundaries(name, pressure_pa, backend)
+        if boundaries is not None:
+            bubble_t, dew_t, _, _ = boundaries
+            if temperature_k < bubble_t:
+                state.specify_phase(CP.iphase_liquid)
+            elif temperature_k > dew_t:
+                state.specify_phase(CP.iphase_gas)
+            else:
+                from scipy.optimize import brentq
+                def residual(quality: float) -> float:
+                    state.update(CP.PQ_INPUTS, pressure_pa, quality)
+                    return float(state.T()) - temperature_k
+                quality = brentq(residual, 0.0, 1.0, xtol=1e-12)
+                state.update(CP.PQ_INPUTS, pressure_pa, quality)
+                return
+        else:
+            # Above Pc a lower-pressure bubble point is only a sufficient
+            # compressed-liquid proof. It does not define a retrograde envelope.
+            _, pc = _critical_values(name, backend)
+            reference_p = min(pressure_pa, .8 * pc) if isfinite(pc) else pressure_pa
+            bubble = _saturation_at_pressure(name, max(1.0, reference_p), backend)
+            if isfinite(bubble) and temperature_k < bubble:
+                state.specify_phase(CP.iphase_liquid)
+    try:
+        state.update(CP.PT_INPUTS, pressure_pa, temperature_k)
+    finally:
+        state.unspecify_phase()
+
+
+@lru_cache(maxsize=2048)
+def _pseudocritical_temperature(name: str, pressure_pa: float, backend: str = "HEOS") -> float:
+    import CoolProp.CoolProp as CP
+    tc, pc = _critical_values(name, backend)
+    if not isfinite(tc) or pressure_pa <= pc:
+        return nan
+    try:
+        from scipy.optimize import minimize_scalar
+        state = _abstract_state(name, saturation="cp_peak", backend=backend)
+        limits = coolant_property_limits(name, backend=backend)
+        def negative_cp(temperature: float) -> float:
+            state.update(CP.PT_INPUTS, pressure_pa, temperature)
+            return -float(state.cpmass())
+        low = max(limits.minimum_temperature_k, .8 * tc)
+        high = min(limits.maximum_temperature_k, 2.0 * tc)
+        grid = [low + (high-low)*i/40 for i in range(41)]
+        values = [negative_cp(t) for t in grid]
+        best = min(range(len(grid)), key=lambda i: values[i])
+        if best in {0, len(grid)-1}:
+            return nan
+        result = minimize_scalar(negative_cp, bounds=(grid[best-1], grid[best+1]), method="bounded")
+        return float(result.x) if result.success else nan
+    except (ValueError, ImportError, OSError):
+        return nan
+
+
+def _extract_phase(name: str, state: object, *, vapor: bool, backend: str) -> CoolantPhaseState:
+    import CoolProp.CoolProp as CP
+    temperature = float(state.T())
+    fallback = get_coolant_model(name).at_temperature(temperature)
+    output = state.saturated_vapor_keyed_output if vapor else state.saturated_liquid_keyed_output
+    issues: list[str] = []
+    def value(key: object, label: str, default: float, *, positive: bool = True) -> float:
+        try:
+            result = float(output(key))
+            if not isfinite(result) or (positive and result <= 0):
+                raise ValueError(f"invalid {label}")
+            if name == "Ethanol (100%)" and label == "conductivity" and (
+                temperature > 600.0 or float(state.p()) > 245e6
+            ):
+                raise ValueError("outside ethanol conductivity correlation bounds")
+            return result
+        except ValueError:
+            issues.append(f"saturated {'vapor' if vapor else 'liquid'} {label} unavailable; screening property used")
+            return default
+    return CoolantPhaseState(
+        value(CP.iDmass, "density", fallback.density_kg_m3),
+        value(CP.iCpmass, "cp", fallback.specific_heat_j_kgk),
+        value(CP.iconductivity, "conductivity", fallback.conductivity_w_mk),
+        value(CP.iviscosity, "viscosity", fallback.viscosity_pa_s),
+        temperature, float(state.p()), value(CP.iHmass, "enthalpy", nan, positive=False),
+        value(CP.imolar_mass, "molar mass", nan), "gas" if vapor else "liquid",
+        f"CoolProp {backend} equilibrium phase", value(CP.ispeed_sound, "sound speed", nan),
+        value(CP.iCvmass, "cv", nan), tuple(issues),
+    )
+
+
+def _mass_quality(state: object) -> float:
+    import CoolProp.CoolProp as CP
+    molar_quality = float(state.Q())
+    liquid_m = float(state.saturated_liquid_keyed_output(CP.imolar_mass))
+    vapor_m = float(state.saturated_vapor_keyed_output(CP.imolar_mass))
+    return molar_quality*vapor_m / ((1.0-molar_quality)*liquid_m + molar_quality*vapor_m)
+
+
+def _extract_eos_state(name: str, state: object, pressure_pa: float, *, backend: str = "HEOS") -> CoolantState:
+    import CoolProp.CoolProp as CP
+    temperature = float(state.T())
+    limits = _validate_eos_range(name, temperature, pressure_pa, backend)
+    fallback = get_coolant_model(name).at_temperature(temperature)
+    issues: list[str] = []
+    phase_names = {
+        CP.iphase_liquid: "liquid", CP.iphase_gas: "gas",
+        CP.iphase_twophase: "two_phase", CP.iphase_supercritical: "supercritical",
+        CP.iphase_supercritical_liquid: "supercritical_liquid",
+        CP.iphase_supercritical_gas: "supercritical_gas", CP.iphase_critical_point: "critical_point",
+    }
+    phase = phase_names.get(state.phase(), "unknown")
+    def property_value(method: str, default: float) -> float:
+        try:
+            value = float(getattr(state, method)())
+            if not isfinite(value) or value <= 0:
+                raise ValueError(f"invalid {method}")
+            if name == "Ethanol (100%)" and method == "conductivity" and (
+                temperature > 600.0 or pressure_pa > 245e6
+            ):
+                raise ValueError("outside ethanol conductivity correlation bounds")
+            return value
+        except ValueError:
+            issues.append(f"{method} unavailable in EOS; screening transport/property used")
+            return default
+    density = property_value("rhomass", fallback.density_kg_m3)
+    cp = property_value("cpmass", fallback.specific_heat_j_kgk)
+    conductivity = property_value("conductivity", fallback.conductivity_w_mk)
+    viscosity = property_value("viscosity", fallback.viscosity_pa_s)
+    cv = property_value("cvmass", nan)
+    sound = property_value("speed_sound", nan)
+    definition = _eos_definition(name)
+    assert definition is not None
+    mixture = bool(definition[1])
+    if mixture:
+        issues.append("mixture EOS/transport require composition-specific validation")
+    if name in {"LH2", "GH2"}:
+        issues.append("normal-hydrogen EOS assumed; ortho/para composition and conversion heat not modelled")
+    tc, pc = _critical_values(name, backend)
+    if mixture and phase == "liquid" and isfinite(pc) and pressure_pa > pc and temperature < tc:
+        phase = "supercritical_liquid"
+    diagnostic_pressure = floor(pressure_pa/10000.0)*10000.0 if mixture else pressure_pa
+    if mixture:
+        issues.append("mixture bubble-temperature diagnostic uses pressure rounded down by at most 0.1 bar")
+    saturation_temperature = (
+        nan if mixture and isfinite(pc) and diagnostic_pressure >= pc
+        else _saturation_at_pressure(name, max(1.0, diagnostic_pressure), backend)
+    )
+    if mixture and isfinite(pc) and diagnostic_pressure >= pc:
+        issues.append("mixture retrograde phase envelope above critical pressure not validated")
+    liquid = vapor = None
+    quality = surface_tension = equilibrium_residual = nan
+    if phase == "two_phase":
+        liquid = _extract_phase(name, state, vapor=False, backend=backend)
+        vapor = _extract_phase(name, state, vapor=True, backend=backend)
+        quality = _mass_quality(state)
+        phase_enthalpy = (1.0-quality)*liquid.enthalpy_j_kg + quality*vapor.enthalpy_j_kg
+        equilibrium_residual = float(state.hmass())-phase_enthalpy
+        if abs(equilibrium_residual) > 1e-4*max(1.0, abs(float(state.hmass())), abs(phase_enthalpy)):
+            raise ValueError("EOS equilibrium phase enthalpy closure exceeds relative tolerance 1e-4")
+        if mixture and abs(equilibrium_residual) > 1e-7*max(1.0, abs(float(state.hmass()))):
+            issues.append(f"mixture equilibrium phase enthalpy closure residual {equilibrium_residual:g} J/kg")
+        issues.extend(liquid.issues)
+        issues.extend(vapor.issues)
+        # Bulk Cp, viscosity and k have no unique equilibrium two-phase
+        # transport definition. Retain phase-weighted diagnostics only; boiling
+        # correlations must explicitly use the phase-resolved properties.
+        cp = (1.0-quality)*liquid.specific_heat_j_kgk + quality*vapor.specific_heat_j_kgk
+        conductivity = (1.0-quality)*liquid.conductivity_w_mk + quality*vapor.conductivity_w_mk
+        viscosity = (1.0-quality)*liquid.viscosity_pa_s + quality*vapor.viscosity_pa_s
+        issues.append("two-phase bulk cp/transport are phase-weighted diagnostics; use saturated phase properties")
+        try:
+            surface_tension = float(state.surface_tension())
+        except ValueError:
+            issues.append("two-phase surface tension unavailable in EOS")
+    thermo_source = f"CoolProp {backend}: {definition[0]}"
+    transport_source = (
+        f"{thermo_source}; screening fallback present"
+        if any("screening" in issue for issue in issues) else thermo_source
+    )
+    return CoolantState(
+        density, cp, conductivity, viscosity, temperature_k=temperature, pressure_pa=pressure_pa,
+        enthalpy_j_kg=float(state.hmass()), phase=phase, source=thermo_source,
+        saturation_temperature_k=saturation_temperature,
+        saturation_pressure_pa=_saturation_at_temperature(name, temperature, backend) if not mixture else nan,
+        critical_temperature_k=tc, critical_pressure_pa=pc,
+        pseudocritical_temperature_k=_pseudocritical_temperature(name, diagnostic_pressure, backend) if not mixture else nan,
+        speed_of_sound_m_s=sound, specific_heat_cv_j_kgk=cv,
+        gas_constant_j_kgk=float(state.gas_constant()/state.molar_mass()), issues=tuple(issues),
+        vapor_quality_mass_fraction=quality, saturated_liquid=liquid, saturated_vapor=vapor,
+        surface_tension_n_m=surface_tension, thermodynamic_source=thermo_source,
+        transport_source=transport_source, property_limits=limits,
+        equilibrium_energy_residual_j_kg=equilibrium_residual,
+    )
+
+
+def _failed_eos_state(model: CoolantPropertyModel, temperature_k: float, pressure_pa: float,
+                      error: object, *, enthalpy_j_kg: float | None = None) -> CoolantState:
+    state = model.at_temperature(temperature_k)
+    return replace(
+        state, pressure_pa=pressure_pa,
+        enthalpy_j_kg=state.enthalpy_j_kg if enthalpy_j_kg is None else enthalpy_j_kg,
+        phase="unknown", issues=(f"{model.name}: EOS state unavailable ({error}); physical state unsupported",),
+    )
+
+
+def coolant_state(name: object, temperature_k: float, pressure_pa: float, *, backend: str = "HEOS") -> CoolantState:
+    """Pressure-dependent real-fluid state, with explicit backend/range failure."""
+    model = get_coolant_model(name)
+    backend = _backend_name(backend)
+    temperature_k, pressure_pa = float(temperature_k), float(pressure_pa)
+    if not isfinite(pressure_pa) or pressure_pa <= 0:
+        raise ValueError("coolant pressure must be finite and positive")
+    fallback = model.at_temperature(temperature_k)
+    if _eos_definition(model.name) is None:
+        return replace(fallback, pressure_pa=pressure_pa, issues=(
+            f"{model.name}: no validated pressure/phase equation of state; screening only",
+        ))
+    try:
+        _validate_eos_range(model.name, temperature_k, pressure_pa, backend)
+        state = _abstract_state(model.name, backend=backend)
+        _update_pressure_temperature(model.name, state, pressure_pa, temperature_k, backend=backend)
+        return _extract_eos_state(model.name, state, pressure_pa, backend=backend)
+    except (ValueError, ImportError, OSError) as error:
+        return _failed_eos_state(model, temperature_k, pressure_pa, error)
+
+
+def _mixture_enthalpy_update(name: str, state: object, enthalpy_j_kg: float,
+                             pressure_pa: float, temperature_hint_k: float,
+                             backend: str) -> None:
+    """Bracket a stable single phase or equilibrium PQ; never Newton through VLE."""
+    import CoolProp.CoolProp as CP
+    from scipy.optimize import brentq
+    limits = coolant_property_limits(name, backend=backend)
+    lower, upper = limits.minimum_temperature_k, limits.maximum_temperature_k
+    imposed_phase = None
+    boundaries = _mixture_boundaries(name, pressure_pa, backend)
+    if boundaries is not None:
+        bubble_t, dew_t, bubble_h, dew_h = boundaries
+        if bubble_h <= enthalpy_j_kg <= dew_h:
+            state.unspecify_phase()
+            def residual_q(quality: float) -> float:
+                state.update(CP.PQ_INPUTS, pressure_pa, quality)
+                return float(state.hmass())-enthalpy_j_kg
+            quality = brentq(residual_q, 0.0, 1.0, xtol=1e-12)
+            state.update(CP.PQ_INPUTS, pressure_pa, quality)
+            return
+        if enthalpy_j_kg < bubble_h:
+            upper = min(upper, bubble_t)
+            imposed_phase = CP.iphase_liquid
+        else:
+            lower = max(lower, dew_t)
+            imposed_phase = CP.iphase_gas
+    def residual_t(temperature: float) -> float:
+        state.unspecify_phase()
+        if imposed_phase is not None:
+            state.specify_phase(imposed_phase)
+            try:
+                state.update(CP.PT_INPUTS, pressure_pa, temperature)
+            finally:
+                state.unspecify_phase()
+        else:
+            _update_pressure_temperature(name, state, pressure_pa, temperature, backend=backend)
+        return float(state.hmass())-enthalpy_j_kg
+    center = min(upper, max(lower, temperature_hint_k))
+    center_error = residual_t(center)
+    tolerance = max(1.0, abs(enthalpy_j_kg))*1e-10
+    if abs(center_error) <= tolerance:
+        return
+    left = right = center
+    left_error = right_error = center_error
+    step = 2.0
+    for _ in range(32):
+        if left_error > 0 and left > lower:
+            left = max(lower, center-step)
+            left_error = residual_t(left)
+        if right_error < 0 and right < upper:
+            right = min(upper, center+step)
+            right_error = residual_t(right)
+        if left_error <= 0 <= right_error:
+            temperature = brentq(residual_t, left, right, xtol=1e-9, rtol=1e-12, maxiter=100)
+            residual_t(temperature)
+            return
+        if left == lower and right == upper:
+            break
+        # Only one side expands for a monotone, stable isobaric h(T).
+        if (left_error > 0 and left == lower) or (right_error < 0 and right == upper):
+            break
+        step *= 1.8
+    raise ValueError("mixture enthalpy is outside a supported monotone phase bracket")
+
+
+def coolant_state_from_enthalpy(
+    name: object, enthalpy_j_kg: float, pressure_pa: float,
+    *, temperature_hint_k: float | None = None, backend: str = "HEOS",
+) -> CoolantState:
+    """PH flash: pure-fluid native flash; bracketed mixture PT/PQ inversion."""
+    model = get_coolant_model(name)
+    backend = _backend_name(backend)
+    if not isfinite(enthalpy_j_kg) or not isfinite(pressure_pa) or pressure_pa <= 0:
+        raise ValueError("coolant enthalpy and positive pressure must be finite")
+    definition = _eos_definition(model.name)
+    if definition is not None:
+        try:
+            import CoolProp.CoolProp as CP
+            state = _abstract_state(model.name, backend=backend)
+            if pressure_pa > coolant_property_limits(model.name, backend=backend).maximum_pressure_pa:
+                raise ValueError("EOS pressure exceeds documented maximum")
+            if definition[1]:
+                _mixture_enthalpy_update(
+                    model.name, state, enthalpy_j_kg, pressure_pa,
+                    temperature_hint_k if temperature_hint_k is not None else model.reference_temperature_k,
+                    backend,
+                )
+            else:
+                state.unspecify_phase()
+                state.update(CP.HmassP_INPUTS, enthalpy_j_kg, pressure_pa)
+            return _extract_eos_state(model.name, state, pressure_pa, backend=backend)
+        except (ValueError, ImportError, OSError) as error:
+            if temperature_hint_k is not None:
+                return _failed_eos_state(model, temperature_hint_k, pressure_pa,
+                    f"EOS enthalpy flash failed: {error}", enthalpy_j_kg=enthalpy_j_kg)
+            raise ValueError(f"{model.name}: enthalpy flash failed ({error})") from error
+    temperature = temperature_hint_k or model.reference_temperature_k
+    for _ in range(40):
+        state = model.at_temperature(temperature)
+        residual = state.enthalpy_j_kg-enthalpy_j_kg
+        if abs(residual) < max(1.0, abs(enthalpy_j_kg))*1e-10:
+            return replace(state, pressure_pa=pressure_pa)
+        temperature = max(1.0, temperature-residual/state.specific_heat_j_kgk)
+    raise ValueError("screening coolant enthalpy inversion did not converge")
+
+
+def coolant_state_from_quality(name: object, pressure_pa: float, vapor_quality_mass_fraction: float,
+                               *, backend: str = "HEOS") -> CoolantState:
+    """Equilibrium PQ flash with mass quality, also for mixtures with glide."""
+    import CoolProp.CoolProp as CP
+    from scipy.optimize import brentq
+    model = get_coolant_model(name)
+    backend = _backend_name(backend)
+    quality = float(vapor_quality_mass_fraction)
+    if not isfinite(quality) or not 0.0 <= quality <= 1.0:
+        raise ValueError("vapor mass quality must be in [0, 1]")
+    if not isfinite(pressure_pa) or pressure_pa <= 0:
+        raise ValueError("coolant pressure must be finite and positive")
+    state = _abstract_state(model.name, saturation="quality", backend=backend)
+    state.unspecify_phase()
+    definition = _eos_definition(model.name)
+    assert definition is not None
+    molar_quality = quality
+    if definition[1] and 0.0 < quality < 1.0:
+        def residual(molar: float) -> float:
+            state.update(CP.PQ_INPUTS, pressure_pa, molar)
+            return _mass_quality(state)-quality
+        molar_quality = brentq(residual, 0.0, 1.0, xtol=1e-12)
+    state.update(CP.PQ_INPUTS, pressure_pa, molar_quality)
+    return _extract_eos_state(model.name, state, pressure_pa, backend=backend)

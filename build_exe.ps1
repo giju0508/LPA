@@ -42,6 +42,7 @@ $Preflight = @'
 import pathlib
 import struct
 import sys
+from lpa import __version__ as lpa_version
 
 assert sys.version_info[:2] == (3, 14), sys.version
 assert struct.calcsize("P") == 8, "64-bit Python is required"
@@ -50,6 +51,10 @@ import tkinter
 import matplotlib
 import numpy
 import scipy
+import CoolProp
+import ht
+import fluids
+from CoolProp.CoolProp import PropsSI
 import rocketcea
 import rocketcea.py_cea
 from rocketcea.cea_obj_w_units import CEA_Obj
@@ -63,9 +68,12 @@ assert pathlib.Path(rocketcea.py_cea.__file__).suffix.lower() == ".pyd"
 # A small call catches a mismatched Fortran extension before packaging.
 cea = CEA_Obj(oxName="LOX", fuelName="RP-1", pressure_units="bar")
 assert cea.get_Cstar(Pc=20.0, MR=2.5) > 0.0
+assert 990.0 < PropsSI("Dmass", "T", 293.15, "P", 3000000.0, "Water") < 1010.0
+print(f"LPA {lpa_version}")
 print(f"Python {sys.version.split()[0]}, Tk {tkinter.TkVersion}")
 print(f"NumPy {numpy.__version__}, SciPy {scipy.__version__}, Matplotlib {matplotlib.__version__}")
 print(f"RocketCEA {rocketcea.__version__}: {root}")
+print(f"CoolProp {CoolProp.__version__}: real-fluid EOS preflight passed")
 '@
 # Windows PowerShell can remove embedded quotes when a multiline string is
 # forwarded to a native executable.  Base64 keeps the Python source intact

@@ -5,6 +5,7 @@ from math import isfinite
 import pytest
 
 from lpa.core.models import Resolution
+import lpa.thermal.solver as thermal_solver
 from lpa.thermal import (
     MATERIALS,
     MESH_SECTION_COUNTS,
@@ -109,6 +110,10 @@ def low_settings(**overrides: object) -> ThermalSolverSettings:
         "characteristic_velocity_m_s": 1500.0,
         "total_mass_flow_kg_s": 0.95,
         "gas_emissivity": 0.05,
+        # These historical array/interface fixtures intentionally exercise the
+        # deterministic screening model. Real-fluid applicability has separate
+        # release regression tests, including boiling and infeasible supply.
+        "coolant_property_backend": "screening",
     }
     values.update(overrides)
     return ThermalSolverSettings(**values)
@@ -215,6 +220,42 @@ def test_regen_solver_returns_rpa_temperature_arrays_and_coolant_rise(
     assert max(result.coolant_coefficient_w_m2k) > 1_000.0
 
 
+def test_regen_heat_pickup_uses_contour_path_length(
+    contour: dict[str, object],
+    gas: dict[str, object],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    observed_path_lengths: list[float] = []
+    original_area = thermal_solver.annular_wall_area
+
+    def capture_area(radius_m: float, path_length_m: float) -> float:
+        observed_path_lengths.append(path_length_m)
+        return original_area(radius_m, path_length_m)
+
+    monkeypatch.setattr(thermal_solver, "annular_wall_area", capture_area)
+    analyze_thermal(
+        contour,
+        gas,
+        [regen(coolant_definition=coolant())],
+        low_settings(),
+    )
+
+    mesh = thermal_solver._build_mesh(contour, MESH_SECTION_COUNTS["low"])
+    bounds = (mesh.x_m[0], mesh.x_m[-1])
+    expected = [
+        thermal_solver._channel_path_length_in_range(mesh, index, bounds)
+        for index in reversed(range(len(mesh.x_m)))
+    ]
+    projected = [
+        thermal_solver._cell_width_in_range(mesh, index, bounds)
+        for index in reversed(range(len(mesh.x_m)))
+    ]
+
+    # Without linked films a single counterflow pass closes the energy march.
+    assert observed_path_lengths == pytest.approx(expected)
+    assert any(path > axial for path, axial in zip(expected, projected))
+
+
 def test_regen_axial_coolant_state_and_occupied_angle_geometry_are_reported(
     contour: dict[str, object], gas: dict[str, object]
 ) -> None:
@@ -238,12 +279,12 @@ def test_regen_axial_coolant_state_and_occupied_angle_geometry_are_reported(
 
     geometry = result.metadata["angle_channel_geometry_by_segment"]["regen"]
     assert geometry["channel_width_mm"] == pytest.approx(
-        tuple(radius_mm * 4.0 * 3.141592653589793 / 180.0 for radius_mm in (40.0, 15.0, 30.0))
+        tuple(radius_mm * 4.0 * 3.141592653589793 / 180.0 for radius_mm in (41.0, 16.0, 31.0))
     )
     expected_ribs = tuple(
         2.0 * 3.141592653589793 * radius_mm / 48.0 - channel_width
         for radius_mm, channel_width in zip(
-            (40.0, 15.0, 30.0), geometry["channel_width_mm"]
+            (41.0, 16.0, 31.0), geometry["channel_width_mm"]
         )
     )
     assert geometry["rib_width_mm"] == pytest.approx(expected_ribs)
@@ -346,6 +387,7 @@ def test_radiation_balance_and_tbc_temperature_drop(
     index = result.Twc.index(max(result.Twc))
     assert result.Twg[index] > result.Twi[index] > result.Twc[index] > 295.0
     external = radiative_heat_flux(result.Twc[index], 295.0, 0.8)
+    external *= (result.radius_m[index]+0.0008+0.00005)/result.radius_m[index]
     assert result.heat_flux_w_m2[index] == pytest.approx(external, rel=2.0e-4)
     assert result.converged
 

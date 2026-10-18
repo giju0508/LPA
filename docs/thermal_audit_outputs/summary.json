@@ -1,0 +1,46 @@
+{
+  "case": {
+    "chamber_pressure_bar": 10.0,
+    "mixture_ratio": 2.6,
+    "throat_diameter_mm": 31.79,
+    "contraction_area_ratio": 4.0,
+    "expansion_area_ratio": 4.0,
+    "characteristic_length_mm": 1000.0,
+    "reaction_efficiency_percent": 98.0,
+    "throat_curvature_ratio": 0.382,
+    "wall_thickness_mm": 1.0,
+    "water_inlet_temperature_k": 293.15,
+    "water_inlet_pressure_bar": 25.0,
+    "water_flow_percent": 100.0,
+    "gas_emissivity": 0.08
+  },
+  "rocketcea_performance": {
+    "source": "rocketcea",
+    "hot_gas_mass_flow_kg_s": 0.4300616250378622,
+    "delivered_cstar_m_s": 1845.6113213822605,
+    "combustion_temperature_k": 3123.0793588470015,
+    "gamma_from_exit": 1.1982972139809978,
+    "molecular_weight_kg_kmol_from_exit": 19.209105852264535
+  },
+  "station_count": 700,
+  "maximum_independent_vs_production_bartz_relative_error": 1.4331136497836507e-06,
+  "maximum_hot_wall_temperature_k": 648.5002587119201,
+  "maximum_coolant_wall_temperature_k": 633.5371244621705,
+  "maximum_bulk_coolant_temperature_k": 488.93474592878977,
+  "coolant_outlet_temperature_k": 489.0569517161267,
+  "coolant_outlet_pressure_bar": 23.926981760215465,
+  "minimum_local_coolant_pressure_bar": 23.927099261504413,
+  "water_saturation_temperature_at_inlet_pressure_k": 495.8469935154014,
+  "water_saturation_temperature_at_minimum_pressure_k": 493.24546486593283,
+  "model_capability": {
+    "axial_convergence_counts": [
+      350,
+      700,
+      1400
+    ],
+    "radial_mesh": false,
+    "time_integration": false,
+    "coolant_phase_change": false,
+    "axial_solid_conduction": false
+  }
+}

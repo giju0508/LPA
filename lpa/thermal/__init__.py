@@ -14,7 +14,12 @@ from .correlations import (
     gnielinski_nusselt,
     internal_flow_heat_transfer,
     radiative_heat_flux,
+    cylindrical_conduction_resistance,
+    rectangular_fin_area_ratio,
 )
+from .coolants import (CoolantState, CoolantPhaseState, CoolantPropertyLimits,
+    CoolantPropertyModel, coolant_state, coolant_state_from_enthalpy,
+    coolant_state_from_quality, coolant_property_limits, coolant_saturation_pressure, get_coolant_model)
 from .materials import (
     MATERIALS,
     MaterialReference,
@@ -41,12 +46,19 @@ from .models import (
     ValidationIssue,
     mesh_section_count,
 )
-from .solver import ThermalSolverSettings, analyze_thermal
+from .solver import ThermalSolverSettings, analyze_thermal, thermal_radiation_sensitivity
 from .validation import resolve_segment_range, validate_segments
 
 __all__ = [
     "ChannelTriplet",
     "CoolantDefinition",
+    "CoolantState",
+    "CoolantPhaseState",
+    "CoolantPropertyLimits",
+    "coolant_state_from_quality",
+    "coolant_property_limits",
+    "coolant_saturation_pressure",
+    "CoolantPropertyModel",
     "FilmSegment",
     "MATERIALS",
     "MESH_COUNTS",
@@ -68,6 +80,7 @@ __all__ = [
     "ValidationIssue",
     "adiabatic_wall_temperature",
     "analyze_thermal",
+    "thermal_radiation_sensitivity",
     "bartz_correction_factor",
     "bartz_heat_flux",
     "bartz_heat_transfer_coefficient",
@@ -81,6 +94,11 @@ __all__ = [
     "material_reference_metadata",
     "mesh_section_count",
     "radiative_heat_flux",
+    "cylindrical_conduction_resistance",
+    "rectangular_fin_area_ratio",
+    "coolant_state",
+    "coolant_state_from_enthalpy",
+    "get_coolant_model",
     "resolve_segment_range",
     "thermal_conductivity",
     "validate_segments",

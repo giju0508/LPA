@@ -8,7 +8,7 @@ Dittus-Boelter and the wider-range Gnielinski correlations.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import exp, isfinite, log10, pi, sqrt
+from math import exp, isfinite, log, log10, pi, sqrt, tanh
 
 
 STEFAN_BOLTZMANN_W_M2K4 = 5.670374419e-8
@@ -84,8 +84,8 @@ def bartz_heat_transfer_coefficient(
 ) -> float:
     """Return gas-side ``h`` in W/(m2 K) using the Bartz correlation.
 
-    ``area_ratio`` is local A/At.  The curvature term uses the nozzle throat
-    radius of curvature, matching the user input Rn/Rt.
+    ``area_ratio`` is local A/At. The curvature is the actual upstream
+    converging contour radius at the throat (R1), not downstream nozzle Rn.
     """
 
     chamber_pressure_pa = _positive(chamber_pressure_pa, "chamber pressure")
@@ -206,6 +206,7 @@ class InternalFlowHeatTransfer:
     velocity_m_s: float
     flow_area_m2: float
     friction_factor: float
+    warnings: tuple[str, ...] = ()
 
 
 def internal_flow_heat_transfer(
@@ -219,6 +220,8 @@ def internal_flow_heat_transfer(
     specific_heat_j_kgk: float,
     relative_roughness: float = 0.0,
     correlation: str = "gnielinski",
+    channel_aspect_ratio: float | None = None,
+    heated_length_m: float | None = None,
 ) -> InternalFlowHeatTransfer:
     """Evaluate coolant-side convection for the sum of all parallel channels."""
 
@@ -233,6 +236,7 @@ def internal_flow_heat_transfer(
     reynolds = density_kg_m3 * velocity * hydraulic_diameter_m / viscosity_pa_s
     prandtl = specific_heat_j_kgk * viscosity_pa_s / conductivity_w_mk
     name = str(correlation).strip().casefold().replace("-", "_")
+    warnings: list[str] = []
     if name in {"dittus", "dittus_boelter", "db"}:
         if reynolds < 2300.0:
             nusselt = 3.66
@@ -247,8 +251,47 @@ def internal_flow_heat_transfer(
         )
     else:
         raise ValueError("correlation must be 'gnielinski' or 'dittus_boelter'")
-    coefficient = nusselt * conductivity_w_mk / hydraulic_diameter_m
     friction = darcy_friction_factor(reynolds, relative_roughness)
+    if reynolds < 3000.0 and channel_aspect_ratio is not None:
+        aspect = _positive(channel_aspect_ratio, "channel aspect ratio")
+        aspect = min(aspect, 1.0 / aspect)
+        # Shah & London fully developed rectangular-duct results: Darcy
+        # Poiseuille number and uniform heat flux on all four walls. The
+        # conjugate rocket-channel boundary condition is separately flagged.
+        laminar_friction = 96.0 / reynolds * (
+            1 - 1.3553*aspect + 1.9467*aspect**2 - 1.7012*aspect**3
+            + 0.9564*aspect**4 - 0.2537*aspect**5
+        )
+        laminar_nusselt = 8.235 * (
+            1 - 2.0421*aspect + 3.0853*aspect**2 - 2.4765*aspect**3
+            + 1.0578*aspect**4 - 0.1861*aspect**5
+        )
+        if reynolds < 2300.0:
+            friction, nusselt = laminar_friction, laminar_nusselt
+            warnings.append("laminar rectangular Nu uses uniform all-wall heat flux; conjugate boundary requires validation")
+        else:
+            blend=(reynolds-2300.0)/700.0
+            turbulent_nusselt=(dittus_boelter_nusselt(3000.,prandtl)
+                if name in {"dittus","dittus_boelter","db"}
+                else gnielinski_nusselt(3000.,prandtl,relative_roughness=relative_roughness))
+            nusselt=laminar_nusselt+blend*(turbulent_nusselt-laminar_nusselt)
+            friction=laminar_friction+blend*(darcy_friction_factor(3000.,relative_roughness)-laminar_friction)
+    if 2300.0 <= reynolds < 3000.0:
+        warnings.append("transition heat-transfer blend is not experimentally validated")
+    if name in {"gnielinski", "gn"} and reynolds >= 3000 and (
+        reynolds > 5e6 or not 0.5 <= prandtl <= 2000
+    ):
+        warnings.append("Gnielinski Reynolds/Prandtl applicability range exceeded")
+    if name in {"dittus", "dittus_boelter", "db"} and (
+        reynolds < 10000 or not 0.7 <= prandtl <= 160
+    ):
+        warnings.append("Dittus-Boelter Reynolds/Prandtl applicability range exceeded")
+    if heated_length_m is not None and heated_length_m > 0:
+        if reynolds < 2300 and heated_length_m < 0.05 * reynolds * prandtl * hydraulic_diameter_m:
+            warnings.append("thermal entrance region: fully developed laminar correlation not applicable")
+        elif reynolds >= 2300 and heated_length_m < 10 * hydraulic_diameter_m:
+            warnings.append("short heated entrance region: fully developed turbulent correlation unverified")
+    coefficient = nusselt * conductivity_w_mk / hydraulic_diameter_m
     return InternalFlowHeatTransfer(
         coefficient_w_m2k=coefficient,
         nusselt=nusselt,
@@ -258,7 +301,42 @@ def internal_flow_heat_transfer(
         velocity_m_s=velocity,
         flow_area_m2=total_flow_area_m2,
         friction_factor=friction,
+        warnings=tuple(warnings),
     )
+
+
+def rectangular_fin_area_ratio(
+    *, channel_width_m: float, channel_height_m: float, pitch_m: float,
+    coolant_coefficient_w_m2k: float, wall_conductivity_w_mk: float,
+) -> tuple[float, float]:
+    """Effective wetted width/pitch with straight adiabatic-tip rib fins.
+
+    The closeout is adiabatic. The result includes the channel floor and
+    both sidewalls, with fin efficiency rather than a unity area assumption.
+    """
+    width = _positive(channel_width_m, "channel width")
+    height = _positive(channel_height_m, "channel height")
+    pitch = _positive(pitch_m, "channel pitch")
+    rib = pitch - width
+    if rib <= 0:
+        raise ValueError("channel pitch must exceed channel width")
+    h = _positive(coolant_coefficient_w_m2k, "coolant coefficient")
+    k = _positive(wall_conductivity_w_mk, "wall conductivity")
+    mh = sqrt(2.0 * h / (k * rib)) * height
+    efficiency = tanh(mh) / mh if mh > 1e-12 else 1.0
+    return (width + 2.0 * height * efficiency) / pitch, efficiency
+
+
+def cylindrical_conduction_resistance(
+    inner_radius_m: float, thickness_m: float, conductivity_w_mk: float,
+    *, reference_radius_m: float | None = None,
+) -> float:
+    """Radial resistance in m2 K/W referred to the chosen surface area."""
+    radius = _positive(inner_radius_m, "inner radius")
+    thickness = _positive(thickness_m, "wall thickness", allow_zero=True)
+    conductivity = _positive(conductivity_w_mk, "conductivity")
+    reference = radius if reference_radius_m is None else _positive(reference_radius_m, "reference radius")
+    return reference * log(1.0 + thickness / radius) / conductivity
 
 
 def rectangular_channel_geometry(

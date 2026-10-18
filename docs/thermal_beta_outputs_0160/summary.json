@@ -1,0 +1,1980 @@
+{
+  "version": "0.16.0b1",
+  "timestamp_kst": "2026-10-19T02:09:33.095332+09:00",
+  "dependencies": {
+    "CoolProp": "8.0.0",
+    "rocketcea": "1.2.3",
+    "ht": "1.2.0",
+    "fluids": "1.3.1"
+  },
+  "property_roundtrips": [
+    {
+      "coolant": "LNG",
+      "inlet_T_K": 150.0,
+      "inlet_p_bar": 20.0,
+      "phase": "liquid",
+      "density_kg_m3": 383.3945860545256,
+      "Cp_J_kgK": 3678.2022705950753,
+      "outlet_phase": "liquid",
+      "outlet_T_K": 150.67864550962574,
+      "enthalpy_rise_J_kg": 2499.999999999869,
+      "source": "CoolProp HEOS: Methane&Ethane&Propane&n-Butane&Nitrogen",
+      "issues": [
+        "viscosity unavailable in EOS; screening transport/property used",
+        "mixture EOS/transport require composition-specific validation",
+        "mixture bubble-temperature diagnostic uses pressure rounded down by at most 0.1 bar"
+      ],
+      "limits": {
+        "name": "LNG",
+        "backend": "HEOS",
+        "minimum_temperature_k": 90.64319300000001,
+        "maximum_temperature_k": 575.0,
+        "maximum_pressure_pa": 12000000.0,
+        "thermodynamic_source": "CoolProp HEOS: Methane&Ethane&Propane&n-Butane&Nitrogen",
+        "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+        "references": [
+          "https://coolprop.org/fluid_properties/Mixtures.html",
+          "https://coolprop.org/coolprop/REFPROP.html",
+          "https://www.nist.gov/publications/eos-lng-fundamental-equation-state-calculation-thermodynamic-properties-liquefied"
+        ],
+        "notes": [
+          "EOS limits do not imply validation of viscosity or thermal conductivity.",
+          "Mixture limits also depend on composition and phase-envelope convergence.",
+          "Upper bounds conservatively include every constituent EOS limit; mixture freezing is not modelled."
+        ],
+        "transport_limits": [
+          {
+            "property_name": "conductivity_w_mk",
+            "minimum_temperature_k": null,
+            "maximum_temperature_k": null,
+            "maximum_pressure_pa": null,
+            "references": [
+              "https://coolprop.org/fluid_properties/Mixtures.html",
+              "https://coolprop.org/coolprop/REFPROP.html",
+              "https://www.nist.gov/publications/eos-lng-fundamental-equation-state-calculation-thermodynamic-properties-liquefied"
+            ],
+            "notes": [
+              "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "minimum_temperature_k": null,
+            "maximum_temperature_k": null,
+            "maximum_pressure_pa": null,
+            "references": [
+              "https://coolprop.org/fluid_properties/Mixtures.html",
+              "https://coolprop.org/coolprop/REFPROP.html",
+              "https://www.nist.gov/publications/eos-lng-fundamental-equation-state-calculation-thermodynamic-properties-liquefied"
+            ],
+            "notes": [
+              "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "coolant": "LNG",
+      "inlet_T_K": 150.0,
+      "inlet_p_bar": 25.0,
+      "phase": "liquid",
+      "density_kg_m3": 384.3687745559994,
+      "Cp_J_kgK": 3657.6021062565383,
+      "outlet_phase": "liquid",
+      "outlet_T_K": 150.68253485469745,
+      "enthalpy_rise_J_kg": 2499.9999999999272,
+      "source": "CoolProp HEOS: Methane&Ethane&Propane&n-Butane&Nitrogen",
+      "issues": [
+        "viscosity unavailable in EOS; screening transport/property used",
+        "mixture EOS/transport require composition-specific validation",
+        "mixture bubble-temperature diagnostic uses pressure rounded down by at most 0.1 bar"
+      ],
+      "limits": {
+        "name": "LNG",
+        "backend": "HEOS",
+        "minimum_temperature_k": 90.64319300000001,
+        "maximum_temperature_k": 575.0,
+        "maximum_pressure_pa": 12000000.0,
+        "thermodynamic_source": "CoolProp HEOS: Methane&Ethane&Propane&n-Butane&Nitrogen",
+        "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+        "references": [
+          "https://coolprop.org/fluid_properties/Mixtures.html",
+          "https://coolprop.org/coolprop/REFPROP.html",
+          "https://www.nist.gov/publications/eos-lng-fundamental-equation-state-calculation-thermodynamic-properties-liquefied"
+        ],
+        "notes": [
+          "EOS limits do not imply validation of viscosity or thermal conductivity.",
+          "Mixture limits also depend on composition and phase-envelope convergence.",
+          "Upper bounds conservatively include every constituent EOS limit; mixture freezing is not modelled."
+        ],
+        "transport_limits": [
+          {
+            "property_name": "conductivity_w_mk",
+            "minimum_temperature_k": null,
+            "maximum_temperature_k": null,
+            "maximum_pressure_pa": null,
+            "references": [
+              "https://coolprop.org/fluid_properties/Mixtures.html",
+              "https://coolprop.org/coolprop/REFPROP.html",
+              "https://www.nist.gov/publications/eos-lng-fundamental-equation-state-calculation-thermodynamic-properties-liquefied"
+            ],
+            "notes": [
+              "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "minimum_temperature_k": null,
+            "maximum_temperature_k": null,
+            "maximum_pressure_pa": null,
+            "references": [
+              "https://coolprop.org/fluid_properties/Mixtures.html",
+              "https://coolprop.org/coolprop/REFPROP.html",
+              "https://www.nist.gov/publications/eos-lng-fundamental-equation-state-calculation-thermodynamic-properties-liquefied"
+            ],
+            "notes": [
+              "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "coolant": "LNG",
+      "inlet_T_K": 150.0,
+      "inlet_p_bar": 30.0,
+      "phase": "liquid",
+      "density_kg_m3": 385.3206723312055,
+      "Cp_J_kgK": 3638.0771554109256,
+      "outlet_phase": "liquid",
+      "outlet_T_K": 150.68626071891967,
+      "enthalpy_rise_J_kg": 2500.000000000233,
+      "source": "CoolProp HEOS: Methane&Ethane&Propane&n-Butane&Nitrogen",
+      "issues": [
+        "viscosity unavailable in EOS; screening transport/property used",
+        "mixture EOS/transport require composition-specific validation",
+        "mixture bubble-temperature diagnostic uses pressure rounded down by at most 0.1 bar"
+      ],
+      "limits": {
+        "name": "LNG",
+        "backend": "HEOS",
+        "minimum_temperature_k": 90.64319300000001,
+        "maximum_temperature_k": 575.0,
+        "maximum_pressure_pa": 12000000.0,
+        "thermodynamic_source": "CoolProp HEOS: Methane&Ethane&Propane&n-Butane&Nitrogen",
+        "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+        "references": [
+          "https://coolprop.org/fluid_properties/Mixtures.html",
+          "https://coolprop.org/coolprop/REFPROP.html",
+          "https://www.nist.gov/publications/eos-lng-fundamental-equation-state-calculation-thermodynamic-properties-liquefied"
+        ],
+        "notes": [
+          "EOS limits do not imply validation of viscosity or thermal conductivity.",
+          "Mixture limits also depend on composition and phase-envelope convergence.",
+          "Upper bounds conservatively include every constituent EOS limit; mixture freezing is not modelled."
+        ],
+        "transport_limits": [
+          {
+            "property_name": "conductivity_w_mk",
+            "minimum_temperature_k": null,
+            "maximum_temperature_k": null,
+            "maximum_pressure_pa": null,
+            "references": [
+              "https://coolprop.org/fluid_properties/Mixtures.html",
+              "https://coolprop.org/coolprop/REFPROP.html",
+              "https://www.nist.gov/publications/eos-lng-fundamental-equation-state-calculation-thermodynamic-properties-liquefied"
+            ],
+            "notes": [
+              "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "minimum_temperature_k": null,
+            "maximum_temperature_k": null,
+            "maximum_pressure_pa": null,
+            "references": [
+              "https://coolprop.org/fluid_properties/Mixtures.html",
+              "https://coolprop.org/coolprop/REFPROP.html",
+              "https://www.nist.gov/publications/eos-lng-fundamental-equation-state-calculation-thermodynamic-properties-liquefied"
+            ],
+            "notes": [
+              "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "coolant": "H2O",
+      "inlet_T_K": 500.0,
+      "inlet_p_bar": 40.0,
+      "phase": "liquid",
+      "density_kg_m3": 832.5862469314974,
+      "Cp_J_kgK": 4651.487645588098,
+      "outlet_phase": "liquid",
+      "outlet_T_K": 500.53726967287423,
+      "enthalpy_rise_J_kg": 2500.000000003958,
+      "source": "CoolProp HEOS: Water",
+      "issues": [],
+      "limits": {
+        "name": "H2O",
+        "backend": "HEOS",
+        "minimum_temperature_k": 273.16,
+        "maximum_temperature_k": 1273.0,
+        "maximum_pressure_pa": 1000000000.0,
+        "thermodynamic_source": "CoolProp HEOS: Water",
+        "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+        "references": [
+          "https://coolprop.org/fluid_properties/fluids/Water.html",
+          "https://iapws.org/technical-guidance/release/IAPWS-95"
+        ],
+        "notes": [
+          "EOS limits do not imply validation of viscosity or thermal conductivity.",
+          "IAPWS-95 stable-fluid validity cap: 1273 K; melting boundary still applies."
+        ],
+        "transport_limits": [
+          {
+            "property_name": "conductivity_w_mk",
+            "minimum_temperature_k": null,
+            "maximum_temperature_k": null,
+            "maximum_pressure_pa": null,
+            "references": [
+              "https://coolprop.org/fluid_properties/fluids/Water.html",
+              "https://iapws.org/technical-guidance/release/IAPWS-95"
+            ],
+            "notes": [
+              "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "minimum_temperature_k": null,
+            "maximum_temperature_k": null,
+            "maximum_pressure_pa": null,
+            "references": [
+              "https://coolprop.org/fluid_properties/fluids/Water.html",
+              "https://iapws.org/technical-guidance/release/IAPWS-95"
+            ],
+            "notes": [
+              "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "coolant": "LCH4",
+      "inlet_T_K": 111.0,
+      "inlet_p_bar": 60.0,
+      "phase": "supercritical_liquid",
+      "density_kg_m3": 428.55742746233904,
+      "Cp_J_kgK": 3416.5064190456787,
+      "outlet_phase": "supercritical_liquid",
+      "outlet_T_K": 111.73177728456079,
+      "enthalpy_rise_J_kg": 2499.999999999648,
+      "source": "CoolProp HEOS: Methane",
+      "issues": [],
+      "limits": {
+        "name": "LCH4",
+        "backend": "HEOS",
+        "minimum_temperature_k": 90.6941,
+        "maximum_temperature_k": 625.0,
+        "maximum_pressure_pa": 1000000000.0,
+        "thermodynamic_source": "CoolProp HEOS: Methane",
+        "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+        "references": [
+          "https://coolprop.org/fluid_properties/fluids/Methane.html"
+        ],
+        "notes": [
+          "EOS limits do not imply validation of viscosity or thermal conductivity."
+        ],
+        "transport_limits": [
+          {
+            "property_name": "conductivity_w_mk",
+            "minimum_temperature_k": null,
+            "maximum_temperature_k": null,
+            "maximum_pressure_pa": null,
+            "references": [
+              "https://coolprop.org/fluid_properties/fluids/Methane.html"
+            ],
+            "notes": [
+              "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "minimum_temperature_k": null,
+            "maximum_temperature_k": null,
+            "maximum_pressure_pa": null,
+            "references": [
+              "https://coolprop.org/fluid_properties/fluids/Methane.html"
+            ],
+            "notes": [
+              "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "coolant": "LH2",
+      "inlet_T_K": 21.0,
+      "inlet_p_bar": 20.0,
+      "phase": "supercritical_liquid",
+      "density_kg_m3": 72.53556678311436,
+      "Cp_J_kgK": 9324.750954733521,
+      "outlet_phase": "supercritical_liquid",
+      "outlet_T_K": 21.267405582654526,
+      "enthalpy_rise_J_kg": 2500.0000000005857,
+      "source": "CoolProp HEOS: Hydrogen",
+      "issues": [
+        "normal-hydrogen EOS assumed; ortho/para composition and conversion heat not modelled"
+      ],
+      "limits": {
+        "name": "LH2",
+        "backend": "HEOS",
+        "minimum_temperature_k": 13.957,
+        "maximum_temperature_k": 1000.0,
+        "maximum_pressure_pa": 2000000000.0,
+        "thermodynamic_source": "CoolProp HEOS: Hydrogen",
+        "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+        "references": [
+          "https://coolprop.org/fluid_properties/fluids/Hydrogen.html"
+        ],
+        "notes": [
+          "EOS limits do not imply validation of viscosity or thermal conductivity."
+        ],
+        "transport_limits": [
+          {
+            "property_name": "conductivity_w_mk",
+            "minimum_temperature_k": null,
+            "maximum_temperature_k": null,
+            "maximum_pressure_pa": null,
+            "references": [
+              "https://coolprop.org/fluid_properties/fluids/Hydrogen.html"
+            ],
+            "notes": [
+              "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "minimum_temperature_k": null,
+            "maximum_temperature_k": null,
+            "maximum_pressure_pa": null,
+            "references": [
+              "https://coolprop.org/fluid_properties/fluids/Hydrogen.html"
+            ],
+            "notes": [
+              "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "coolant": "LOX",
+      "inlet_T_K": 90.0,
+      "inlet_p_bar": 40.0,
+      "phase": "liquid",
+      "density_kg_m3": 1150.534170549093,
+      "Cp_J_kgK": 1680.313006469434,
+      "outlet_phase": "liquid",
+      "outlet_T_K": 91.48685048725653,
+      "enthalpy_rise_J_kg": 2499.999998300482,
+      "source": "CoolProp HEOS: Oxygen",
+      "issues": [],
+      "limits": {
+        "name": "LOX",
+        "backend": "HEOS",
+        "minimum_temperature_k": 54.361000000000004,
+        "maximum_temperature_k": 2000.0,
+        "maximum_pressure_pa": 80000000.0,
+        "thermodynamic_source": "CoolProp HEOS: Oxygen",
+        "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+        "references": [
+          "https://coolprop.org/fluid_properties/fluids/Oxygen.html"
+        ],
+        "notes": [
+          "EOS limits do not imply validation of viscosity or thermal conductivity."
+        ],
+        "transport_limits": [
+          {
+            "property_name": "conductivity_w_mk",
+            "minimum_temperature_k": null,
+            "maximum_temperature_k": null,
+            "maximum_pressure_pa": null,
+            "references": [
+              "https://coolprop.org/fluid_properties/fluids/Oxygen.html"
+            ],
+            "notes": [
+              "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "minimum_temperature_k": null,
+            "maximum_temperature_k": null,
+            "maximum_pressure_pa": null,
+            "references": [
+              "https://coolprop.org/fluid_properties/fluids/Oxygen.html"
+            ],
+            "notes": [
+              "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "coolant": "Ethanol (100%)",
+      "inlet_T_K": 600.0,
+      "inlet_p_bar": 100.0,
+      "phase": "supercritical",
+      "density_kg_m3": 129.7390560158953,
+      "Cp_J_kgK": 3978.6369592132214,
+      "outlet_phase": "supercritical",
+      "outlet_T_K": 600.6243840136907,
+      "enthalpy_rise_J_kg": 2500.0,
+      "source": "CoolProp HEOS: Ethanol",
+      "issues": [],
+      "limits": {
+        "name": "Ethanol (100%)",
+        "backend": "HEOS",
+        "minimum_temperature_k": 159.10000000000002,
+        "maximum_temperature_k": 650.0,
+        "maximum_pressure_pa": 280000000.0,
+        "thermodynamic_source": "CoolProp HEOS: Ethanol",
+        "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+        "references": [
+          "https://coolprop.org/fluid_properties/fluids/Ethanol.html"
+        ],
+        "notes": [
+          "EOS limits do not imply validation of viscosity or thermal conductivity.",
+          "Ethanol conductivity correlation: triple point to 600 K, up to 245 MPa."
+        ],
+        "transport_limits": [
+          {
+            "property_name": "conductivity_w_mk",
+            "minimum_temperature_k": 159.1,
+            "maximum_temperature_k": 600.0,
+            "maximum_pressure_pa": 245000000.0,
+            "references": [
+              "https://doi.org/10.1063/1.4797368"
+            ],
+            "notes": [
+              "Reference conductivity correlation; excludes unvalidated extrapolation."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "minimum_temperature_k": null,
+            "maximum_temperature_k": null,
+            "maximum_pressure_pa": null,
+            "references": [
+              "https://coolprop.org/fluid_properties/fluids/Ethanol.html"
+            ],
+            "notes": [
+              "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "rpa_fixed_wall_comparison": [
+    {
+      "station": {
+        "name": "chamber",
+        "x_m": 0.0,
+        "area_ratio": 4.0,
+        "mach": 0.1509388438926254,
+        "heat_transfer_coefficient_w_m2k": 1664.0369331610734,
+        "convective_heat_flux_w_m2": 3647414.418762775
+      },
+      "computed_h_W_m2K": 1637.5020940865527,
+      "computed_q_W_m2": 3589140.511886514,
+      "relative_h_error": -0.01594606378364094,
+      "relative_q_error": -0.015976771538899648
+    },
+    {
+      "station": {
+        "name": "throat",
+        "x_m": 0.2669826007325168,
+        "area_ratio": 1.0,
+        "mach": 1.0000003840651346,
+        "heat_transfer_coefficient_w_m2k": 5637.8246073570235,
+        "convective_heat_flux_w_m2": 12118422.737012237
+      },
+      "computed_h_W_m2K": 5538.274217338882,
+      "computed_q_W_m2": 11890975.70001325,
+      "relative_h_error": -0.017657589043872268,
+      "relative_q_error": -0.018768699684350465
+    },
+    {
+      "station": {
+        "name": "exit",
+        "x_m": 0.3271029278024,
+        "area_ratio": 4.0,
+        "mach": 2.5432745536638857,
+        "heat_transfer_coefficient_w_m2k": 1418.2731995882505,
+        "convective_heat_flux_w_m2": 2844866.864808981
+      },
+      "computed_h_W_m2K": 1382.9513314993787,
+      "computed_q_W_m2": 2765469.3109301184,
+      "relative_h_error": -0.024904840688751873,
+      "relative_q_error": -0.02790905784063591
+    }
+  ],
+  "boiling_benchmark_definition": {
+    "contour": {
+      "x_m": [
+        0.0,
+        0.025,
+        0.05
+      ],
+      "radius_m": [
+        0.02,
+        0.02,
+        0.02
+      ],
+      "throat_index": 1,
+      "throat_x_m": 0.025,
+      "chamber_end_index": 0
+    },
+    "gas": {
+      "combustion_temperature_k": 3400.0,
+      "chamber_pressure_pa": 2000000.0,
+      "characteristic_velocity_m_s": 1500.0,
+      "total_mass_flow_kg_s": 1.0,
+      "gamma": 1.22,
+      "gas_constant_j_kgk": 355.0
+    },
+    "segment": {
+      "type": "regen",
+      "segment_id": "water",
+      "x_start_m": 0.0,
+      "x_end_m": 0.05,
+      "wall_thickness_mm": 1.0,
+      "wall_conductivity_w_mk": 300.0,
+      "channel_height_mm": 2.0,
+      "channel_count": 20,
+      "width_mode": "channel_width",
+      "widths_mm": 2.0,
+      "coflow": true,
+      "coolant": {
+        "coolant": "H2O",
+        "inlet_temperature_k": 290.0,
+        "inlet_pressure_bar": 40.0,
+        "mass_flow_kg_s": 0.025
+      }
+    },
+    "limitation": "Specified constant-gamma gas screening benchmark, not hot-fire or CEA validation"
+  },
+  "boiling_result": {
+    "physical_validity": "unsupported",
+    "issues": [
+      "water: laminar rectangular Nu uses uniform all-wall heat flux; conjugate boundary requires validation",
+      "water: thermal entrance region: fully developed laminar correlation not applicable",
+      "water: coolant-side wall exceeds saturation/bubble temperature; subcooled boiling/CHF/dryout unsupported",
+      "water: transition heat-transfer blend is not experimentally validated",
+      "water: Beta pre-dryout boiling correlation; CHF/dryout not predicted",
+      "water: rectangular-channel hydraulic-diameter adaptation and slip/flow pattern require experimental validation",
+      "water: Lockhart-Martinelli friction assumes smooth channels; gravity/local losses not included",
+      "water: cryogenic-fluid applicability requires fluid-specific validation",
+      "water: speed_sound unavailable in EOS; screening transport/property used",
+      "water: two-phase bulk cp/transport are phase-weighted diagnostics; use saturated phase properties",
+      "water: cpmass unavailable in EOS; screening transport/property used",
+      "water: cvmass unavailable in EOS; screening transport/property used",
+      "water: outlet coolant is bulk two-phase; Beta pre-dryout assumption, CHF/dryout not predicted",
+      "water outlet: cpmass unavailable in EOS; screening transport/property used",
+      "water outlet: speed_sound unavailable in EOS; screening transport/property used",
+      "water outlet: two-phase bulk cp/transport are phase-weighted diagnostics; use saturated phase properties",
+      "gas cp derived from constant gamma/R; combustion-product cp not supplied",
+      "gas viscosity uses air Sutherland fallback; combustion-product transport not supplied",
+      "gas Prandtl uses constant 0.70 fallback; combustion-product transport not supplied",
+      "Bartz frozen chamber reference unavailable; first-station gas properties used for screening"
+    ],
+    "converged": true,
+    "solved": 120,
+    "two_phase_stations": 16,
+    "outlet_T_K": {
+      "water": 523.4732151668809
+    },
+    "outlet_p_bar": {
+      "water": 39.979209889991836
+    },
+    "energy_balance": {
+      "water": {
+        "heat_pickup_w": 42535.879782181655,
+        "coolant_enthalpy_rise_w": 42535.35650747426,
+        "two_phase_kinetic_energy_change_w": 0.5232747073750943,
+        "residual_w": 2.1827872842550278e-11
+      }
+    },
+    "metadata": {
+      "enabled": true,
+      "mesh_level": "low",
+      "mesh_section_count": 120,
+      "mesh_section_counts": {
+        "low": 120,
+        "medium": 300,
+        "high": 700
+      },
+      "gas_state_source": "provided",
+      "gas_side_model": "Bartz with frozen chamber boundary-layer transport and upstream throat curvature",
+      "bartz_reference": {
+        "source": "provided first-station transport; frozen boundary-layer reference unavailable",
+        "specific_heat_j_kgk": 1968.6363636363637,
+        "viscosity_pa_s": 7.788214835873855e-05,
+        "prandtl": 0.7,
+        "gamma": 1.22,
+        "throat_upstream_curvature_radius_m": 0.03
+      },
+      "coolant_side_model": "gnielinski with rectangular laminar correction and rib fin effective area",
+      "coolant_pressure_model": "Darcy-Weisbach single phase; Lockhart-Martinelli two-phase friction plus homogeneous variable-area acceleration",
+      "two_phase_model": "Beta pure-fluid Li-Wu/Chen-Bennett pre-dryout boiling; Lockhart-Martinelli friction; homogeneous acceleration",
+      "two_phase_model_by_segment": {
+        "water": {
+          "configured_model": "auto",
+          "max_vapor_mass_quality": 0.7,
+          "quality_limit_is_dryout_prediction": false,
+          "regimes": [
+            "Li-Wu (2010) mini-channel saturated boiling",
+            "single_phase"
+          ]
+        }
+      },
+      "angle_channel_geometry_by_segment": {},
+      "wall_model": "steady one-dimensional cylindrical wall/TBC conduction with surface area conversion",
+      "wall_thickness_convention": "radial offset; local cylindrical ring approximation on sloped contour",
+      "radiation_model": "diffuse-grey external steady-state balance",
+      "film_model": "RPA gaseous-film mixing effectiveness screening model",
+      "inactive_segment_ids": [],
+      "coolant_identity_by_segment": {
+        "water": "H2O"
+      },
+      "material_references": {
+        "CuCrZr": {
+          "title": "Effect of heat treatment on the microstructure and properties of CuCrZr prepared by laser powder bed fusion",
+          "authors_or_organization": "X. Chen et al., Materials Characterization",
+          "year": 2024,
+          "identifier": "doi:10.1016/j.matchar.2024.114103",
+          "url": "https://doi.org/10.1016/j.matchar.2024.114103",
+          "notes": "The paper reports 314.3 +/- 5.3 W/(m K) after direct aging.  The embedded elevated-temperature curve is a rounded screening curve consistent with the reported LPBF electrical/thermal trend; verify the actual build and heat lot for detailed design.",
+          "manufacturing_condition": "LPBF, direct aged at 450 C",
+          "valid_temperature_range_k": [
+            293.15,
+            973.15
+          ],
+          "curve_provenance": "engineering screening elevated-temperature curve"
+        },
+        "IN625": {
+          "title": "INCONEL alloy 625 technical bulletin, Table 3",
+          "authors_or_organization": "Special Metals Corporation",
+          "year": 2013,
+          "identifier": "SMC-063",
+          "url": "https://www.specialmetals.com/documents/technical-bulletins/inconel/inconel-alloy-625.pdf",
+          "notes": "Annealed 2100 F for one hour; measured by Battelle Memorial Institute.",
+          "manufacturing_condition": "Wrought, annealed at 1149 C for one hour",
+          "valid_temperature_range_k": [
+            255.14999999999998,
+            1255.15
+          ],
+          "curve_provenance": "published supplier/NASA tabulation"
+        },
+        "IN718": {
+          "title": "INCONEL alloy 718 technical bulletin, Table 5",
+          "authors_or_organization": "Special Metals Corporation",
+          "year": 2007,
+          "identifier": "SMC-045",
+          "url": "https://www.specialmetals.com/documents/technical-bulletins/inconel/inconel-alloy-718.pdf",
+          "notes": "Annealed and aged condition. Conductivity is calculated from the manufacturer's resistivity measurements.",
+          "manufacturing_condition": "Wrought, solution annealed and aged",
+          "valid_temperature_range_k": [
+            294.26111111111106,
+            1366.4833333333331
+          ],
+          "curve_provenance": "published supplier/NASA tabulation"
+        },
+        "AlSi10Mg": {
+          "title": "Thermophysical Properties of Laser Powder Bed Fused Ti-6Al-4V and AlSi10Mg Alloys Made with Varying Laser Parameters",
+          "authors_or_organization": "S. Akwaboa et al., Materials",
+          "year": 2023,
+          "identifier": "doi:10.3390/ma16144920",
+          "url": "https://doi.org/10.3390/ma16144920",
+          "notes": "Figure 2f reports temperature-dependent L-PBF data. LPA uses the 100 W, 0.2 m/s series; the 118.2 and 172.0 W/(m K) endpoints are reported by the authors and intermediate markers are rounded from the figure. Build parameters and porosity must be matched for design.",
+          "manufacturing_condition": "LPBF, as-built, 100 W and 0.2 m/s scan speed",
+          "valid_temperature_range_k": [
+            373.15,
+            673.15
+          ],
+          "curve_provenance": "digitized selected LPBF experimental series"
+        },
+        "C103": {
+          "title": "C-103 Niobium Alloy, Alloy Digest Cb-25",
+          "authors_or_organization": "ASM International",
+          "year": 2000,
+          "identifier": "doi:10.31399/asm.ad.cb0025",
+          "url": "https://doi.org/10.31399/asm.ad.cb0025",
+          "notes": "Rounded engineering values for Nb-10Hf-1Ti are used. Published C-103 data vary with product form and temperature history; verify the supplier heat for life or margin assessment.",
+          "manufacturing_condition": "Wrought Nb-10Hf-1Ti engineering curve",
+          "valid_temperature_range_k": [
+            293.15,
+            1873.15
+          ],
+          "curve_provenance": "engineering screening elevated-temperature curve"
+        },
+        "Ti64": {
+          "title": "Prediction of Space Shuttle TPS panel heating, Table II",
+          "authors_or_organization": "NASA",
+          "year": 1989,
+          "identifier": "NASA-TM-101660",
+          "url": "https://ntrs.nasa.gov/citations/19900002976",
+          "notes": "Table II temperature-dependent data for a Ti-6Al-4V panel.",
+          "manufacturing_condition": "Conventional Ti-6Al-4V panel",
+          "valid_temperature_range_k": [
+            300.0,
+            1100.0
+          ],
+          "curve_provenance": "published supplier/NASA tabulation"
+        }
+      },
+      "physical_validity": "unsupported",
+      "physical_issues": [
+        "water: laminar rectangular Nu uses uniform all-wall heat flux; conjugate boundary requires validation",
+        "water: thermal entrance region: fully developed laminar correlation not applicable",
+        "water: coolant-side wall exceeds saturation/bubble temperature; subcooled boiling/CHF/dryout unsupported",
+        "water: transition heat-transfer blend is not experimentally validated",
+        "water: Beta pre-dryout boiling correlation; CHF/dryout not predicted",
+        "water: rectangular-channel hydraulic-diameter adaptation and slip/flow pattern require experimental validation",
+        "water: Lockhart-Martinelli friction assumes smooth channels; gravity/local losses not included",
+        "water: cryogenic-fluid applicability requires fluid-specific validation",
+        "water: speed_sound unavailable in EOS; screening transport/property used",
+        "water: two-phase bulk cp/transport are phase-weighted diagnostics; use saturated phase properties",
+        "water: cpmass unavailable in EOS; screening transport/property used",
+        "water: cvmass unavailable in EOS; screening transport/property used",
+        "water: outlet coolant is bulk two-phase; Beta pre-dryout assumption, CHF/dryout not predicted",
+        "water outlet: cpmass unavailable in EOS; screening transport/property used",
+        "water outlet: speed_sound unavailable in EOS; screening transport/property used",
+        "water outlet: two-phase bulk cp/transport are phase-weighted diagnostics; use saturated phase properties",
+        "gas cp derived from constant gamma/R; combustion-product cp not supplied",
+        "gas viscosity uses air Sutherland fallback; combustion-product transport not supplied",
+        "gas Prandtl uses constant 0.70 fallback; combustion-product transport not supplied",
+        "Bartz frozen chamber reference unavailable; first-station gas properties used for screening"
+      ],
+      "model_limits": [
+        "steady axisymmetric wall/channel model: transient storage, ablation, axial/circumferential conduction and structural life unavailable",
+        "rib fins assume straight fins with adiabatic closeout; conjugate channel validation required",
+        "gas-side Bartz empirical correlation requires combustion/boundary-layer validation"
+      ],
+      "model_capabilities": {
+        "pressure_dependent_eos": true,
+        "bulk_enthalpy_march": true,
+        "rib_fin_effective_area": true,
+        "cylindrical_conduction": true,
+        "coupled_film_regen_iteration": true,
+        "two_phase_heat_transfer": true,
+        "critical_heat_flux": false,
+        "two_phase_mixture_heat_transfer": false,
+        "two_phase_thermodynamic_quality": true,
+        "dryout": false,
+        "supercritical_htd_validated": false,
+        "ablation": false,
+        "transient_heat_storage": false,
+        "gas_spectral_radiation": false,
+        "film_withdrawal_from_regen": false,
+        "reactive_coolant_decomposition": false,
+        "coking_deposit_lifetime": false,
+        "axial_solid_conduction": false,
+        "closeout_2d_conduction": false,
+        "local_feed_losses": false,
+        "acceleration_pressure_loss": false,
+        "two_phase_homogeneous_acceleration": true,
+        "manifold_flow_distribution": false,
+        "structural_life": false
+      },
+      "coolant_property_sources": {
+        "water": "CoolProp HEOS: Water"
+      },
+      "coolant_property_metadata": {
+        "water": {
+          "thermodynamic_source": "CoolProp HEOS: Water",
+          "transport_source": "CoolProp HEOS: Water",
+          "limits": {
+            "name": "H2O",
+            "backend": "HEOS",
+            "minimum_temperature_k": 273.16,
+            "maximum_temperature_k": 1273.0,
+            "maximum_pressure_pa": 1000000000.0,
+            "thermodynamic_source": "CoolProp HEOS: Water",
+            "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+            "references": [
+              "https://coolprop.org/fluid_properties/fluids/Water.html",
+              "https://iapws.org/technical-guidance/release/IAPWS-95"
+            ],
+            "notes": [
+              "EOS limits do not imply validation of viscosity or thermal conductivity.",
+              "IAPWS-95 stable-fluid validity cap: 1273 K; melting boundary still applies."
+            ],
+            "transport_limits": [
+              {
+                "property_name": "conductivity_w_mk",
+                "minimum_temperature_k": null,
+                "maximum_temperature_k": null,
+                "maximum_pressure_pa": null,
+                "references": [
+                  "https://coolprop.org/fluid_properties/fluids/Water.html",
+                  "https://iapws.org/technical-guidance/release/IAPWS-95"
+                ],
+                "notes": [
+                  "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+                ]
+              },
+              {
+                "property_name": "viscosity_pa_s",
+                "minimum_temperature_k": null,
+                "maximum_temperature_k": null,
+                "maximum_pressure_pa": null,
+                "references": [
+                  "https://coolprop.org/fluid_properties/fluids/Water.html",
+                  "https://iapws.org/technical-guidance/release/IAPWS-95"
+                ],
+                "notes": [
+                  "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "fin_area_by_segment": {
+        "water": [
+          0.8222472357074312,
+          0.7915829375664906
+        ]
+      },
+      "energy_balance_by_segment": {
+        "water": {
+          "heat_pickup_w": 42535.879782181655,
+          "coolant_enthalpy_rise_w": 42535.35650747426,
+          "two_phase_kinetic_energy_change_w": 0.5232747073750943,
+          "residual_w": 2.1827872842550278e-11
+        }
+      },
+      "coolant_outlet_phase": {
+        "water": "two_phase"
+      },
+      "coolant_outlet_enthalpy_j_kg": {
+        "water": 1775939.168695305
+      },
+      "coupled_iterations": 1,
+      "coupled_converged": true,
+      "effective_recovery_temperature_k": [
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635,
+        3362.2307177042635
+      ],
+      "gas_radiation_flux_bounds_w_m2": [
+        [
+          0.0,
+          912108.4656763636
+        ],
+        [
+          0.0,
+          915843.6280355917
+        ],
+        [
+          0.0,
+          923167.8402949992
+        ],
+        [
+          0.0,
+          930309.7065585362
+        ],
+        [
+          0.0,
+          937274.4424779566
+        ],
+        [
+          0.0,
+          944066.9046551968
+        ],
+        [
+          0.0,
+          950691.6157344263
+        ],
+        [
+          0.0,
+          957152.7906948116
+        ],
+        [
+          0.0,
+          963454.3585586438
+        ],
+        [
+          0.0,
+          969599.9840884571
+        ],
+        [
+          0.0,
+          975593.087660692
+        ],
+        [
+          0.0,
+          981436.8642356918
+        ],
+        [
+          0.0,
+          987134.3000753539
+        ],
+        [
+          0.0,
+          992688.1893419087
+        ],
+        [
+          0.0,
+          998101.1490798508
+        ],
+        [
+          0.0,
+          1003375.6332425202
+        ],
+        [
+          0.0,
+          1008513.945075526
+        ],
+        [
+          0.0,
+          1013518.2505255078
+        ],
+        [
+          0.0,
+          1018390.5883737338
+        ],
+        [
+          0.0,
+          1023132.880220899
+        ],
+        [
+          0.0,
+          1027746.9422342742
+        ],
+        [
+          0.0,
+          1032234.4919199869
+        ],
+        [
+          0.0,
+          1036597.1575402804
+        ],
+        [
+          0.0,
+          1040836.4855972193
+        ],
+        [
+          0.0,
+          1044953.9482029645
+        ],
+        [
+          0.0,
+          1048950.9484788566
+        ],
+        [
+          0.0,
+          1052828.8290428945
+        ],
+        [
+          0.0,
+          1056588.8754086215
+        ],
+        [
+          0.0,
+          1060232.3216979657
+        ],
+        [
+          0.0,
+          1063760.3562586333
+        ],
+        [
+          0.0,
+          1067174.1253085071
+        ],
+        [
+          0.0,
+          1070474.737304893
+        ],
+        [
+          0.0,
+          1073663.2664331426
+        ],
+        [
+          0.0,
+          1076740.7562689523
+        ],
+        [
+          0.0,
+          1079708.2227944415
+        ],
+        [
+          0.0,
+          1082566.657293408
+        ],
+        [
+          0.0,
+          1085317.0293428097
+        ],
+        [
+          0.0,
+          1087960.2877968415
+        ],
+        [
+          0.0,
+          1090497.3649866623
+        ],
+        [
+          0.0,
+          1092929.1774035809
+        ],
+        [
+          0.0,
+          1095256.6278165465
+        ],
+        [
+          0.0,
+          1097480.6068891897
+        ],
+        [
+          0.0,
+          1099601.9946440815
+        ],
+        [
+          0.0,
+          1101621.6617796777
+        ],
+        [
+          0.0,
+          1103540.4708501294
+        ],
+        [
+          0.0,
+          1105359.2773187303
+        ],
+        [
+          0.0,
+          1107078.9304982799
+        ],
+        [
+          0.0,
+          1108700.2743619925
+        ],
+        [
+          0.0,
+          1110224.1483077542
+        ],
+        [
+          0.0,
+          1111651.3877599863
+        ],
+        [
+          0.0,
+          1112982.8247405181
+        ],
+        [
+          0.0,
+          1114219.2883398312
+        ],
+        [
+          0.0,
+          1115361.6051218137
+        ],
+        [
+          0.0,
+          1116410.5994644146
+        ],
+        [
+          0.0,
+          1117367.0938318616
+        ],
+        [
+          0.0,
+          1118231.9090116927
+        ],
+        [
+          0.0,
+          1119005.864282089
+        ],
+        [
+          0.0,
+          1119689.7775515607
+        ],
+        [
+          0.0,
+          1120284.4654372972
+        ],
+        [
+          0.0,
+          1120903.5795744946
+        ],
+        [
+          0.0,
+          1121300.4926747687
+        ],
+        [
+          0.0,
+          1121541.3188714006
+        ],
+        [
+          0.0,
+          1313553.3151183384
+        ],
+        [
+          0.0,
+          1570813.2383883204
+        ],
+        [
+          0.0,
+          1821425.7234452448
+        ],
+        [
+          0.0,
+          2062735.3524222292
+        ],
+        [
+          0.0,
+          2292544.9489197787
+        ],
+        [
+          0.0,
+          2509176.0065676384
+        ],
+        [
+          0.0,
+          2711484.4959111116
+        ],
+        [
+          0.0,
+          2898837.376447948
+        ],
+        [
+          0.0,
+          3071059.100485808
+        ],
+        [
+          0.0,
+          3228359.062249456
+        ],
+        [
+          0.0,
+          3371250.573162909
+        ],
+        [
+          0.0,
+          3500470.159682307
+        ],
+        [
+          0.0,
+          3570927.890669976
+        ],
+        [
+          0.0,
+          3604240.5373764266
+        ],
+        [
+          0.0,
+          3635343.6587982657
+        ],
+        [
+          0.0,
+          3664376.836596681
+        ],
+        [
+          0.0,
+          3691472.909043072
+        ],
+        [
+          0.0,
+          3716757.987479521
+        ],
+        [
+          0.0,
+          3740351.55055604
+        ],
+        [
+          0.0,
+          3762661.2508475324
+        ],
+        [
+          0.0,
+          3783411.180579237
+        ],
+        [
+          0.0,
+          3802740.667759194
+        ],
+        [
+          0.0,
+          3820775.313518007
+        ],
+        [
+          0.0,
+          3837613.846099762
+        ],
+        [
+          0.0,
+          3853344.8549019946
+        ],
+        [
+          0.0,
+          3868050.2097710026
+        ],
+        [
+          0.0,
+          3881806.364945624
+        ],
+        [
+          0.0,
+          3894685.0768754533
+        ],
+        [
+          0.0,
+          3906753.907939746
+        ],
+        [
+          0.0,
+          3918076.6361182705
+        ],
+        [
+          0.0,
+          3928713.617046087
+        ],
+        [
+          0.0,
+          3938722.1190855363
+        ],
+        [
+          0.0,
+          3948156.641866162
+        ],
+        [
+          0.0,
+          3957069.224429452
+        ],
+        [
+          0.0,
+          3965509.7472624457
+        ],
+        [
+          0.0,
+          3973526.2317863046
+        ],
+        [
+          0.0,
+          3981165.140728603
+        ],
+        [
+          0.0,
+          3988471.6830115104
+        ],
+        [
+          0.0,
+          3995490.1272317036
+        ],
+        [
+          0.0,
+          4002264.1283143754
+        ],
+        [
+          0.0,
+          4008837.073976818
+        ],
+        [
+          0.0,
+          4015252.4548369544
+        ],
+        [
+          0.0,
+          4972807.269544252
+        ],
+        [
+          0.0,
+          4972756.170056383
+        ],
+        [
+          0.0,
+          4972703.42110166
+        ],
+        [
+          0.0,
+          4972648.922197976
+        ],
+        [
+          0.0,
+          4972592.56590133
+        ],
+        [
+          0.0,
+          4972534.231424509
+        ],
+        [
+          0.0,
+          4972473.787715254
+        ],
+        [
+          0.0,
+          4972411.090735074
+        ],
+        [
+          0.0,
+          4972345.98171352
+        ],
+        [
+          0.0,
+          4972278.285104075
+        ],
+        [
+          0.0,
+          4972207.8061779635
+        ],
+        [
+          0.0,
+          4972134.328176347
+        ],
+        [
+          0.0,
+          4972057.990759773
+        ],
+        [
+          0.0,
+          4971977.760654399
+        ],
+        [
+          0.0,
+          4971893.711670419
+        ],
+        [
+          0.0,
+          4971805.497468338
+        ]
+      ],
+      "gas_radiation_inputs": {
+        "specified_emissivity": 0.0,
+        "h2o_mole_fraction": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "co2_mole_fraction": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "pressure_pa": [
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916,
+          1121226.8182002916
+        ],
+        "mean_beam_length_m": [
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04
+        ],
+        "bounds_basis": "emissivity in [0,1], fixed calculated wall temperature; not calibrated uncertainty interval"
+      },
+      "unsolved_station_count": 0,
+      "temperature_labels": {
+        "Twg": "hot-gas-facing surface",
+        "Twi": "TBC/base-wall interface",
+        "Twc": "coolant/outer-side wall",
+        "Tc": "bulk coolant or ambient"
+      }
+    }
+  }
+}

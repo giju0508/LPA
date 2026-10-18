@@ -1,6 +1,13 @@
 """Public calculation API for LGJ Propulsion Analysis."""
 
 from .analysis import AnalysisResult, analyze_engine
+from .atmosphere import (
+    MAX_GEOMETRIC_ALTITUDE_M,
+    MIN_GEOMETRIC_ALTITUDE_M,
+    StandardAtmosphereState,
+    altitude_for_pressure,
+    standard_atmosphere,
+)
 from .contour import ContourResult, generate_contour
 from .models import (
     AmbientConditions,
@@ -51,6 +58,8 @@ from .performance import (
     ThermochemicalState,
     evaluate_performance,
     optimize_mixture_ratio,
+    optimize_mixture_ratio_for_inputs,
+    performance_at_ambient_pressure,
 )
 from .propellants import (
     COOLANT_CEA_NAMES,
@@ -66,6 +75,7 @@ from .sweeps import (
     PerformanceSweep,
     SweepPoint,
     run_ambient_sweep,
+    run_standard_atmosphere_sweep,
     run_throttle_sweep,
 )
 from .serialization import analysis_input_from_dict, analysis_input_to_dict

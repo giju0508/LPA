@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import tkinter as tk
+import tkinter.font as tkfont
 from collections.abc import Callable, Iterable
 from tkinter import ttk
 from typing import Any
@@ -199,13 +200,16 @@ class FieldGrid(ttk.Frame):
         base_row = row * 3
         value_span = max(1, columnspan * 3 - 2)
         label_span = max(2, columnspan * 3 - 1)
-        ttk.Label(self, text=label, style="Surface.TLabel", font=(FONT_UI, 9, "bold")).grid(
+        field_label = ttk.Label(self, text=label, style="Field.TLabel", wraplength=280)
+        field_label.grid(
             row=base_row,
             column=start_column,
             sticky="w",
             columnspan=label_span,
             pady=(0, 4),
         )
+        self.bind("<Configure>", lambda event, item=field_label, span=columnspan:
+                  item.configure(wraplength=max(80, event.width * span // self.columns - 20)), add="+")
         widget.grid(
             row=base_row + 1,
             column=start_column,
@@ -215,7 +219,7 @@ class FieldGrid(ttk.Frame):
         )
         if unit:
             unit_column = start_column + value_span
-            ttk.Label(self, text=unit, style="Muted.TLabel").grid(
+            ttk.Label(self, text=unit, style="Unit.TLabel").grid(
                 row=base_row + 1,
                 column=unit_column,
                 padx=(7, 0),
@@ -351,3 +355,41 @@ def configure_tree_columns(tree: ttk.Treeview, specifications: Iterable[tuple[st
     for name, width, anchor in specifications:
         tree.heading(name, text=name)
         tree.column(name, width=width, minwidth=60, anchor=anchor, stretch=True)
+
+
+def fit_tree_columns(tree: ttk.Treeview) -> None:
+    """Keep headings readable at each DPI and provide horizontal access."""
+    font = tkfont.Font(root=tree, font=ttk.Style(tree).lookup("Treeview.Heading", "font"))
+    value_font = tkfont.Font(root=tree, font=ttk.Style(tree).lookup("Treeview", "font"))
+    rows = [tree.item(item, "values") for item in tree.get_children()]
+    for index, column in enumerate(tree.cget("columns")):
+        content_width = max((value_font.measure(str(row[index])) for row in rows if index < len(row)), default=0)
+        minimum = max(45, font.measure(str(tree.heading(column, "text"))) + 18, content_width + 14)
+        tree.column(column, minwidth=minimum, width=max(minimum, int(tree.column(column, "width"))))
+    parent = tree.master
+    tree.pack_forget()
+    vertical = []
+    for child in parent.winfo_children():
+        if isinstance(child, ttk.Scrollbar) and str(child.cget("orient")) == "vertical":
+            child.pack_forget()
+            vertical.append(child)
+    if not vertical and len(rows) > int(tree.cget("height")):
+        scrollbar = ttk.Scrollbar(parent, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=scrollbar.set)
+        vertical.append(scrollbar)
+    tree.grid(row=0, column=0, sticky="nsew")
+    parent.grid_columnconfigure(0, weight=1)
+    parent.grid_rowconfigure(0, weight=1)
+    for child in vertical:
+        child.grid(row=0, column=1, sticky="ns")
+    horizontal = ttk.Scrollbar(parent, orient="horizontal", command=tree.xview)
+    horizontal.grid(row=1, column=0, sticky="ew")
+    tree.configure(xscrollcommand=horizontal.set)
+    def display_scrollbar(_event: tk.Event | None = None) -> None:
+        total = sum(int(tree.column(column, "width")) for column in tree.cget("columns"))
+        if total > tree.winfo_width() - 3:
+            horizontal.grid()
+        else:
+            horizontal.grid_remove()
+    tree.bind("<Configure>", display_scrollbar, add="+")
+    tree.after_idle(display_scrollbar)
