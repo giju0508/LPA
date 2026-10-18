@@ -34,25 +34,25 @@ def test_rp1_domain_is_a_property_specific_hull_not_an_enclosing_rectangle():
     assert isnan(rp1.rp1_conductivity(300.0, 20e5))
 
 
-def test_rp1_partial_evidence_never_claims_a_validated_eos_or_viscosity_floor():
+def test_rp1_engineering_surrogate_exceeds_old_fit_without_claiming_original_nist_accuracy():
     cold = coolants.coolant_state("RP-1", 293.0, 20e5)
-    warm = coolants.coolant_state("RP-1", 320.0, 20e5)
-    unsupported = coolants.coolant_state("RP-1", 589.0, 20e5)
-    assert cold.phase == warm.phase == unsupported.phase == "unknown"
-    assert cold.property_applicability == warm.property_applicability == "screening"
+    warm = coolants.coolant_state("RP-1", 589.0, 20e5)
+    unsupported = coolants.coolant_state("RP-1", 650.0, 20e5)
+    assert cold.phase == warm.phase == "liquid"
+    assert unsupported.phase == "unknown"
+    assert cold.property_applicability == warm.property_applicability == "correlated"
     assert isfinite(warm.viscosity_pa_s) and warm.viscosity_pa_s < cold.viscosity_pa_s
-    assert warm.viscosity_pa_s == pytest.approx(rp1.rp1_kinematic_viscosity(320.0)*warm.density_kg_m3)
     assert unsupported.property_applicability == "unsupported"
     assert isnan(unsupported.viscosity_pa_s)
-    assert rp1.NIST_RP1_REFERENCE in cold.property_references
+    assert "two-component engineering surrogate" in cold.issues[0]
+    assert any("1949" in ref for ref in cold.property_references)
     evidence = {item["property_name"]: item for item in warm.property_evidence}
-    assert evidence["conductivity_w_mk"]["applicability"] == "measured_interpolation"
-    assert evidence["density_kg_m3"]["applicability"] == "screening"
-    assert evidence["viscosity_pa_s"]["temperature_range_k"] == (243.29,333.15)
-    assert evidence["viscosity_density_product_kg2_m4_s"]["applicability"] == "measured_interpolation"
+    assert evidence["conductivity_w_mk"]["applicability"] == "correlated"
+    assert evidence["density_kg_m3"]["applicability"] == "correlated"
+    assert evidence["viscosity_pa_s"]["maximum_temperature_inclusive"] is False
     atmospheric = coolants.coolant_state("RP-1", 293.15, 83000.0)
-    assert atmospheric.viscosity_pa_s == pytest.approx(rp1.rp1_kinematic_viscosity(293.15)*810.0)
-    assert atmospheric.property_applicability == "screening"
+    assert .0015 < atmospheric.viscosity_pa_s < .002
+    assert atmospheric.property_applicability == "correlated"
 
 
 def test_rp1_ph_inversion_recomputes_pressure_dependent_transport():
@@ -60,8 +60,8 @@ def test_rp1_ph_inversion_recomputes_pressure_dependent_transport():
     inverse = coolants.coolant_state_from_enthalpy(
         "RP-1", target.enthalpy_j_kg, 30e5, temperature_hint_k=293.0,
     )
-    expected = coolants.coolant_state("RP-1", 320.0, 30e5)
-    assert inverse.temperature_k == pytest.approx(320.0, abs=1e-7)
+    expected = coolants.coolant_state("RP-1", inverse.temperature_k, 30e5)
+    assert inverse.enthalpy_j_kg == pytest.approx(target.enthalpy_j_kg, abs=1e-4)
     assert inverse.conductivity_w_mk == pytest.approx(expected.conductivity_w_mk, rel=1e-10)
     assert inverse.viscosity_pa_s == pytest.approx(expected.viscosity_pa_s, rel=1e-10)
     assert inverse.conductivity_w_mk != pytest.approx(target.conductivity_w_mk, rel=1e-4)

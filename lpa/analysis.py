@@ -61,6 +61,29 @@ def _jsonable(value: Any) -> Any:
     return value
 
 
+def _thermal_solver_settings(thermal: dict[str, Any]) -> dict[str, Any]:
+    """Translate persisted UI choices without conflating pure/mixture enablement."""
+    selection = str(thermal.get("two_phase_model", "Auto (Beta)"))
+    if selection not in {"Auto (Beta)", "Pure fluids only", "Disabled"}:
+        raise ValueError("Unknown two-phase channel calculation selection")
+    mixture = str(thermal.get("mixture_boiling_model", "shah_gungor_winterton"))
+    if selection in {"Disabled", "Pure fluids only"}:
+        mixture = "disabled"
+    if mixture not in {"shah_gungor_winterton", "disabled"}:
+        raise ValueError("Unknown mixture flow-boiling model")
+    beta = _float(thermal.get("mixture_mass_transfer_coefficient_m_s"), 3e-4)
+    if beta <= 0:
+        raise ValueError("Mixture mass-transfer coefficient must be positive")
+    return {
+        "resolution": str(thermal.get("thermal_resolution", "Medium")).casefold(),
+        "max_iterations": _int(thermal.get("thermal_max_iterations"), 200),
+        "coolant_property_backend": "refprop" if str(thermal.get("coolant_property_backend", "CoolProp HEOS")).startswith("REFPROP") else "coolprop",
+        "two_phase_model": "disabled" if selection == "Disabled" else "auto",
+        "mixture_boiling_model": mixture,
+        "mixture_mass_transfer_coefficient_m_s": beta,
+    }
+
+
 def _propellant(value: Any) -> str:
     text = str(value).strip()
     replacements = {
@@ -798,7 +821,7 @@ def _film_orifice_results(
         if "twophase" in phase or "two_phase" in phase:
             warnings.append(f"Film '{name}' orifice sizing skipped: {phase} restriction requires a validated real-fluid flow model.")
             continue
-        if "gas" in phase or "supercritical" in phase:
+        if phase in {"gas","supercritical_gas","supercritical"}:
             cv = getattr(state, "specific_heat_cv_j_kgk", None)
             gas_constant = getattr(state, "gas_constant_j_kgk", None)
             if not cv or not gas_constant:
@@ -1109,12 +1132,7 @@ class AnalysisService:
                 "co2_mole_fraction": core_result.thermodynamics.co2_mole_fraction,
                 "nozzle_regime": core_result.thermodynamics.nozzle_regime,
             }
-            settings = {
-                "resolution": str(project["thermal"].get("thermal_resolution", "Medium")).casefold(),
-                "max_iterations": _int(project["thermal"].get("thermal_max_iterations"), 200),
-                "coolant_property_backend": "refprop" if str(project["thermal"].get("coolant_property_backend","CoolProp HEOS")).startswith("REFPROP") else "coolprop",
-                "two_phase_model": "disabled" if project["thermal"].get("two_phase_model")=="Disabled" else "auto",
-            }
+            settings = _thermal_solver_settings(project["thermal"])
             thermal_result = analyze_thermal(contour, gas, thermal_segments, settings=settings)
             thermal = thermal_result.as_dict() if hasattr(thermal_result, "as_dict") else _jsonable(thermal_result)
             feed_issues = _regen_feed_pressure_issues(project, core_result, thermal_result)

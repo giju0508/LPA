@@ -34,6 +34,12 @@ class CoolantPhaseState:
     speed_of_sound_m_s: float = nan
     specific_heat_cv_j_kgk: float = nan
     issues: tuple[str, ...] = ()
+    component_names: tuple[str, ...] = ()
+    mole_fractions: tuple[float, ...] = ()
+    transport_source: str = "native provider"
+    transport_applicability: str = "eos"
+    property_references: tuple[str, ...] = ()
+    property_evidence: tuple[dict[str, object], ...] = ()
 
     @property
     def prandtl(self) -> float:
@@ -98,6 +104,14 @@ class CoolantState:
     property_notes: tuple[str, ...] = ()
     property_references: tuple[str, ...] = ()
     property_evidence: tuple[dict[str, object], ...] = ()
+    mixture_component_names: tuple[str, ...] = ()
+    mixture_overall_mole_fractions: tuple[float, ...] = ()
+    mixture_liquid_bubble_temperature_k: float = nan
+    mixture_liquid_dew_temperature_k: float = nan
+    equilibrium_temperature_enthalpy_derivative_k_kg_j: float = nan
+    bubble_temperature_k: float = nan
+    dew_temperature_k: float = nan
+    mixture_boiling_property_issues: tuple[str, ...] = ()
 
     @property
     def prandtl(self) -> float:
@@ -355,15 +369,23 @@ def get_coolant_model(name: object) -> CoolantPropertyModel:
 
 
 def _rp1_state(temperature_k: float, pressure_pa: float) -> CoolantState:
+    try:
+        from .rp1_surrogate import rp1_surrogate_estimate
+        return CoolantState(**rp1_surrogate_estimate(temperature_k,pressure_pa))
+    except (ValueError,ImportError,OSError) as error:
+        reason=str(error)
+    # Retain earlier measurements as diagnostics only after the conditional
+    # surrogate refuses a state. Their finite values cannot authorize a march.
     from .rp1_properties import NIST_RP1_REFERENCE, rp1_estimate
-    values = rp1_estimate(temperature_k, pressure_pa)
+    values=rp1_estimate(temperature_k,pressure_pa)
+    values.update(phase="unknown",property_applicability="unsupported",
+                  issues=(*values.get("issues",()),f"RP-1 engineering surrogate unavailable: {reason}"))
     return CoolantState(
         temperature_k=temperature_k, pressure_pa=pressure_pa,
-        thermodynamic_source="pressure-independent screening Cp/density; no RP-1 EOS",
-        thermodynamic_applicability="screening",
-        transport_applicability=values["property_applicability"],
+        thermodynamic_source="unsupported RP-1 state; legacy diagnostics only",
+        thermodynamic_applicability="unsupported",transport_applicability="unsupported",
         property_notes=(
-            "Partial NIST measurements do not establish a validated four-property or phase model.",
+            "Conditional RP-1 engineering surrogate rejected this state; no usable phase/transport solution.",
             "Interpolation hulls are property-specific and do not certify liquid-phase stability.",
             "The original NIST RP-1 sample was atypical; fuel lot differences remain unresolved.",
         ),
@@ -471,6 +493,17 @@ def coolant_property_limits(name: object, *, backend: str = "HEOS") -> CoolantPr
         references += (
             "https://www.nist.gov/publications/eos-lng-fundamental-equation-state-calculation-thermodynamic-properties-liquefied",
         )
+    transport_source="fluid-specific EOS transport correlations; missing or out-of-range properties are explicit"
+    if canonical == "LNG" and backend == "HEOS":
+        from .mixture_transport import SOURCE, REFERENCE
+        transport_source=SOURCE
+        references+= (REFERENCE,)
+        notes.append("TRAPP transport uses individual phase density/composition; no common mixture validation rectangle is asserted.")
+    elif fluid == "Ethanol&Water":
+        from .ethanol_transport import REFERENCES, VAPOR_REFERENCES
+        transport_source="experimental liquid excess transport / dilute vapor mixture correlations; phase-qualified engineering prediction"
+        references+= (*REFERENCES,*VAPOR_REFERENCES)
+        notes.append("Experimental source grids, model calculation guards and EOS limits are separate; high-temperature/pressure mixture transport can be predictive.")
     transport_limits = tuple(
         CoolantTransportLimits(
             property_name,
@@ -491,7 +524,7 @@ def coolant_property_limits(name: object, *, backend: str = "HEOS") -> CoolantPr
     return CoolantPropertyLimits(
         canonical, backend, float(state.Tmin()), maximum, maximum_pressure,
         f"CoolProp {backend}: {fluid}",
-        "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+        transport_source,
         references, tuple(notes), transport_limits,
     )
 
@@ -664,7 +697,11 @@ def _extract_phase(name: str, state: object, *, vapor: bool, backend: str) -> Co
         except ValueError:
             issues.append(f"saturated {'vapor' if vapor else 'liquid'} {label} unavailable; screening property used")
             return default
-    return CoolantPhaseState(
+    definition = _eos_definition(name)
+    assert definition is not None
+    components = tuple(definition[0].split("&"))
+    fractions = tuple(float(x) for x in (state.mole_fractions_vapor() if vapor else state.mole_fractions_liquid())) if definition[1] else (1.0,)
+    result = CoolantPhaseState(
         value(CP.iDmass, "density", fallback.density_kg_m3),
         value(CP.iCpmass, "cp", fallback.specific_heat_j_kgk),
         value(CP.iconductivity, "conductivity", fallback.conductivity_w_mk),
@@ -673,7 +710,128 @@ def _extract_phase(name: str, state: object, *, vapor: bool, backend: str) -> Co
         value(CP.imolar_mass, "molar mass", nan), "gas" if vapor else "liquid",
         f"CoolProp {backend} equilibrium phase", value(CP.ispeed_sound, "sound speed", nan),
         value(CP.iCvmass, "cv", nan), tuple(issues),
+        component_names=components, mole_fractions=fractions,
     )
+    if name == "LNG" and backend == "HEOS":
+        result = _with_lng_phase_transport(result)
+    elif components == ("Ethanol","Water"):
+        result = _with_ethanol_phase_transport(result)
+    return result
+
+
+def _with_lng_phase_transport(phase: CoolantPhaseState) -> CoolantPhaseState:
+    """NBS TN1039 transport at actual phase density/composition, not bulk Z."""
+    from .mixture_transport import lng_ecs_transport
+    try:
+        result = lng_ecs_transport(temperature_k=phase.temperature_k,
+            molar_density_mol_m3=phase.density_kg_m3/phase.molar_mass_kg_mol,
+            components=phase.component_names,mole_fractions=phase.mole_fractions)
+    except (ValueError, ArithmeticError) as error:
+        return replace(phase, transport_applicability="unsupported",
+            issues=(*phase.issues,f"NBS mixture transport unavailable: {error}"))
+    # Existing native numbers can be finite even when individual mixture
+    # components were evaluated beyond their transport surface. Replace both.
+    issues=tuple(item for item in phase.issues if not any(
+        text in item for text in ("conductivity unavailable", "viscosity unavailable")))
+    return replace(phase,viscosity_pa_s=result.viscosity_pa_s,
+        conductivity_w_mk=result.conductivity_w_mk,
+        transport_source=result.source,transport_applicability=result.property_applicability,
+        property_references=result.references,
+        issues=(*issues,*result.issues))
+
+
+def _with_ethanol_phase_transport(phase: CoolantPhaseState) -> CoolantPhaseState:
+    from .ethanol_transport import ethanol_water_transport
+    try:
+        result=ethanol_water_transport(temperature_k=phase.temperature_k,
+            pressure_pa=phase.pressure_pa,ethanol_mole_fraction=phase.mole_fractions[0],
+            phase=phase.phase,phase_density_kg_m3=phase.density_kg_m3)
+    except (ValueError,ArithmeticError) as error:
+        return replace(phase,transport_applicability="unsupported",
+            issues=(*phase.issues,f"ethanol-water phase transport unavailable: {error}"))
+    issues=tuple(item for item in phase.issues if not any(
+        text in item for text in ("conductivity unavailable","viscosity unavailable")))
+    return replace(phase,viscosity_pa_s=result.viscosity_pa_s,
+        conductivity_w_mk=result.conductivity_w_mk,transport_source=result.source,
+        transport_applicability=result.property_applicability,property_references=result.references,
+        property_evidence=(result.evidence,),issues=(*issues,*result.issues))
+
+
+def _mixture_boiling_properties(name: str, state: object, pressure_pa: float,
+                                 backend: str) -> dict[str, object]:
+    """Local equilibrium data used by the separate mixture boiling model.
+
+    Dew/bubble temperatures refer to the CURRENT liquid composition. dT/dh
+    instead follows the feed-composition isobar, including composition glide.
+    Separate cached state objects prevent a diagnostic flash mutating bulk h.
+    """
+    import CoolProp.CoolProp as CP
+    definition = _eos_definition(name)
+    assert definition is not None and definition[1]
+    output: dict[str, object] = {
+        "mixture_component_names":tuple(definition[0].split("&")),
+        "mixture_overall_mole_fractions":tuple(float(x) for x in state.get_mole_fractions()),
+    }
+    issues: list[str] = []
+    boundaries = _mixture_boundaries(name,pressure_pa,backend)
+    if boundaries is not None:
+        output.update(bubble_temperature_k=boundaries[0],dew_temperature_k=boundaries[1])
+    if state.phase() != CP.iphase_twophase:
+        return output
+    try:
+        local = _abstract_state(name,backend=backend,saturation="liquid_composition_glide")
+        local.set_mole_fractions(state.mole_fractions_liquid())
+        local.unspecify_phase()
+        local.update(CP.PQ_INPUTS,pressure_pa,0.0)
+        bubble = float(local.T())
+        try:
+            local.update(CP.PQ_INPUTS,pressure_pa,1.0)
+            dew = float(local.T())
+        except ValueError:
+            # HEOS PQ's initial-temperature solver fails for some aqueous
+            # compositions although the QT equilibrium surface is regular.
+            # Invert that same EOS surface; do not substitute a fixed glide.
+            from scipy.optimize import brentq
+            def pressure_residual(temperature: float) -> float:
+                local.update(CP.QT_INPUTS,1.0,temperature)
+                return float(local.p())-pressure_pa
+            lower=bubble
+            low_error=pressure_residual(lower)
+            upper=lower
+            high_error=low_error
+            step=2.0
+            maximum=coolant_property_limits(name,backend=backend).maximum_temperature_k
+            while high_error < 0 and upper < maximum:
+                upper=min(maximum,bubble+step)
+                high_error=pressure_residual(upper)
+                step*=1.5
+            if low_error > 0 or high_error < 0:
+                raise ValueError("local dew QT surface does not bracket the requested pressure")
+            dew=brentq(pressure_residual,lower,upper,xtol=1e-8,rtol=1e-12)
+            issues.append("local dew PQ flash recovered by bracketed QT EOS inversion")
+        if not isfinite(bubble) or not isfinite(dew) or dew < bubble-1e-5:
+            raise ValueError("non-monotone liquid-composition temperature glide")
+        output.update(mixture_liquid_bubble_temperature_k=bubble,
+                      mixture_liquid_dew_temperature_k=max(bubble,dew))
+    except (ValueError,ArithmeticError) as error:
+        issues.append(f"local liquid-composition glide unavailable: {error}")
+    try:
+        derivative = _abstract_state(name,backend=backend,saturation="isobaric_glide_derivative")
+        derivative.unspecify_phase()
+        q=float(state.Q())
+        low,high=max(0.0,q-1e-4),min(1.0,q+1e-4)
+        derivative.update(CP.PQ_INPUTS,pressure_pa,low)
+        t0,h0=float(derivative.T()),float(derivative.hmass())
+        derivative.update(CP.PQ_INPUTS,pressure_pa,high)
+        t1,h1=float(derivative.T()),float(derivative.hmass())
+        slope=(t1-t0)/(h1-h0)
+        if not isfinite(slope) or slope < -1e-8 or h1 <= h0:
+            raise ValueError("non-monotone equilibrium h/T derivative")
+        output["equilibrium_temperature_enthalpy_derivative_k_kg_j"]=max(0.0,slope)
+    except (ValueError,ArithmeticError) as error:
+        issues.append(f"isobaric temperature/enthalpy derivative unavailable: {error}")
+    output["mixture_boiling_property_issues"]=tuple(issues)
+    return output
 
 
 def _mass_quality(state: object) -> float:
@@ -726,8 +884,41 @@ def _extract_eos_state(name: str, state: object, pressure_pa: float, *, backend:
     if name in {"LH2", "GH2"}:
         issues.append("normal-hydrogen EOS assumed; ortho/para composition and conversion heat not modelled")
     tc, pc = _critical_values(name, backend)
+    mixture_data = _mixture_boiling_properties(name,state,pressure_pa,backend) if mixture else {}
+    correlated_transport = None
     if mixture and phase == "liquid" and isfinite(pc) and pressure_pa > pc and temperature < tc:
         phase = "supercritical_liquid"
+    if name == "LNG" and backend == "HEOS" and phase != "two_phase":
+        from .mixture_transport import lng_ecs_transport
+        try:
+            correlated_transport=lng_ecs_transport(temperature_k=temperature,
+                molar_density_mol_m3=float(state.rhomolar()),
+                components=tuple(definition[0].split("&")),
+                mole_fractions=tuple(float(x) for x in state.get_mole_fractions()))
+            conductivity=correlated_transport.conductivity_w_mk
+            viscosity=correlated_transport.viscosity_pa_s
+            unavailable.difference_update({"conductivity","viscosity"})
+            issues=[issue for issue in issues if not any(text in issue for text in (
+                "conductivity unavailable", "viscosity unavailable"))]
+            issues.extend(correlated_transport.issues)
+        except (ValueError,ArithmeticError) as error:
+            unavailable.update({"conductivity","viscosity"})
+            issues.append(f"NBS mixture transport unavailable: {error}")
+    elif definition[0] == "Ethanol&Water" and phase != "two_phase":
+        from .ethanol_transport import ethanol_water_transport
+        try:
+            correlated_transport=ethanol_water_transport(temperature_k=temperature,
+                pressure_pa=pressure_pa,ethanol_mole_fraction=float(state.get_mole_fractions()[0]),
+                phase=phase,phase_density_kg_m3=density)
+            conductivity=correlated_transport.conductivity_w_mk
+            viscosity=correlated_transport.viscosity_pa_s
+            unavailable.difference_update({"conductivity","viscosity"})
+            issues=[issue for issue in issues if not any(text in issue for text in (
+                "conductivity unavailable","viscosity unavailable"))]
+            issues.extend(correlated_transport.issues)
+        except (ValueError,ArithmeticError) as error:
+            unavailable.update({"conductivity","viscosity"})
+            issues.append(f"ethanol-water transport unavailable: {error}")
     diagnostic_pressure = floor(pressure_pa/10000.0)*10000.0 if mixture else pressure_pa
     if mixture:
         issues.append("mixture bubble-temperature diagnostic uses pressure rounded down by at most 0.1 bar")
@@ -743,14 +934,18 @@ def _extract_eos_state(name: str, state: object, pressure_pa: float, *, backend:
         liquid = _extract_phase(name, state, vapor=False, backend=backend)
         vapor = _extract_phase(name, state, vapor=True, backend=backend)
         quality = _mass_quality(state)
-        phase_enthalpy = (1.0-quality)*liquid.enthalpy_j_kg + quality*vapor.enthalpy_j_kg
+        phase_enthalpy = (vapor.enthalpy_j_kg if mixture and quality>=1.0-1e-12 else
+                          (1.0-quality)*liquid.enthalpy_j_kg + quality*vapor.enthalpy_j_kg)
         equilibrium_residual = float(state.hmass())-phase_enthalpy
         if abs(equilibrium_residual) > 1e-4*max(1.0, abs(float(state.hmass())), abs(phase_enthalpy)):
             raise ValueError("EOS equilibrium phase enthalpy closure exceeds relative tolerance 1e-4")
         if mixture and abs(equilibrium_residual) > 1e-7*max(1.0, abs(float(state.hmass()))):
             issues.append(f"mixture equilibrium phase enthalpy closure residual {equilibrium_residual:g} J/kg")
-        issues.extend(liquid.issues)
+        if quality < 1.0-1e-12:
+            issues.extend(liquid.issues)
         issues.extend(vapor.issues)
+        issues=[issue for issue in issues if not any(issue.startswith(method+" unavailable")
+                for method in ("rhomass","cpmass","conductivity","viscosity"))]
         # Bulk Cp, viscosity and k have no unique equilibrium two-phase
         # transport definition. Retain phase-weighted diagnostics only; boiling
         # correlations must explicitly use the phase-resolved properties.
@@ -762,36 +957,61 @@ def _extract_eos_state(name: str, state: object, pressure_pa: float, *, backend:
             surface_tension = float(state.surface_tension())
         except ValueError:
             issues.append("two-phase surface tension unavailable in EOS")
+        # The dew endpoint is a genuine vapor state; do not feed x=1 into
+        # a wet-wall boiling correlation with a vanishing liquid film.
+        if mixture and quality >= 1.0-1e-12:
+            phase = "gas"
+            density=vapor.density_kg_m3
+            cp=vapor.specific_heat_j_kgk
+            conductivity=vapor.conductivity_w_mk
+            viscosity=vapor.viscosity_pa_s
+            cv=vapor.specific_heat_cv_j_kgk
+            sound=vapor.speed_of_sound_m_s
     # The bulk Cp and transport of a two-phase equilibrium are diagnostics;
     # their native unavailability must not hide valid phase-resolved values.
-    if phase == "two_phase":
+    if liquid is not None and vapor is not None:
+        required_phases=(vapor,) if phase=="gas" and quality>=1.0-1e-12 else (liquid,vapor)
         unavailable = {
             method for method, label in (("rhomass", "density"), ("cpmass", "cp"),
                                         ("conductivity", "conductivity"), ("viscosity", "viscosity"))
-            if any(f" {label} unavailable" in issue for phase_state in (liquid, vapor)
+            if any(f" {label} unavailable" in issue for phase_state in required_phases
                    if phase_state is not None for issue in phase_state.issues)
         }
         thermo_fallback = any(
             any(f" {label} unavailable" in issue for label in ("density", "cp", "enthalpy", "molar mass"))
-            for phase_state in (liquid, vapor) if phase_state is not None for issue in phase_state.issues
+            for phase_state in required_phases for issue in phase_state.issues
         )
         transport_fallback = any(
             any(f" {label} unavailable" in issue for label in ("conductivity", "viscosity"))
-            for phase_state in (liquid, vapor) if phase_state is not None for issue in phase_state.issues
+            for phase_state in required_phases for issue in phase_state.issues
         )
+        transport_fallback |= any(p.transport_applicability in {"screening","unsupported"}
+                                  for p in required_phases)
+        if transport_fallback:
+            unavailable.update({"conductivity","viscosity"})
     else:
         thermo_fallback = bool(unavailable & {"rhomass", "cpmass"})
         transport_fallback = bool(unavailable & {"conductivity", "viscosity"})
     thermo_health = "screening" if thermo_fallback or phase == "unknown" else "eos"
     transport_health = "screening" if transport_fallback else "eos"
+    if correlated_transport is not None or (
+            liquid is not None and vapor is not None and
+            all(p.transport_applicability=="correlated" for p in required_phases)):
+        transport_health = "correlated"
     # Finite fallback numbers remain useful diagnostics, but cannot authorize
     # a heat-transfer calculation without the required native properties.
-    health = "eos" if thermo_health == transport_health == "eos" else "unsupported"
+    health = ("eos" if transport_health=="eos" else "correlated") if thermo_health=="eos" and not transport_fallback else "unsupported"
     thermo_source = f"CoolProp {backend}: {definition[0]}"
     transport_source = (
         f"{thermo_source}; screening fallback present"
         if transport_fallback else thermo_source
     )
+    if correlated_transport is not None:
+        transport_source=correlated_transport.source
+    elif liquid is not None and vapor is not None and transport_health=="correlated":
+        transport_source=(vapor.transport_source if len(required_phases)==1 else
+                          liquid.transport_source if liquid.transport_source==vapor.transport_source else
+                          f"liquid: {liquid.transport_source}; vapor: {vapor.transport_source}")
     return CoolantState(
         density, cp, conductivity, viscosity, temperature_k=temperature, pressure_pa=pressure_pa,
         enthalpy_j_kg=float(state.hmass()), phase=phase, source=thermo_source,
@@ -811,15 +1031,28 @@ def _extract_eos_state(name: str, state: object, pressure_pa: float, *, backend:
             "EOS denotes the provider's model domain, not independent experimental validation of every state.",
             "Thermodynamic bounds and transport-correlation bounds are separate; unreported transport limits remain unknown.",
         ),
-        property_references=limits.references,
+        property_references=tuple(dict.fromkeys((*limits.references,
+            *(correlated_transport.references if correlated_transport is not None else ()),
+            *(liquid.property_references if liquid is not None else ()),
+            *(vapor.property_references if vapor is not None else ())))),
         property_evidence=tuple(
-            dict(property_name=label, source="reference screening fallback" if method in unavailable else thermo_source,
-                 applicability="screening" if method in unavailable else "eos",
+            dict(property_name=label,
+                 source=("reference screening fallback" if method in unavailable else
+                         transport_source if method in {"conductivity","viscosity"} else thermo_source),
+                 applicability=("screening" if method in unavailable else
+                                "correlated" if method in {"conductivity","viscosity"}
+                                and transport_health=="correlated" else "eos"),
                  temperature_range_k=None, pressure_range_pa=None,
+                 model_evidence=(getattr(correlated_transport,"evidence",None)
+                     if correlated_transport is not None else
+                     {"liquid":liquid.property_evidence,"vapor":vapor.property_evidence}
+                     if liquid is not None and vapor is not None else None)
+                     if method in {"conductivity","viscosity"} else None,
                  notes=("Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback.",))
             for label, method in (("density_kg_m3", "rhomass"), ("specific_heat_j_kgk", "cpmass"),
                                   ("conductivity_w_mk", "conductivity"), ("viscosity_pa_s", "viscosity"))
         ),
+        **mixture_data,
     )
 
 
@@ -940,6 +1173,16 @@ def coolant_state_from_enthalpy(
     backend = _backend_name(backend)
     if not isfinite(enthalpy_j_kg) or not isfinite(pressure_pa) or pressure_pa <= 0:
         raise ValueError("coolant enthalpy and positive pressure must be finite")
+    if model is COOLANT_MODELS["RP-1"]:
+        from .rp1_surrogate import rp1_surrogate_from_enthalpy
+        try:
+            return CoolantState(**rp1_surrogate_from_enthalpy(enthalpy_j_kg,pressure_pa,
+                temperature_hint_k=temperature_hint_k))
+        except (ValueError,ImportError,OSError) as error:
+            if temperature_hint_k is None:
+                raise ValueError(f"RP-1: enthalpy flash failed ({error})") from error
+            return _failed_eos_state(model,temperature_hint_k,pressure_pa,
+                f"RP-1 enthalpy inversion failed: {error}",enthalpy_j_kg=enthalpy_j_kg)
     definition = _eos_definition(model.name)
     if definition is not None:
         try:

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from lpa.analysis import (
     _effective_regen_coolant_name,
     _film_orifice_results,
@@ -74,4 +76,20 @@ def test_film_orifice_uses_linked_regen_coolant_not_stale_film_value() -> None:
     assert all("screening properties" in message for message in warnings)
     assert len(rows) == 1
     assert rows[0]["coolant"] == "RP-1"
+
+
+@pytest.mark.parametrize("fuel,temperature",[("RP-1",320.),("LNG",150.)])
+def test_dense_liquid_above_critical_pressure_does_not_use_gas_restriction(fuel,temperature):
+    _film,segments=_linked_segments()
+    project={"engine":{"oxidizer":"LOX","fuel":fuel,"mixture_ratio":"2.5"},
+             "thermal":{"segments":segments}}
+    core=SimpleNamespace(contour=SimpleNamespace(x_m=(0.,.1),chamber_end_index=0),
+        performance=SimpleNamespace(chamber_pressure_bar=10.,total_mass_flow_kg_s=1.))
+    thermal=SimpleNamespace(x_m=(0.,.1),Tc_K=(temperature,temperature),
+        active_segment_id=("linked","linked"),coolant_outlet_temperature_k={"linked":temperature},
+        coolant_inlet_temperature_k={"linked":temperature},coolant_outlet_pressure_bar={"linked":60.})
+    rows,warnings=_film_orifice_results(project,core,thermal)
+    assert len(rows)==1 and rows[0]["phase"]=="supercritical_liquid"
+    assert "incompressible" in rows[0]["model"]
+    assert not any("gas restriction" in warning for warning in warnings)
 

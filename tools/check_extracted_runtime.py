@@ -11,7 +11,8 @@ import numpy
 from lpa.core import AnalysisInput,EngineDefinition,ThrustChamberInput,NozzleExitCondition,AmbientConditions,optimize_mixture_ratio
 from lpa.core.analysis import analyze_engine
 from lpa.thermal import analyze_thermal,ThermalSolverSettings
-from lpa.thermal.coolants import get_coolant_model
+from lpa.thermal.coolants import get_coolant_model,coolant_state_from_quality,coolant_state_from_enthalpy
+from lpa.thermal.two_phase import mixture_saturated_boiling
 assert Path(CoolProp.__file__).resolve().is_relative_to(bundle),CoolProp.__file__
 assert Path(numpy.__file__).resolve().is_relative_to(bundle),numpy.__file__
 assert CoolProp.__version__=='8.0.0'
@@ -49,10 +50,30 @@ assert abs(boiling.metadata['energy_balance_by_segment']['water']['residual_w'])
 record['beta_boiling']={'two_phase_stations':boiling.coolant_phase.count('two_phase'),'physical_validity':boiling.physical_validity,'energy_balance':boiling.metadata['energy_balance_by_segment']}
 record['LNG_150K_25bar_density']=lng.density_kg_m3
 rp1=get_coolant_model('RP-1').at_state(450.,20e5)
-assert rp1.property_applicability=='unsupported' and __import__('math').isnan(rp1.viscosity_pa_s)
-assert 'NISTIR 6646' in rp1.transport_source
+assert rp1.property_applicability=='correlated' and rp1.phase=='liquid' and rp1.viscosity_pa_s>0
+rp1_hot=get_coolant_model('RP-1').at_state(600.,20e5)
+rp1_inverse=coolant_state_from_enthalpy('RP-1',rp1_hot.enthalpy_j_kg,20e5,temperature_hint_k=293.)
+assert abs(rp1_inverse.temperature_k-600.)<1e-6
 record['RP1_450K_20bar']={'property_applicability':rp1.property_applicability,
-    'phase':rp1.phase,'viscosity_available':False,'transport_source':rp1.transport_source}
+    'phase':rp1.phase,'viscosity_available':True,'transport_source':rp1.transport_source,
+    'viscosity_Pa_s':rp1.viscosity_pa_s,'600K_PH_temperature_K':rp1_inverse.temperature_k}
+assert lng.property_applicability=='correlated' and lng.viscosity_pa_s>0
+ethanol=get_coolant_model('Ethanol (70%)').at_state(293.15,25e5)
+assert .002<ethanol.viscosity_pa_s<.0025 and .23<ethanol.conductivity_w_mk<.25
+record['mixture_transport']={'LNG_viscosity_Pa_s':lng.viscosity_pa_s,
+    'LNG_conductivity_W_mK':lng.conductivity_w_mk,
+    'ethanol70_viscosity_Pa_s':ethanol.viscosity_pa_s,
+    'ethanol70_conductivity_W_mK':ethanol.conductivity_w_mk}
+record['mixture_boiling']={}
+for name in ('LNG','Ethanol (70%)'):
+    mixed=coolant_state_from_quality(name,25e5,.2)
+    check=mixture_saturated_boiling(state=mixed,mass_flow_kg_s=.1,total_flow_area_m2=1e-4,
+        hydraulic_diameter_m=.002,wall_temperature_k=mixed.temperature_k+50.,wall_heat_flux_w_m2=1e5)
+    assert check.coefficient_w_m2k>0 and mixed.transport_applicability=='correlated'
+    assert 0<check.mass_transfer_correction_factor<=1
+    record['mixture_boiling'][name]={'coefficient_W_m2K':check.coefficient_w_m2k,
+        'applicability':check.applicability,'glide_K':check.liquid_composition_glide_k,
+        'wet_wall_assumed':check.wet_wall_assumed,'dryout_predicted':False}
 record['thermal_wall_solution_complete']=thermal.metadata['wall_solution_complete']
 record['automatic_of']={'objective':optimum.objective,'source':optimum.source,'mixture_ratio':optimum.mixture_ratio,'theoretical_vacuum_isp_s':optimum.vacuum_isp_s}
 output.write_text(json.dumps(record,indent=2),encoding='utf-8');print(json.dumps(record,indent=2))

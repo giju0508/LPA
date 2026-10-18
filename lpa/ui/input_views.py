@@ -145,23 +145,30 @@ class EngineDefinitionPage(InputPage):
         self.mixture_ratio_var = self.string("mixture_ratio", "1.3")
         self.mixture_ratio_entry = ttk.Entry(ratio_box, textvariable=self.mixture_ratio_var)
         self.mixture_ratio_entry.grid(row=0, column=0, sticky="ew")
+        fields.add("Mixture ratio (O/F)", ratio_box)
+        # Keep Pc and O/F on the same input row. Only the longer checkbox
+        # receives the shared hint row so its text stays on one line at high DPI.
+        auto_ratio_box = ttk.Frame(fields, style="Surface.TFrame")
+        auto_ratio_box.grid(row=2, column=0, columnspan=5, sticky="ew", pady=(0, 8))
+        auto_ratio_box.grid_columnconfigure(0, weight=1)
         self.mixture_ratio_auto_var = self.boolean("mixture_ratio_auto", False)
         self.automatic_mixture_ratio_checkbox = ttk.Checkbutton(
-            ratio_box,
+            auto_ratio_box,
             text="Auto O/F: maximum theoretical vacuum Isp",
             variable=self.mixture_ratio_auto_var,
             command=self._on_auto_mixture_ratio,
         )
-        self.automatic_mixture_ratio_checkbox.grid(row=1, column=0, sticky="w", pady=(5, 0))
+        self.automatic_mixture_ratio_checkbox.grid(row=0, column=0, sticky="e")
         self.mixture_ratio_status = ttk.Label(
-            ratio_box,
+            auto_ratio_box,
             text="",
             style="Muted.TLabel",
             wraplength=360,
         )
-        self.mixture_ratio_status.grid(row=2, column=0, sticky="w", pady=(3, 0))
+        self.mixture_ratio_status.grid(row=1, column=0, sticky="ew", pady=(3, 0))
         self.mixture_ratio_status.grid_remove()
-        fields.add("Mixture ratio (O/F)", ratio_box, columnspan=2)
+        auto_ratio_box.bind("<Configure>", lambda event: self.mixture_ratio_status.configure(
+            wraplength=max(160, event.width-8)), add="+")
 
         oxidizer_box = ttk.Frame(fields, style="Surface.TFrame")
         oxidizer_box.grid_columnconfigure(0, weight=1)
@@ -179,6 +186,10 @@ class EngineDefinitionPage(InputPage):
         )
         self.fuel_combo.grid(row=0, column=0, sticky="ew")
         fields.add("Fuel", fuel_box)
+        # Concentration controls can make one propellant cell taller. Keep the
+        # selectors aligned instead of vertically centering its shorter peer.
+        oxidizer_box.grid_configure(sticky="new")
+        fuel_box.grid_configure(sticky="new")
         self.oxidizer_fraction_box, self.oxidizer_fraction_entry = self._fraction_input(
             oxidizer_box, "oxidizer_mass_fraction_pct", "90"
         )
@@ -1014,7 +1025,16 @@ class ThermalAnalysisPage(InputPage):
             values=("CoolProp HEOS","REFPROP (separate installation)"),state="readonly"))
         fields.add("Two-phase channel calculation",ttk.Combobox(fields,
             textvariable=self.string("two_phase_model","Auto (Beta)"),
-            values=("Auto (Beta)","Disabled"),state="readonly"))
+            values=("Auto (Beta)","Pure fluids only","Disabled"),state="readonly"))
+        # Persist a project override without making an empirical parameter look
+        # like a measured fuel property in the ordinary input flow.
+        self.string("mixture_mass_transfer_coefficient_m_s", "0.0003")
+        self.boiling_hint = ttk.Label(self.thermal_controls,
+            text="Auto includes mixture wet-wall engineering estimates. CHF, dryout and post-dryout heat transfer are not predicted; a complete numerical path does not validate the channel.",
+            style="Muted.TLabel", wraplength=700)
+        self.boiling_hint.pack(fill="x", pady=(4, 5))
+        self.boiling_hint.bind("<Configure>", lambda event: self.boiling_hint.configure(
+            wraplength=max(160, event.width-8)), add="+")
         ttk.Checkbutton(self.thermal_controls, text="Couple Regen outlet to reactant state",
                         variable=self.boolean("regen_feed_feedback_enabled", False)).pack(anchor="w", pady=(3, 0))
 
@@ -1231,10 +1251,17 @@ class ThermalAnalysisPage(InputPage):
     def values(self) -> dict[str, Any]:
         self._synchronize_linked_film_coolants()
         result = super().values()
+        result["mixture_boiling_model"] = ("shah_gungor_winterton"
+            if result["two_phase_model"] == "Auto (Beta)" else "disabled")
         result["segments"] = copy.deepcopy(self.segments)
         return result
 
     def load_values(self, values: dict[str, Any]) -> None:
+        values = dict(values)
+        values.setdefault("two_phase_model", "Auto (Beta)")
+        values.setdefault("mixture_mass_transfer_coefficient_m_s", "0.0003")
+        if values.get("two_phase_model", "Auto (Beta)") == "Auto (Beta)" and values.get("mixture_boiling_model") == "disabled":
+            values["two_phase_model"] = "Pure fluids only"
         super().load_values(values)
         self.segments = copy.deepcopy(values.get("segments", []))
         self._refresh_tree()

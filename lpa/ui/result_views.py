@@ -138,6 +138,34 @@ def _coolant_quality_array(thermal: Any) -> np.ndarray:
     return np.where((quality >= 0.0) & (quality <= 1.0), quality, np.nan)
 
 
+def _coolant_wet_wall_flags(thermal: Any) -> tuple[bool | None, ...]:
+    """Preserve unknown separately from false; never turn None into zero."""
+    raw = _get(thermal, "coolant_wet_wall_assumed", default=[]) or []
+    return tuple(bool(value) if isinstance(value, (bool, np.bool_)) else None for value in raw)
+
+
+def _mixture_boiling_diagnostics(thermal: Any) -> list[str]:
+    lines: list[str] = []
+    wet = sum(value is True for value in _coolant_wet_wall_flags(thermal))
+    if wet:
+        lines.append(f"Wet-wall assumption: {wet} stations; CHF, dryout and post-dryout heat transfer are not predicted.")
+        lines.append("A complete numerical path is an engineering estimate, not channel validation.")
+    for key, label in (
+        ("coolant_temperature_glide_k", "Local liquid-composition glide (K)"),
+        ("coolant_boiling_mass_transfer_factor", "Nucleate mass-transfer correction F_TS"),
+        ("coolant_boiling_convective_factor", "Convective correction F_BG"),
+    ):
+        values = _array(thermal, key)
+        finite = values[np.isfinite(values)]
+        if len(finite):
+            lines.append(f"{label}: {min(finite):.6g} to {max(finite):.6g}")
+    model = _mapping(_get(thermal, "metadata.mixture_boiling_model", default={}))
+    if model:
+        lines.append(f"Mixture boiling model: {model.get('method', 'not reported')}; "
+                     f"empirical beta: {_display_number(model.get('mass_transfer_coefficient_m_s'), 6)} m/s")
+    return lines
+
+
 def _coolant_phase_counts(thermal: Any) -> dict[str, int]:
     """Property phase is independent of the selected convection correlation."""
 
@@ -219,7 +247,7 @@ class ResultPage(ttk.Frame):
         row.pack(fill="x", pady=(0, 8))
         status = str(thermal.get("physical_validity", "not_assessed"))
         label_text = {"valid": "Within reported model limits", "screening": "Screening model: review limits",
-                      "invalid": "Outside model limits", "unsupported": "Unsupported physical state",
+                      "invalid": "Outside model limits", "unsupported": "Outside supported model domain",
                       "not_assessed": "Not assessed"}.get(status, status)
         if data.get("thermal_enabled", bool(thermal.get("section_count"))):
             label = ttk.Label(row, text=f"Physical applicability: {label_text}",
@@ -262,6 +290,7 @@ class ResultPage(ttk.Frame):
                           "Vapor mass quality (0–1): " + (f"{min(finite_quality):.5f} to {max(finite_quality):.5f}"
                                                          if len(finite_quality) else "not reported"),
                           "Coolant heat-transfer correlation / regime: " + (json.dumps(counts, ensure_ascii=False) if counts else "not reported")]
+            lines[3:3] = _mixture_boiling_diagnostics(thermal)
         lines.extend(f"{index}. {warning}" for index, warning in enumerate(self.report_warnings, 1))
         if not self.report_warnings:
             lines.append("No reported warnings.")
@@ -686,6 +715,14 @@ class ThermalResultsPage(ResultPage):
         march_label.pack(fill="x", pady=(0, 9))
         march_label.bind("<Configure>", lambda event: march_label.configure(
             wraplength=max(120, event.width - 12)), add="+")
+        wet_count = sum(value is True for value in _coolant_wet_wall_flags(thermal))
+        if wet_count:
+            wet_note = ttk.Label(self.shell,
+                text=f"Wet-wall boiling assumed at {wet_count} stations. CHF, dryout and post-dryout heat transfer are not predicted. Numerical completion does not validate the channel.",
+                style="Warning.TLabel", wraplength=700)
+            wet_note.pack(fill="x", pady=(0, 9))
+            wet_note.bind("<Configure>", lambda event: wet_note.configure(
+                wraplength=max(120, event.width-12)), add="+")
         phase_counts = _coolant_phase_counts(thermal)
         if phase_counts.get("unknown"):
             phase_note = ttk.Label(self.shell,
@@ -786,6 +823,16 @@ class ThermalResultsPage(ResultPage):
                     ),
                 )
             fit_tree_columns(circuit_tree)
+            outlet_phases = _mapping(_get(thermal, "coolant_outlet_phase", "metadata.coolant_outlet_phase", default={}))
+            completions = _mapping(_get(thermal, "metadata.regen_segment_completion", default={}))
+            for note_index, (identifier, phase) in enumerate(outlet_phases.items()):
+                status = _mapping(completions.get(identifier)).get("outlet_property_applicability", "not reported")
+                outlet_note = ttk.Label(circuit_box,
+                    text=f"Outlet state — {names.get(identifier, identifier)}: phase {phase}; property applicability {status}. Heat-transfer applicability is reported separately.",
+                    style="Muted.TLabel", wraplength=700)
+                outlet_note.grid(row=2+note_index, column=0, columnspan=2, sticky="ew", pady=(4, 0))
+                outlet_note.bind("<Configure>", lambda event, item=outlet_note: item.configure(
+                    wraplength=max(120, event.width-8)), add="+")
         angle_geometry = _mapping(
             _get(
                 thermal,
@@ -904,6 +951,9 @@ class ThermalResultsPage(ResultPage):
                   "coolant_nusselt": ("coolant_nusselt",),
                   "coolant_raw_coefficient_w_m2k": ("coolant_raw_coefficient_w_m2k",),
                   "coolant_vapor_quality": ("coolant_vapor_quality",),
+                  "coolant_temperature_glide_k": ("coolant_temperature_glide_k",),
+                  "coolant_boiling_mass_transfer_factor": ("coolant_boiling_mass_transfer_factor",),
+                  "coolant_boiling_convective_factor": ("coolant_boiling_convective_factor",),
                   "gas_coefficient_w_m2k": ("gas_coefficient_w_m2k",),
                   "coolant_coefficient_w_m2k": ("coolant_coefficient_w_m2k",),
                   "film_effectiveness": ("film_effectiveness",)}
@@ -913,17 +963,21 @@ class ThermalResultsPage(ResultPage):
         regimes = thermal.get("coolant_flow_regime", [])
         applicability = thermal.get("station_applicability", [])
         active = thermal.get("active_segment_id", [])
+        wet_wall = _coolant_wet_wall_flags(thermal)
         warnings = " | ".join(self.report_warnings)
         metadata = _mapping(thermal.get("metadata"))
         source_keys = ("model_capabilities", "coolant_property_sources", "coolant_property_metadata", "material_references", "gas_state_source",
                        "gas_side_model", "coolant_side_model", "wall_model", "radiation_model", "film_model",
-                       "two_phase_model", "two_phase_model_by_segment", "regen_segment_completion")
+                       "two_phase_model", "two_phase_model_by_segment", "mixture_boiling_model",
+                       "coolant_outlet_phase", "coolant_outlet_enthalpy_j_kg", "regen_segment_completion")
         sources = json.dumps({key: metadata[key] for key in source_keys if key in metadata},
                              ensure_ascii=False, default=str)
         hot_wall = _array(thermal, "twg_k", "Twg_K", "Twg")
         completion = _thermal_completion_details(thermal)
         segment_completion = _mapping(metadata.get("regen_segment_completion"))
+        outlet_phases = _mapping(_get(thermal, "coolant_outlet_phase", "metadata.coolant_outlet_phase", default={}))
         keys = ["station_index", "x_mm", *fields, "active_segment_id", "coolant_phase", "coolant_flow_regime",
+                "coolant_wet_wall_assumed", "segment_outlet_phase", "segment_outlet_property_applicability",
                 "station_applicability", "wall_solution_available", "wall_solution_complete",
                 "solved_wall_station_count", "requested_wall_station_count", "unsupported_station_count",
                 "segment_solved_wall_stations", "segment_requested_wall_stations", "segment_wall_march_completed",
@@ -938,6 +992,9 @@ class ThermalResultsPage(ResultPage):
                        "active_segment_id": identifier,
                        "coolant_phase": phases[index] if len(phases) == len(x) else "",
                        "coolant_flow_regime": regimes[index] if len(regimes) == len(x) else "",
+                       "coolant_wet_wall_assumed": wet_wall[index] if len(wet_wall) == len(x) and wet_wall[index] is not None else "",
+                       "segment_outlet_phase": outlet_phases.get(identifier, ""),
+                       "segment_outlet_property_applicability": segment.get("outlet_property_applicability", ""),
                        "station_applicability": applicability[index] if len(applicability) == len(x) else "",
                        "wall_solution_available": len(hot_wall) == len(x) and math.isfinite(float(hot_wall[index])),
                        **{key: completion[key] for key in ("wall_solution_complete", "solved_wall_station_count",
@@ -974,6 +1031,7 @@ class ThermalResultsPage(ResultPage):
         )
         table_box.pack(fill="x", pady=(10, 0))
         columns = ("x", "q", "Twg", "Twi", "Twc", "Tc", "pc", "wc", "rho", "Re", "Nu", "hc_raw",
+                   "glide", "F_TS", "F_BG", "wet_wall",
                    "applicability", "phase", "quality", "regime")
         headings = {
             "x": "Axial x (mm)",
@@ -988,6 +1046,10 @@ class ThermalResultsPage(ResultPage):
             "Re": "Coolant Re",
             "Nu": "Coolant Nu",
             "hc_raw": "Raw hc (W/m²K)",
+            "glide": "Local glide (K)",
+            "F_TS": "Nucleate F_TS",
+            "F_BG": "Convective F_BG",
+            "wet_wall": "Wet wall assumed",
             "applicability": "Station applicability",
             "phase": "Property phase",
             "quality": "Vapor x (0–1)",
@@ -1005,7 +1067,7 @@ class ThermalResultsPage(ResultPage):
         horizontal.pack(fill="x")
         tree.configure(xscrollcommand=horizontal.set)
         scale = float(tree.tk.call("tk", "scaling")) / (96.0 / 72.0)
-        for column, base_width in zip(columns, (82, 124, 76, 76, 76, 76, 85, 85, 96, 100, 100, 130, 155, 116, 100, 210)):
+        for column, base_width in zip(columns, (82, 124, 76, 76, 76, 76, 85, 85, 96, 100, 100, 130, 115, 125, 130, 135, 155, 116, 100, 210)):
             width = max(1, round(base_width * scale))
             tree.heading(column, text=headings[column])
             tree.column(column, width=width, minwidth=width, stretch=False,
@@ -1023,11 +1085,15 @@ class ThermalResultsPage(ResultPage):
             "Re": _array(thermal, "coolant_reynolds"),
             "Nu": _array(thermal, "coolant_nusselt"),
             "hc_raw": _array(thermal, "coolant_raw_coefficient_w_m2k"),
+            "glide": _array(thermal, "coolant_temperature_glide_k"),
+            "F_TS": _array(thermal, "coolant_boiling_mass_transfer_factor"),
+            "F_BG": _array(thermal, "coolant_boiling_convective_factor"),
             "quality": _coolant_quality_array(thermal),
         }
         regimes = _get(thermal, "coolant_flow_regime", default=[]) or []
         phases = _get(thermal, "coolant_phase", default=[]) or []
         applicability = _get(thermal, "station_applicability", default=[]) or []
+        wet_wall = _coolant_wet_wall_flags(thermal)
 
         def value_at(key: str, index: int) -> float:
             values = arrays[key]
@@ -1054,6 +1120,10 @@ class ThermalResultsPage(ResultPage):
                     display(value_at("Re", index), 1),
                     display(value_at("Nu", index), 3),
                     display(value_at("hc_raw", index), 2),
+                    display(value_at("glide", index), 3),
+                    display(value_at("F_TS", index), 4),
+                    display(value_at("F_BG", index), 4),
+                    str(wet_wall[index]) if len(wet_wall) == len(x) and wet_wall[index] is not None else "—",
                     str(applicability[index]) if len(applicability) == len(x) and applicability[index] else "—",
                     str(phases[index]) if len(phases) == len(x) and phases[index] else "—",
                     display(value_at("quality", index), 4),

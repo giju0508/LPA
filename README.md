@@ -2,15 +2,15 @@
 
 LPA는 액체로켓 연소기의 성능, 추력실 형상, 열역학 상태와 정상상태 열전달을 예비 설계 단계에서 계산하는 Windows 데스크톱 도구입니다. RPA와 유사한 좌측 입력/결과 탐색 구조를 사용하며, 추진 성능은 RocketCEA, 고온가스측 열전달은 Bartz 상관식을 기본으로 합니다.
 
-현재 버전: **0.17.0b1** · **Beta 사전 배포판** · [변경 이력](CHANGELOG.md) · [검증 기록](docs/VALIDATION.md)
+현재 버전: **0.18.0b1** · **Beta 사전 배포판** · [변경 이력](CHANGELOG.md) · [검증 기록](docs/VALIDATION.md)
 
-이 버전은 냉각채널 입구·전이 열전달, 물성 적용범위와 진단 표시를 보강한 **Beta**입니다. 구현된 상관식, 계산이 완료된 범위와 수치 수렴 여부를 확인할 수 있지만, 전체 엔진이나 실제 채널의 열전달·CHF·dryout·수명 검증이 완료된 버전은 아닙니다. 특히 증기 질량분율 0.7 제한은 계산 보호 경계이며 실제 dryout 발생점을 뜻하지 않습니다. 물리 적용 상태와 중단 이유를 함께 확인하십시오.
+이 버전은 RP-1의 고온 물성, LNG·에탄올/물 혼합물의 상별 수송물성과 2상 비등 계산을 보강한 **Beta**입니다. 구현된 상관식, 계산이 완료된 범위와 수치 수렴 여부를 확인할 수 있지만, 전체 엔진이나 실제 채널의 열전달·CHF·dryout·수명 검증이 완료된 버전은 아닙니다. 순수유체의 증기 질량분율 0.7 제한은 계산 보호 경계이며 실제 dryout 발생점을 뜻하지 않습니다. 혼합물은 계속 젖은 벽을 가정하여 x<1까지 공학적으로 계산하며, 실제 dryout 이후의 온도나 안전 여유를 보장하지 않습니다. 물리 적용 상태와 중단 이유를 함께 확인하십시오.
 
-이번 변경의 근거와 결과는 [0.17.0 Beta 검토 기록](docs/THERMAL_REVIEW_0170.md)에 있습니다.
+이번 변경의 근거와 결과는 [0.18.0 Beta 검토 기록](docs/THERMAL_REVIEW_0180.md), [RP-1 모델](docs/property_review_0180.md), [혼합물 비등](docs/MIXTURE_FLOW_BOILING_2026-10-19.md), [LNG 수송물성](docs/TRAPP_TRANSPORT_2026-10-19.md), [에탄올/물 실측 비교](docs/ETHANOL_TRANSPORT_2026-10-19.md), [UI 배치 검수](docs/UI_LAYOUT_REVIEW_0180.md)에 있습니다. 이전 [0.17.0 검토](docs/THERMAL_REVIEW_0170.md)는 이력으로 보존합니다.
 
-배포 태그: [v0.17.0b1](https://github.com/giju0508/LPA/releases/tag/v0.17.0b1). 소스, 실행 파일 및 시험·빌드 결과의 버전이 같은지 확인하십시오. 이번 시작 중단 수정은 [VS Code 확인 기록](docs/STARTUP_VSCODE_2026-10-19.md)에 있습니다. 열전달 변경의 근거·실행 기록은 [열전달 Beta 구현 기록](docs/THERMAL_BETA_2026-10-19.md), [가스측 RPA 비교](docs/THERMAL_GAS_METHOD_2026-10-19.md), [물성 검증](docs/COOLANT_PROPERTIES_2026-10-19.md), [2상 결과 UI 기록](docs/TWO_PHASE_UI_2026-10-19.md)에 있습니다. 이전 [배포 검토](docs/RELEASE_REMEDIATION_2026-10-11.md)와 [자동 O/F 검토](docs/OF_OPTIMIZATION_REVIEW_2026-10-11.md)도 보존합니다.
+배포 태그: [v0.18.0b1](https://github.com/giju0508/LPA/releases/tag/v0.18.0b1). 소스, 실행 파일 및 시험·빌드 결과의 버전이 같은지 확인하십시오. 이번 시작 중단 수정은 [VS Code 확인 기록](docs/STARTUP_VSCODE_2026-10-19.md)에 있습니다. 열전달 변경의 근거·실행 기록은 [열전달 Beta 구현 기록](docs/THERMAL_BETA_2026-10-19.md), [가스측 RPA 비교](docs/THERMAL_GAS_METHOD_2026-10-19.md), [물성 검증](docs/COOLANT_PROPERTIES_2026-10-19.md), [2상 결과 UI 기록](docs/TWO_PHASE_UI_2026-10-19.md)에 있습니다. 이전 [배포 검토](docs/RELEASE_REMEDIATION_2026-10-11.md)와 [자동 O/F 검토](docs/OF_OPTIMIZATION_REVIEW_2026-10-11.md)도 보존합니다.
 
-기능, 해석 로직 또는 주요 GUI가 변경되는 릴리스마다 `lpa.__version__`을 올리고 같은 버전의 변경 내용과 KST 일시를 `CHANGELOG.md`에 기록합니다. README와 Windows FileVersion/ProductVersion 문자열을 일치시키며, 이 Beta의 Windows 고정 버전은 `0.17.0.1`, prerelease flag는 `0x2`입니다. 빌드·회귀시험 출력은 `tmp/build-<version>.log`, `tmp/test-<version>.log`에 남기고 실행 파일·버전별 ZIP의 SHA-256 및 실제 수행한 검증 결과를 `docs/VALIDATION.md`에 기록합니다.
+기능, 해석 로직 또는 주요 GUI가 변경되는 릴리스마다 `lpa.__version__`을 올리고 같은 버전의 변경 내용과 KST 일시를 `CHANGELOG.md`에 기록합니다. README와 Windows FileVersion/ProductVersion 문자열을 일치시키며, 이 Beta의 Windows 고정 버전은 `0.18.0.1`, prerelease flag는 `0x2`입니다. 빌드·회귀시험 출력은 `tmp/build-<version>.log`, `tmp/test-<version>.log`에 남기고 실행 파일·버전별 ZIP의 SHA-256 및 실제 수행한 검증 결과를 `docs/VALIDATION.md`에 기록합니다.
 
 > **중요:** LPA의 결과는 개념/예비 설계 및 비교 검토용입니다. 시험, 상세 CFD/FEA, 구조·피로·수명 해석, 제작 공정 검증, 독립적인 수계산과 전문 엔지니어의 검토를 대체하지 않으며 비행·시험 안전 인증 자료로 사용할 수 없습니다.
 
@@ -57,9 +57,11 @@ Engine Definition에서 H2O2, Ethanol, IPA를 선택하면 별도의 `Mass fract
 
 시작 및 New Project의 `LPA Demonstrator` 기본값은 **추력 2000 N @ 1 atm, Pc 20 bar(a), Ac/At 6.25, L* 1200 mm, O/F 1.3, LOX / Ethanol 70 wt%**입니다. 자동 O/F는 해제 상태로 시작합니다. 공급 온도·압력은 선택 입력이며, 입력하면 EOS의 상대 엔탈피 변화가 CEA 카드에 적용됩니다. 둘 다 비우면 기존 CEA 기준 상태를 사용하고, 온도만 입력하면 압력 1.01325 bar(LNG 5 bar), 압력만 입력하면 추진제 기준 온도를 사용합니다. LNG는 공통 111.66 K·5 bar 기준의 혼합물 엔탈피를 사용하고 실제 공급 상태를 지정할 수 있습니다. IPA/H2O2 및 kerosene의 공급 엔탈피는 별도 screening 근사와 경고를 유지합니다.
 
-수치 수렴과 물리 적용범위를 별도로 표시합니다. 냉각제의 압력 의존 EOS와 엔탈피 행진, 리브 fin·원통벽 면적 보정, 사각채널 층류, 연결 Film/Regen 반복을 사용합니다. 지원 범위 안의 순수유체 포화 비등은 아래 Beta 모델로 계산하고, 혼합물 2상 열전달·CHF/dryout·검증되지 않은 초임계 열전달·액체 Film 증발·발열 분해·coking·비정상/ablative 영역은 별도로 진단합니다. `screening`, `unsupported`, `invalid`와 수치 수렴·계산 완료 개수를 함께 확인하며, 수렴만으로 실제 설계 적합성을 판정하지 않습니다.
+수치 수렴과 물리 적용범위를 별도로 표시합니다. 냉각제의 압력 의존 EOS와 엔탈피 행진, 리브 fin·원통벽 면적 보정, 사각채널 층류, 연결 Film/Regen 반복을 사용합니다. 순수유체 포화 비등 및 혼합물의 온도 glide/물질전달 보정을 아래 Beta 모델로 계산하고, CHF/dryout·검증되지 않은 초임계 열전달·액체 Film 증발·발열 분해·coking·비정상/ablative 영역은 별도로 진단합니다. `screening`, `unsupported`, `invalid`와 수치 수렴·계산 완료 개수를 함께 확인하며, 수렴만으로 실제 설계 적합성을 판정하지 않습니다.
 
-0.17.0b1의 RP-1 기본 점도는 NIST 자료의 **243.29–333.15 K**에 제한되며 압력 독립 진단용입니다. 밀도/Cp와 상 판정은 검증된 RP-1 EOS가 아니므로 고온 전 구간 재생냉각을 지원 완료한 것으로 해석하지 마십시오. HEOS의 필수 transport가 없거나 유체 모델 자체가 없는 경우에는 기본 열해석 행진을 중단합니다. 결과 표·전체 CSV에 Reynolds/Nusselt 수, 원래 냉각측 열전달계수와 지점별 적용성을 기록하며, 부분 계산의 마지막 상태는 정상 출구로 연결하지 않습니다. [추진제별 물성 근거](docs/property_review_0170.md)를 확인하십시오.
+RP-1의 기존 333.15 K 점도 제한을 대신하여 공개 NIST 성분 EOS 기반 **LPA trans-decalin/n-dodecane 2성분 공학 surrogate**를 사용합니다. 270 ≤ T < 650 K, 0 < P ≤ 50 MPa에서 예측 비등점 미만의 안정 액상만 계산합니다. 이는 원 논문의 NIST 4성분 RP-1 모델이나 모든 연료 lot의 검증 범위가 아닙니다. 밀도에 맞춘 조성, 저온 점도 보정, 방사 보정 열전도율과 독립 Cp/고온 자료 비교를 구분해 기록합니다. 650 K 이상, 예측 비등·물성 모델 실패는 계속 명시적으로 중단합니다. RP-1의 분별 증발·열분해·coking은 지원하지 않습니다.
+
+LNG는 HEOS의 혼합물 점도 NaN/비물리적 성분 평가를 대체하는 NBS TRAPP 모델을 **각 상의 조성·밀도**에서 사용합니다. 에탄올/물은 공개 실측자료의 excess 점도·열전도율 식과 기상 혼합 법칙을 사용합니다. 고온·고압 예측과 실측 범위는 분리하며, 혼합물에서 유한한 물성이 나오는 것만으로 열전달이 검증되었다고 표시하지 않습니다. 결과 표·전체 CSV에 Reynolds/Nusselt 수, 원래 냉각측 열전달계수, local glide, 두 혼합물 보정계수와 wet-wall 가정을 기록합니다.
 
 RPA는 내부 탐색 범위·정련 알고리즘·수렴 허용값을 공개하지 않습니다. LPA는 관측된 목적함수와 출구조건 의미를 따르되, O/F 0.10–30.0의 49점 bounded coarse scan 후 최상 구간을 golden-section 30회로 정련합니다. RocketCEA의 공개 API는 RPA처럼 임의의 pressure-ratio/area-ratio 위치에서 동결시키는 기능을 제공하지 않으므로, 신규 입력은 shifting 또는 throat freezing을 제공합니다. 현재 유한면적 연소기(FAC)에서 chamber freezing은 CEA station 출력이 유효하지 않아 차단하며, 임의 동결 위치는 지원하지 않습니다. 열역학 데이터베이스와 비공개 수치 설정까지 포함한 RPA와의 완전한 수치 일치도 보장하지 않습니다. RocketCEA 계산이 실패하면 engineering fallback을 사용하며 분석 결과 warning에 기록합니다.
 
@@ -83,9 +85,9 @@ Ambient Condition Performance는 입력한 외압 점의 고정 하드웨어 성
 
 ### 포화 2상 재생냉각의 Beta 범위
 
-기본 `auto`는 순수유체의 포화 2상 상태에서 수력직경 `Dh`에 따라 상관식을 선택합니다. 선택된 모델, 출처와 중단 이유는 결과의 모델 진단에 기록합니다.
+기본 `Auto (Beta)`는 순수유체에서 수력직경 `Dh`에 따라 상관식을 선택하고, LNG·에탄올/물 혼합물에는 별도의 Shah/GW87 + Thome–Shakir/Bell–Ghaly 보정을 적용합니다. 선택된 모델, 출처와 중단 이유는 결과의 모델 진단에 기록합니다.
 
-화면에서는 `Auto (Beta)` 또는 `Disabled`를 선택합니다. 개별 상관식 직접 선택과 건도 상한 조정은 현재 Python API의 `ThermalSolverSettings`에서 제공합니다.
+화면에서는 `Auto (Beta)`, `Pure fluids only`, `Disabled`를 선택합니다. `Pure fluids only`는 혼합물 비등 계산을 끄며 `Disabled`는 모든 비등 계산을 중단합니다. 개별 상관식 직접 선택과 건도 상한 조정은 현재 Python API의 `ThermalSolverSettings`에서 제공합니다.
 
 | 선택 | 수력직경 범위 | 계산 범위 |
 |---|---|---|
@@ -94,13 +96,15 @@ Ambient Condition Performance는 입력한 외압 점의 고정 하드웨어 성
 | Chen–Bennett 직접 선택 | 3 ≤ Dh ≤ 32 mm | 위와 같은 제한; 3.0–3.1 mm 중첩 범위에서 선택 가능 |
 | `disabled` | 해당 없음 | 2상 상태를 보고하고 해당 열전달 계산 중단 |
 
-이 경로는 **pre-dryout을 가정한 순수유체 포화 비등**에 한정됩니다. 사각채널을 수력직경으로 대응시키는 방법, slip/유동양식, 극저온 유체별 적용성은 실제 채널 시험으로 검증해야 합니다. 액상·기상 포화 transport와 표면장력·잠열이 필요하며, 압력이 임계압력의 0.8배 이상이거나 상관식의 직경·Reynolds 수 등 조건을 벗어나면 지원하지 않습니다. 열전달 모델의 전체 검증이 끝났다는 뜻으로 `Beta` 또는 `screening` 상태를 해석하지 마십시오.
+위 표의 순수유체 경로는 **pre-dryout을 가정한 포화 비등**입니다. 사각채널을 수력직경으로 대응시키는 방법, slip/유동양식, 극저온 유체별 적용성은 실제 채널 시험으로 검증해야 합니다. 액상·기상 포화 transport와 표면장력·잠열이 필요하며, 압력이 임계압력의 0.8배 이상이거나 상관식의 직경·Reynolds 수 등 조건을 벗어나면 지원하지 않습니다. 열전달 모델의 전체 검증이 끝났다는 뜻으로 `Beta` 또는 `screening` 상태를 해석하지 마십시오.
 
-최대 증기 **질량**분율은 기본 0.7이며 이 이하로 제한할 수 있습니다. **0.7은 실제 dryout 품질이나 안전 여유가 아닙니다.** CHF, dryout 발생 위치, post-dryout 열전달과 2상 유동 불안정은 예측하지 않습니다. Bulk가 액체인데 냉각제측 벽이 포화온도를 넘는 subcooled-boiling 영역도 별도 모델 부재를 진단합니다.
+순수유체의 최대 증기 **질량**분율은 기본 0.7이며 이 이하로 제한할 수 있습니다. **0.7은 실제 dryout 품질이나 안전 여유가 아닙니다.** CHF, dryout 발생 위치, post-dryout 열전달과 2상 유동 불안정은 예측하지 않습니다. Bulk가 액체인데 냉각제측 벽이 포화온도를 넘는 subcooled-boiling 영역도 별도 모델 부재를 진단합니다.
 
 실행 진단은 `%LOCALAPPDATA%/LPA/logs/lpa.log`에 회전 저장됩니다. 버전, Regen 입·출구 상태·질량건도·완료 구간 수와 적용범위/중단 이유를 기록하며, 계산 수치와 원본 station은 결과의 진단·CSV에서도 확인할 수 있습니다.
 
-에탄올/물·LNG 등의 혼합물은 EOS가 제공하는 범위에서 2상 상태와 질량분율을 검출·표시하지만, temperature glide와 성분간 물질전달을 반영하는 혼합물 비등 상관식이 없으므로 **2상 열전달 행진을 중단**합니다. 물성 backend의 선택이나 압력 증가만으로 이 제한이 해제되지는 않습니다.
+LNG·에탄올/물 혼합물은 EOS의 상평형·질량건도와 분별된 액상/기상 물성을 이용합니다. 현재 액상 조성의 bubble/dew 온도차와 일정 압력의 dT/dh로 혼합물 비등 감소를 보정하고 x<1까지 **계속 젖은 벽을 가정한 공학 계산**을 수행합니다. x=1에서는 기체 대류로 전환하며, 두 경험식의 전환에서 계수·온도가 불연속일 수 있습니다. 임의 보간으로 이를 숨기지 않습니다. 경험적 물질전달 계수 beta=0.0003 m/s는 측정 확산계수가 아닙니다.
+
+혼합물 문헌 데이터의 집계 범위(Dh 0.19–14 mm, G 50–930 kg/m²/s, P/Pcritical 0.05–0.63)는 모든 조성·건도·로켓 열유속의 검증 범위가 아닙니다. 범위 밖은 계산값과 함께 `unsupported`를 표시하며, 에탄올/물의 Marangoni 효과와 실제 CHF/dryout은 검증되지 않아 **완료된 계산도 물리 적용 상태는 unsupported일 수 있습니다**. EOS 또는 상별 필수 물성을 확보하지 못하면 계산을 중단합니다. 순수유체와 혼합물의 지원 모델·실측 범위·계산 보호 경계는 서로 다릅니다.
 
 ### 결과의 수렴·완료·중단 해석
 

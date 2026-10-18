@@ -1,0 +1,11 @@
+{
+    "version":  "0.18.0b1",
+    "launch_kind":  "exe",
+    "executable":  "C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\dist\\LPA.exe",
+    "title":  "LPA 0.18.0b1 Beta",
+    "responding":  true,
+    "parent_process_id":  14224,
+    "window_process_id":  16000,
+    "normal_close":  true,
+    "exit_code":  0
+}

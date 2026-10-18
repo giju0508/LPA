@@ -909,11 +909,12 @@ def test_thermal_regen_summary_includes_pressure_columns(app: LPAApplication) ->
     assert page.axial_tree is not None
     assert tuple(page.axial_tree.cget("columns")) == (
         "x", "q", "Twg", "Twi", "Twc", "Tc", "pc", "wc", "rho", "Re", "Nu", "hc_raw",
+        "glide", "F_TS", "F_BG", "wet_wall",
         "applicability", "phase", "quality", "regime"
     )
     assert len(page.axial_tree.get_children()) == 30
     first = page.axial_tree.item(page.axial_tree.get_children()[0], "values")
     last = page.axial_tree.item(page.axial_tree.get_children()[-1], "values")
     assert first == ("0.000", "1.0000", "700.00", "680.00", "500.00", "290.00", "30.000", "4.000", "800.00",
-                     "—", "—", "—", "—", "—", "—", "—")
+                     "—", "—", "—", "—", "—", "—", "—", "—", "—", "—", "—")
     assert last[0] == "34.000"

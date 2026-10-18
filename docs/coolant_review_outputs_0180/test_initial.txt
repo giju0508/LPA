@@ -1,0 +1,43 @@
+........................................................................ [  9%]
+........................................................................ [ 18%]
+...............................................................F........ [ 27%]
+........................................................................ [ 36%]
+........................................................................ [ 45%]
+........................................................................ [ 54%]
+........................................................................ [ 63%]
+........................................................................ [ 72%]
+........................................................................ [ 82%]
+........................................................................ [ 91%]
+......................................................................   [100%]
+================================== FAILURES ===================================
+______ test_film_orifice_uses_linked_regen_coolant_not_stale_film_value _______
+
+    def test_film_orifice_uses_linked_regen_coolant_not_stale_film_value() -> None:
+        _film, segments = _linked_segments()
+        project = {
+            "engine": {"oxidizer": "LOX", "fuel": "RP-1", "mixture_ratio": "2.5"},
+            "thermal": {"segments": segments},
+        }
+        core_result = SimpleNamespace(
+            contour=SimpleNamespace(x_m=(0.0, 0.1), chamber_end_index=0),
+            performance=SimpleNamespace(chamber_pressure_bar=10.0, total_mass_flow_kg_s=1.0),
+        )
+        thermal_result = SimpleNamespace(
+            x_m=(0.0, 0.1),
+            Tc_K=(300.0, 320.0),
+            active_segment_id=("linked", "linked"),
+            coolant_outlet_temperature_k={"linked": 320.0},
+            coolant_inlet_temperature_k={"linked": 300.0},
+            coolant_outlet_pressure_bar={"linked": 40.0},
+        )
+    
+        rows, warnings = _film_orifice_results(project, core_result, thermal_result)
+    
+>       assert all("screening properties" in message for message in warnings)
+E       assert False
+E        +  where False = all(<generator object test_film_orifice_uses_linked_regen_coolant_not_stale_film_value.<locals>.<genexpr> at 0x00000231A3D78A00>)
+
+tests\test_film_regen_coolant_link.py:74: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_film_regen_coolant_link.py::test_film_orifice_uses_linked_regen_coolant_not_stale_film_value
+1 failed, 789 passed in 121.49s (0:02:01)

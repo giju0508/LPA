@@ -126,5 +126,7 @@ def test_requested_refprop_missing_library_is_explicit_without_heos_substitution
 
 def test_rp1_does_not_claim_an_unavailable_nist_surrogate_provider():
     state = coolants.coolant_state("RP-1", 450.0, 100e5)
-    assert state.phase == "unknown" and state.source == "screening"
-    assert "no validated pressure/phase" in " ".join(state.issues)
+    assert state.phase == "supercritical_liquid"
+    assert state.property_applicability == "correlated"
+    assert "LPA fitted" in state.source and "engineering surrogate" in state.source
+    assert "not the published NIST four-component" in " ".join(state.issues)

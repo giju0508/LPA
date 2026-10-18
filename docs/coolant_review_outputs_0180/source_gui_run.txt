@@ -1,0 +1,11 @@
+{
+    "version":  "0.18.0b1",
+    "launch_kind":  "source",
+    "executable":  "C:\\Python314\\python.exe",
+    "title":  "LPA 0.18.0b1 Beta",
+    "responding":  true,
+    "parent_process_id":  25796,
+    "window_process_id":  25796,
+    "normal_close":  true,
+    "exit_code":  0
+}

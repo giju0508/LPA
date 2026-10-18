@@ -346,4 +346,34 @@ RPA 유동 관계식은 같은 Me/K로 평가했을 때의 실측 일치이며, 
 | rocketcea-1.2.3.tar.gz | 69126862 | `66f306407f11ba36186342dc2716417d3a5c9d94c95b0c5663380091bb11caa9` |
 
 
-GitHub 최종 게시 확인: [giju0508/LPA](https://github.com/giju0508/LPA)를 **public**으로 전환하고 [v0.17.0b1 Beta](https://github.com/giju0508/LPA/releases/tag/v0.17.0b1)를 **published prerelease**로 게시했다. 게시 시각 **2026-10-19 04:52:19 KST**, release ID **416669826**, release code commit **b6caefbd58a8b54b69e589901a9522e656d37392**. ZIP·RocketCEA 대응 소스·SHA256SUMS **3개 asset**은 uploaded 상태이며 각 GitHub SHA-256 digest가 로컬 파일과 일치한다. 인증 없는 API에서 저장소/Release를 읽고 모든 asset의 다운로드 HEAD **HTTP 200 / 정확한 크기**를 확인했다. 현재 게시된 최신 Beta가 v0.17.0b1임을 별도로 확인했다. `github_publication.json`, `anonymous_publication_check.json`.
+GitHub 최종 게시 확인: [giju0508/LPA](https://github.com/giju0508/LPA)를 **public**으로 전환하고 [v0.17.0b1 Beta](https://github.com/giju0508/LPA/releases/tag/v0.17.0b1)를 **published prerelease**로 게시했다. 게시 시각 **2026-10-19 04:52:19 KST**, release ID **416669826**, release code commit **b6caefbd58a8b54b69e589901a9522e656d37392**. ZIP·RocketCEA 대응 소스·SHA256SUMS **3개 asset**은 uploaded 상태이며 각 GitHub SHA-256 digest가 로컬 파일과 일치한다. 인증 없는 API에서 저장소/Release를 읽고 모든 asset의 다운로드 HEAD **HTTP 200 / 정확한 크기**를 확인했다. 당시 게시된 최신 Beta가 v0.17.0b1임을 별도로 확인했다. `github_publication.json`, `anonymous_publication_check.json`.
+
+## 검증 기록 (0.18.0b1 Beta)
+
+2026-10-19 KST, 동일 Windows 11 x64 / CPython 3.14.0 / Tk 8.6 및 pinned
+dependencies에서 수행했습니다. [방법·실제 채널 결과](THERMAL_REVIEW_0180.md),
+[원본 출력/manifest](coolant_review_outputs_0180/README.md),
+[UI 화면/배율 검수](UI_LAYOUT_REVIEW_0180.md)를 함께 확인합니다.
+
+| 확인 | 실제 결과 |
+|---|---|
+| 버전 | Python/README/CHANGELOG/Windows 문자열 **0.18.0b1 Beta**, 고정 **0.18.0.1**, prerelease flag **0x2** |
+| 전체 회귀 | **798 passed in 125.33 s**, failure/error/skip 없음. `test_run.txt` |
+| 통합 실패 교정 | 첫 시험 **1 failed / 789 passed**: 새 고압 RP-1 액상 모델이 Film의 기존 `supercritical` 문자열 분기로 기체 오리피스식에 들어가는 문제를 발견. `supercritical_liquid`를 기체 분기에서 제외하고 RP-1/LNG 회귀를 추가했으며 위 전체 시험 통과. 원본 `test_initial.txt` 보존 |
+| 최종 dew endpoint 보강 | 전체 시험 뒤 사라진 액상의 NaN 엔탈피·Cp·밀도가 0×NaN으로 진단 수지를 오염시키지 않도록 기상 값을 직접 사용. 강화한 endpoint 시험 **5 passed in 6.78 s**, 최종 EXE 재빌드·번들 확인/실행. 기존 실제 사례의 유한 물성 수치는 동일 |
+| RP-1 물성 | 공개 NIST constituent EOS + 별도 LPA 2성분 fit. 독립 density/Cp·고온 µ 그림 대조, k 50개 고온 holdout, EOS Gibbs closure와 dh/dT=Cp·PH 수지 확인. 원 NIST 4성분 모델의 오차를 전용하지 않음 |
+| LNG/에탄올 transport | NBS 원문 TRAPP 예제 대조 및 실측 excess 모델. 에탄올 독립 Hoga µ AAD **2.553%**, Zhou k **0.586%**; 해당 source uncertainty/조건의 비교이며 전체 고온/압력 오차가 아님 |
+| 실제 RP-1 원본 | SHA-256/미변경 확인. 높이 1.3/1.8 mm 모두 **300/300** 완료, 출구 **582.585/567.180 K**, 수지 residual 각각 **6.4e-10/2.6e-10 W**. 적용 상태는 **unsupported** 유지 |
+| 공개 혼합물 채널 | LNG·Et70 각각 **300/300** 및 액체→2상→기체. 건도 0.7 이상을 통과하며 운동에너지 포함 수지 **−4.3e-11/7.0e-12 W**. wet-wall 가정 및 unsupported 모델 범위 명시, 실제 CHF/dryout 통과 검증으로 주장하지 않음 |
+| UI | Pc/O/F 동일 행·좌우 순서, Auto O/F 문구 단일 행, 농도 유무에 따른 selector 상단 정렬. 1080×700 / 1280×860 × Tk 96/120/144 dpi 대응 6조건 검증. 실제 OS DPI 전환과는 구분 |
+| EXE | PyInstaller 6.21.0 단일 파일 빌드. 최종 **39개 LPA 모듈+main**의 optimize=1 code가 최종 소스와 일치, icon/Rao PNG·native 및 dependency license 확인 |
+| GUI 시작/종료 | 소스/EXE 모두 `LPA 0.18.0b1 Beta`, responding·normal close true, exit **0**. 소스 stdout/stderr 0 bytes |
+| 추출 native 계산 | host site-packages 없는 `-I -S`에서 실제 CEA/자동 O/F·물 비등·LNG/에탄올 transport+혼합물 비등·RP-1 450/600 K 및 PH 역산 통과. clean-PC의 frozen EXE 전체 계산과는 구분 |
+| ZIP/해시 | 최신 EXE·README·CHANGELOG·방법 문서·UI 화면 및 직접/간접 dependency 원본 license notices. ZIP 무결성/모든 member 원본 일치를 검사하고 **SHA-256·크기는 release_manifest.json 및 배포 SHA256SUMS**에 기록 |
+| 잔여 범위 | 실제 채널 열시험, CHF/dryout·post-dryout·Marangoni, fuel lot/열분해/coking·재료 수명 및 clean-PC 전체 계산·코드 서명은 미검증. RP-1 계산 경계는 270≤T<650 K/P≤50 MPa/예측 액상이며 실측 검증 사각형이 아님 |
+
+게시 링크: [v0.18.0b1 Beta](https://github.com/giju0508/LPA/releases/tag/v0.18.0b1).
+게시 완료 여부·태그 commit·각 asset digest·인증 없는 공개 다운로드 확인은
+`coolant_review_outputs_0180/github_publication.json` 및
+`anonymous_publication_check.json`에 실제 응답으로 기록합니다. GitHub의
+prerelease는 정식 안정판 `Latest` 표기와 구분합니다.

@@ -356,9 +356,13 @@ def validate_project(project: dict[str, Any]) -> list[ValidationIssue]:
 
     if thermal.get("thermal_enabled"):
         for key,choices in (("coolant_property_backend",{"CoolProp HEOS","REFPROP (separate installation)"}),
-                            ("two_phase_model",{"Auto (Beta)","Disabled"})):
+                            ("two_phase_model",{"Auto (Beta)","Pure fluids only","Disabled"}),
+                            ("mixture_boiling_model",{"shah_gungor_winterton","disabled"})):
             if key in thermal and thermal[key] not in choices:
                 issues.append(ValidationIssue("thermal",key,f"Unknown {key} selection."))
+        if "mixture_mass_transfer_coefficient_m_s" in thermal:
+            _positive(issues, "thermal", thermal, "mixture_mass_transfer_coefficient_m_s",
+                      "Mixture mass-transfer coefficient")
         try:
             iterations = float(thermal.get("thermal_max_iterations", 0))
             if not isfinite(iterations) or not iterations.is_integer() or not 10 <= iterations <= 1000:

@@ -23,8 +23,10 @@ assert hashlib.sha256(source.read_bytes()).hexdigest()=='66f306407f11ba36186342d
 archive=ROOT/f'dist/LPA-{__version__}-Windows-x64-Beta.zip'
 members={name:ROOT/name for name in ('README.md','THIRD_PARTY_NOTICES.md','CHANGELOG.md')}
 members['LPA.exe']=exe
-for name in ('THERMAL_REVIEW_0170.md','CHANNEL_ENTRY_METHOD_2026-10-19.md','property_review_0170.md'):
-    members['docs/'+name]=ROOT/'docs'/name
+for document in (ROOT/'docs').glob('*.md'):
+    members['docs/'+document.name]=document
+for screenshot in (ROOT/'docs/ui_layout_outputs_0180').glob('*.png'):
+    members['docs/ui_layout_outputs_0180/'+screenshot.name]=screenshot
 pending=['numpy','scipy','matplotlib','CoolProp','rocketcea','ht','fluids']
 seen=set()
 while pending:

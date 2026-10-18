@@ -1,0 +1,121 @@
+Checking GUI, numerical libraries, and RocketCEA resources...
+USER_HOME_DIR=C:\Users\LGJ
+LPA 0.18.0b1
+Python 3.14.0, Tk 8.6
+NumPy 2.4.2, SciPy 1.17.0, Matplotlib 3.10.8
+RocketCEA 1.2.3: C:\Users\LGJ\LGJ\Development\Rocketry\LPA\.venv-build\Lib\site-packages\rocketcea
+CoolProp 8.0.0: real-fluid EOS preflight passed
+Building one-file Windows executable...
+273 INFO: PyInstaller: 6.21.0, contrib hooks: 2026.6
+273 INFO: Python: 3.14.0
+320 INFO: Platform: Windows-11-10.0.22631-SP0
+320 INFO: Python environment: C:\Users\LGJ\LGJ\Development\Rocketry\LPA\.venv-build
+324 INFO: Removing temporary files and cleaning cache in C:\Users\LGJ\AppData\Local\pyinstaller
+3305 INFO: Module search paths (PYTHONPATH):
+['C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA',
+ 'C:\\Python314\\python314.zip',
+ 'C:\\Python314\\DLLs',
+ 'C:\\Python314\\Lib',
+ 'C:\\Python314',
+ 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build',
+ 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages',
+ 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA']
+3864 INFO: Appending 'datas' from .spec
+3875 INFO: checking Analysis
+3875 INFO: Building Analysis because Analysis-00.toc is non existent
+3875 INFO: Looking for Python shared library...
+3875 INFO: Using Python shared library: C:\Python314\python314.dll
+3875 INFO: Running Analysis Analysis-00.toc
+3875 INFO: Target bytecode optimization level: 1
+3875 INFO: Initializing module dependency graph...
+3876 INFO: Initializing module graph hook caches...
+3890 INFO: Analyzing modules for base_library.zip ...
+5949 INFO: Processing standard module hook 'hook-encodings.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+6605 INFO: Processing standard module hook 'hook-pickle.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+6885 INFO: Processing standard module hook 'hook-math.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+7028 INFO: Processing standard module hook 'hook-difflib.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+7043 INFO: Processing standard module hook 'hook-heapq.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+9822 INFO: Caching module dependency graph...
+9853 INFO: Analyzing C:\Users\LGJ\LGJ\Development\Rocketry\LPA\main.py
+9880 INFO: Processing standard module hook 'hook-_ctypes.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+10011 INFO: Processing pre-find-module-path hook 'hook-tkinter.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks\\pre_find_module_path'
+10013 INFO: TclTkInfo: initializing cached Tcl/Tk info...
+10499 INFO: Processing standard module hook 'hook-_tkinter.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+10601 INFO: Processing standard module hook 'hook-multiprocessing.util.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+10703 INFO: Processing standard module hook 'hook-xml.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+11496 INFO: Processing standard module hook 'hook-numpy.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+13084 INFO: Processing standard module hook 'hook-sysconfig.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+13201 INFO: Processing standard module hook 'hook-platform.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+13818 INFO: Processing standard module hook 'hook-webbrowser.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+14371 INFO: Processing pre-safe-import-module hook 'hook-typing_extensions.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+14373 INFO: SetuptoolsInfo: initializing cached setuptools info...
+16607 INFO: Processing standard module hook 'hook-scipy.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+17646 INFO: Processing standard module hook 'hook-scipy.linalg.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+18248 INFO: Processing standard module hook 'hook-scipy.special._ufuncs.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+18457 INFO: Processing standard module hook 'hook-scipy.special._ellip_harm_2.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+20880 INFO: Processing standard module hook 'hook-scipy.spatial._ckdtree.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+20950 INFO: Processing standard module hook 'hook-matplotlib.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+21495 INFO: Processing pre-safe-import-module hook 'hook-packaging.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+21625 INFO: Processing pre-safe-import-module hook 'hook-gi.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+21937 INFO: Processing standard module hook 'hook-matplotlib.backend_bases.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+22095 INFO: Processing standard module hook 'hook-PIL.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+22270 INFO: Processing standard module hook 'hook-PIL.Image.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+22849 INFO: Processing standard module hook 'hook-xml.etree.cElementTree.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+23077 INFO: Processing standard module hook 'hook-PIL.ImageFilter.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+24126 INFO: Processing standard module hook 'hook-matplotlib.backends.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+24247 INFO: Processing standard module hook 'hook-matplotlib.pyplot.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+25930 INFO: Processing standard module hook 'hook-dateutil.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+26028 INFO: Processing pre-safe-import-module hook 'hook-six.moves.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+28845 INFO: Processing standard module hook 'hook-scipy.spatial.transform.rotation.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+29989 INFO: Processing standard module hook 'hook-scipy.stats._stats.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+30634 INFO: Processing standard module hook 'hook-scipy.sparse.csgraph.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+34848 INFO: Analyzing hidden import 'CoolProp.BibtexParser'
+34858 INFO: Analyzing hidden import 'CoolProp.GUI'
+34858 INFO: Analyzing hidden import 'CoolProp.GUI.CoolPropGUI'
+35099 INFO: Analyzing hidden import 'CoolProp.GUI.PsychScript'
+35102 INFO: Processing module hooks (post-graph stage)...
+35112 INFO: Processing standard module hook 'hook-matplotlib.backends.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+35113 INFO: Matplotlib backend selection method: user-provided name(s)
+35113 INFO: Selected matplotlib backends: ['TkAgg']
+35518 INFO: Processing standard module hook 'hook-PIL.SpiderImagePlugin.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+35602 WARNING: Hidden import "scipy.special._cdflib" not found!
+35662 INFO: Processing standard module hook 'hook-_tkinter.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+35686 INFO: Performing binary vs. data reclassification (1289 entries)
+35850 INFO: Looking for ctypes DLLs
+35999 INFO: Analyzing run-time hooks ...
+36005 INFO: Including run-time hook 'pyi_rth_inspect.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+36008 INFO: Including run-time hook 'pyi_rth_pkgutil.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+36011 INFO: Including run-time hook 'pyi_rth_multiprocessing.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+36014 INFO: Including run-time hook 'pyi_rth_mplconfig.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+36015 INFO: Processing pre-find-module-path hook 'hook-_pyi_rth_utils.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks\\pre_find_module_path'
+36018 INFO: Processing standard module hook 'hook-_pyi_rth_utils.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks'
+36029 INFO: Including run-time hook 'pyi_rth__tkinter.py' from 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+36068 INFO: Creating base_library.zip...
+36294 INFO: Looking for dynamic libraries
+39997 INFO: Extra DLL search directories (AddDllDirectory): ['C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\numpy.libs', 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\coolprop.libs', 'C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\.venv-build\\Lib\\site-packages\\scipy.libs']
+39997 INFO: Extra DLL search directories (PATH): []
+41904 INFO: Warnings written to C:\Users\LGJ\LGJ\Development\Rocketry\LPA\build\LPA\warn-LPA.txt
+42000 INFO: Graph cross-reference written to C:\Users\LGJ\LGJ\Development\Rocketry\LPA\build\LPA\xref-LPA.html
+42062 INFO: checking PYZ
+42063 INFO: Building PYZ because PYZ-00.toc is non existent
+42063 INFO: Building PYZ (ZlibArchive) C:\Users\LGJ\LGJ\Development\Rocketry\LPA\build\LPA\PYZ-00.pyz
+47151 INFO: Building PYZ (ZlibArchive) C:\Users\LGJ\LGJ\Development\Rocketry\LPA\build\LPA\PYZ-00.pyz completed successfully.
+47216 INFO: checking PKG
+47216 INFO: Building PKG because PKG-00.toc is non existent
+47216 INFO: Building PKG (CArchive) LPA.pkg
+55533 INFO: Building PKG (CArchive) LPA.pkg completed successfully.
+55557 INFO: Bootloader C:\Users\LGJ\LGJ\Development\Rocketry\LPA\.venv-build\Lib\site-packages\PyInstaller\bootloader\Windows-64bit-intel\runw.exe
+55558 INFO: checking EXE
+55558 INFO: Building EXE because EXE-00.toc is non existent
+55558 INFO: Building EXE from EXE-00.toc
+55566 INFO: Copying bootloader EXE to C:\Users\LGJ\LGJ\Development\Rocketry\LPA\dist\LPA.exe
+55615 INFO: Copying icon to EXE
+55658 INFO: Copying version information to EXE
+55705 INFO: Copying 0 resources to EXE
+55705 INFO: Embedding manifest in EXE
+55749 INFO: Appending PKG archive to EXE
+55868 INFO: Fixing EXE headers
+56357 INFO: Building EXE from EXE-00.toc completed successfully.
+56380 INFO: Build complete! The results are available in: C:\Users\LGJ\LGJ\Development\Rocketry\LPA\dist
+Build complete: C:\Users\LGJ\LGJ\Development\Rocketry\LPA\dist\LPA.exe
+Run the validation checklist in docs\VALIDATION.md before distribution.

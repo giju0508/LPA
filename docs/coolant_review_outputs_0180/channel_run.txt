@@ -1,0 +1,156 @@
+INFO:lpa.thermal.solver:regen start id=public_cylinder coolant=LNG T_K=150 p_bar=25 mdot_kg_s=0.04 source=CoolProp HEOS: Methane&Ethane&Propane&n-Butane&Nitrogen phase=liquid
+INFO:lpa.thermal.solver:regen model id=public_cylinder transport=Ely-Hanley NBS TN 1039 (1981) TRAPP; supplied phase density property_applicability=correlated pure_boiling=auto mixture_boiling=shah_gungor_winterton beta_m_s=0.0003 wet_wall_only=True CHF_predicted=False dryout_predicted=False
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: turbulent thermal-entry factor adapted from circular tubes; rectangular/conjugate channel requires validation
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: short turbulent entrance: circular-tube correction and inlet-profile assumptions require validation
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture EOS/transport require composition-specific validation
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: TRAPP nonpolar one-fluid transport is predictive; composition-specific experimental validation required
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: Supplied phase density replaces the original TRAPP pVT calculation; reported historical errors are not a validation of this adaptation
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: Critical thermal-conductivity enhancement and mixture diffusion/critical anomalies are not represented
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture bubble-temperature diagnostic uses pressure rounded down by at most 0.1 bar
+WARNING:lpa.thermal.solver:thermal applicability=unsupported: public_cylinder: coolant-side wall exceeds saturation/bubble temperature; subcooled boiling/CHF/dryout unsupported
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: hydrocarbon cracking/coking and deposit resistance/lifetime require fuel/material-specific validation
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: engineering mixture flow boiling assumes a continuously wetted wall for every 0 <= x < 1; actual dryout/CHF and post-dryout heat transfer are NOT predicted
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: Shah/GW87 + Thome-Shakir/Bell-Ghaly mixture correction; beta is an empirical mass-transfer parameter, not a measured diffusion coefficient
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: rectangular one-sided/conjugate channel, variable heat flux, orientation, fuel composition and phase transport require independent validation
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: local-composition equilibrium glide and fixed-pressure dT/dh are used; phase enthalpy difference approximates mixture vaporization enthalpy
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: Lockhart-Martinelli smooth-channel friction and homogeneous density are engineering assumptions; acceleration is handled by the channel solver
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: no globally verified quality interval is established for LNG/aqueous ethanol; x=0.7 is not a predicted dryout boundary
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: GW87 wet-wall h has a zero mathematical limit as x approaches one; switching to gas convection at the dew endpoint can produce a model discontinuity
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: engineering extrapolation: phase Re below Dittus-Boelter turbulent reference 10000; endpoint/film adaptation unvalidated
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: published LNG data were an exception to the mixture correction; this LNG composition is not independently validated
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: speed_sound unavailable in EOS; screening transport/property used
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: two-phase bulk cp/transport are phase-weighted diagnostics; use saturated phase properties
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: two-phase surface tension unavailable in EOS
+WARNING:lpa.thermal.solver:thermal applicability=unsupported: public_cylinder: coolant heat-transfer correlation outside its supported domain
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: cvmass unavailable in EOS; screening transport/property used
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder outlet: mixture EOS/transport require composition-specific validation
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder outlet: TRAPP nonpolar one-fluid transport is predictive; composition-specific experimental validation required
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder outlet: Supplied phase density replaces the original TRAPP pVT calculation; reported historical errors are not a validation of this adaptation
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder outlet: Critical thermal-conductivity enhancement and mixture diffusion/critical anomalies are not represented
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder outlet: mixture bubble-temperature diagnostic uses pressure rounded down by at most 0.1 bar
+INFO:lpa.thermal.solver:regen outlet id=public_cylinder T_K=268.959 p_bar=24.8984 h_J_kg=786132 phase=gas x_mass=nan solved=300/300
+LNG: 300/300 complete; outlet {'public_cylinder': 268.95872694267405}
+INFO:lpa.thermal.solver:regen start id=public_cylinder coolant=Ethanol (70%) T_K=293.15 p_bar=25 mdot_kg_s=0.02 source=CoolProp HEOS: Ethanol&Water phase=liquid
+INFO:lpa.thermal.solver:regen model id=public_cylinder transport=Experimental ethanol-water excess transport correlations with pure HEOS liquid references and Li mixing property_applicability=correlated pure_boiling=auto mixture_boiling=shah_gungor_winterton beta_m_s=0.0003 wet_wall_only=True CHF_predicted=False dryout_predicted=False
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: laminar rectangular Nu uses uniform all-wall heat flux reference; conjugate/one-sided heated boundary requires validation
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: developing laminar reference assumes constant section/properties and uniform inlet profiles; local-property channel adaptation requires validation
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: laminar Darcy friction uses fully developed duct reference; hydrodynamic entrance pressure loss is not included
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture EOS/transport require composition-specific validation
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: Ethanol-water experimental excess transport correlation; phase EOS and channel heat-transfer validation remain separate
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: Viscosity is an engineering prediction outside the sparse calibrated T/P/composition source hulls; independent high-pressure accuracy at this state is unestablished
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: Thermal conductivity is an engineering prediction outside the ambient-pressure 282.71-343.02 K calibration data; mixture pressure/high-temperature correction is unvalidated
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture bubble-temperature diagnostic uses pressure rounded down by at most 0.1 bar
+WARNING:lpa.thermal.solver:thermal applicability=unsupported: public_cylinder: coolant-side wall exceeds saturation/bubble temperature; subcooled boiling/CHF/dryout unsupported
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: Gnielinski (2013) Re=2300..4000 transition interpolation; rectangular/conjugate adaptation is not experimentally validated
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: transition Darcy friction uses continuous endpoint interpolation; transition hydraulics require validation
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: turbulent thermal-entry factor adapted from circular tubes; rectangular/conjugate channel requires validation
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: Pure saturated-liquid reference used where mixture pressure is below a pure component saturation pressure; this reference substitution is predictive, not measured mixture transport
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: engineering mixture flow boiling assumes a continuously wetted wall for every 0 <= x < 1; actual dryout/CHF and post-dryout heat transfer are NOT predicted
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: Shah/GW87 + Thome-Shakir/Bell-Ghaly mixture correction; beta is an empirical mass-transfer parameter, not a measured diffusion coefficient
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: rectangular one-sided/conjugate channel, variable heat flux, orientation, fuel composition and phase transport require independent validation
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: local-composition equilibrium glide and fixed-pressure dT/dh are used; phase enthalpy difference approximates mixture vaporization enthalpy
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: Lockhart-Martinelli smooth-channel friction and homogeneous density are engineering assumptions; acceleration is handled by the channel solver
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: no globally verified quality interval is established for LNG/aqueous ethanol; x=0.7 is not a predicted dryout boundary
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: GW87 wet-wall h has a zero mathematical limit as x approaches one; switching to gas convection at the dew endpoint can produce a model discontinuity
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: engineering extrapolation: phase Re below Dittus-Boelter turbulent reference 10000; endpoint/film adaptation unvalidated
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: engineering extrapolation: aqueous/alcohol composition is outside the demonstrated Shah flow-boiling mixture database; Marangoni effects are unmodelled
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: speed_sound unavailable in EOS; screening transport/property used
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: Ethanol-water vapor uses dilute-gas Wilke/Wassiljewa-Mason-Saxena engineering estimates at phase composition; dense-gas/critical transport corrections are unavailable
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: High-pressure/nonideal vapor is outside dilute-gas validation; finite coefficients are predictive diagnostics
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: two-phase bulk cp/transport are phase-weighted diagnostics; use saturated phase properties
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: two-phase surface tension unavailable in EOS
+WARNING:lpa.thermal.solver:thermal applicability=unsupported: public_cylinder: coolant heat-transfer correlation outside its supported domain
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -0.150132 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -0.225085 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -0.327357 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -0.4639 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -0.642563 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -0.871953 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -1.1612 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -1.51962 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -1.95621 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -2.4791 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -3.09482 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -3.80746 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -4.61779 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -5.52232 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -6.51235 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -7.57316 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -8.68331 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -9.81418 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -10.9298 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -11.9872 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -12.937 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -13.7245 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -14.2918 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -14.5796 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -14.53 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -14.0901 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -13.2158 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -11.8763 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -10.0608 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -7.7855 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -5.1192 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder: mixture equilibrium phase enthalpy closure residual -2.20449 J/kg
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder outlet: mixture EOS/transport require composition-specific validation
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder outlet: Ethanol-water vapor uses dilute-gas Wilke/Wassiljewa-Mason-Saxena engineering estimates at phase composition; dense-gas/critical transport corrections are unavailable
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder outlet: High-pressure/nonideal vapor is outside dilute-gas validation; finite coefficients are predictive diagnostics
+WARNING:lpa.thermal.solver:thermal applicability=screening: public_cylinder outlet: mixture bubble-temperature diagnostic uses pressure rounded down by at most 0.1 bar
+INFO:lpa.thermal.solver:regen outlet id=public_cylinder T_K=483.46 p_bar=24.9733 h_J_kg=1.54623e+06 phase=gas x_mass=nan solved=300/300
+Ethanol (70%): 300/300 complete; outlet {'public_cylinder': 483.4599676762683}
+USER_HOME_DIR=C:\Users\LGJ
+INFO:lpa.thermal.solver:regen start id=circuit_1 coolant=RP-1 T_K=293 p_bar=20 mdot_kg_s=0.334704 source=LPA fitted trans-decalin/n-dodecane engineering surrogate; public NIST constituent EOS phase=liquid
+INFO:lpa.thermal.solver:regen model id=circuit_1 transport=Ely-Hanley NBS TN 1039 (1981) TRAPP; supplied phase density + RP-1 residual correction; NIST corrected-conductivity fit property_applicability=correlated pure_boiling=auto mixture_boiling=shah_gungor_winterton beta_m_s=0.0003 wet_wall_only=True CHF_predicted=False dryout_predicted=False
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: laminar rectangular Nu uses uniform all-wall heat flux reference; conjugate/one-sided heated boundary requires validation
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: developing laminar reference assumes constant section/properties and uniform inlet profiles; local-property channel adaptation requires validation
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: laminar Darcy friction uses fully developed duct reference; hydrodynamic entrance pressure loss is not included
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: RP-1 uses a newly fitted two-component engineering surrogate, not the published NIST four-component RP-1 model
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: RP-1 surrogate density calibration and independent Cp/transport checks do not validate an individual fuel lot or its vapor-liquid envelope
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: RP-1 high-temperature transport remains predictive; thermal decomposition/coking and deposit resistance are not modelled
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: RP-1 viscosity uses a low-temperature empirical residual correction to TRAPP; conductivity is a separate radiation-corrected NIST-data fit
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: TRAPP nonpolar one-fluid transport is predictive; composition-specific experimental validation required
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: Supplied phase density replaces the original TRAPP pVT calculation; reported historical errors are not a validation of this adaptation
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: Critical thermal-conductivity enhancement and mixture diffusion/critical anomalies are not represented
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: CuCrZr conductivity uses selected source/screening data; actual lot/build and manufacturing-condition validation required
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: hydrocarbon cracking/coking and deposit resistance/lifetime require fuel/material-specific validation
+WARNING:lpa.thermal.solver:thermal applicability=unsupported: circuit_1: coolant-side wall exceeds saturation/bubble temperature; subcooled boiling/CHF/dryout unsupported
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: Gnielinski (2013) Re=2300..4000 transition interpolation; rectangular/conjugate adaptation is not experimentally validated
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: transition Darcy friction uses continuous endpoint interpolation; transition hydraulics require validation
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: turbulent thermal-entry factor adapted from circular tubes; rectangular/conjugate channel requires validation
+WARNING:lpa.thermal.solver:thermal applicability=unsupported: circuit_1: CuCrZr: wall temperature outside conductivity data range [293.15, 973.15] K; out-of-range conductivity queries clamp to endpoints; wall solution is diagnostic only
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: RP-1 uses a newly fitted two-component engineering surrogate, not the published NIST four-component RP-1 model
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: RP-1 surrogate density calibration and independent Cp/transport checks do not validate an individual fuel lot or its vapor-liquid envelope
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: RP-1 high-temperature transport remains predictive; thermal decomposition/coking and deposit resistance are not modelled
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: RP-1 viscosity uses a low-temperature empirical residual correction to TRAPP; conductivity is a separate radiation-corrected NIST-data fit
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: TRAPP nonpolar one-fluid transport is predictive; composition-specific experimental validation required
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: Supplied phase density replaces the original TRAPP pVT calculation; reported historical errors are not a validation of this adaptation
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: Critical thermal-conductivity enhancement and mixture diffusion/critical anomalies are not represented
+INFO:lpa.thermal.solver:regen outlet id=circuit_1 T_K=582.585 p_bar=19.7108 h_J_kg=409727 phase=liquid x_mass=nan solved=300/300
+INFO:lpa.thermal.solver:regen start id=circuit_1 coolant=RP-1 T_K=293 p_bar=20 mdot_kg_s=0.334704 source=LPA fitted trans-decalin/n-dodecane engineering surrogate; public NIST constituent EOS phase=liquid
+INFO:lpa.thermal.solver:regen model id=circuit_1 transport=Ely-Hanley NBS TN 1039 (1981) TRAPP; supplied phase density + RP-1 residual correction; NIST corrected-conductivity fit property_applicability=correlated pure_boiling=auto mixture_boiling=shah_gungor_winterton beta_m_s=0.0003 wet_wall_only=True CHF_predicted=False dryout_predicted=False
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: laminar rectangular Nu uses uniform all-wall heat flux reference; conjugate/one-sided heated boundary requires validation
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: developing laminar reference assumes constant section/properties and uniform inlet profiles; local-property channel adaptation requires validation
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: laminar Darcy friction uses fully developed duct reference; hydrodynamic entrance pressure loss is not included
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: RP-1 uses a newly fitted two-component engineering surrogate, not the published NIST four-component RP-1 model
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: RP-1 surrogate density calibration and independent Cp/transport checks do not validate an individual fuel lot or its vapor-liquid envelope
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: RP-1 high-temperature transport remains predictive; thermal decomposition/coking and deposit resistance are not modelled
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: RP-1 viscosity uses a low-temperature empirical residual correction to TRAPP; conductivity is a separate radiation-corrected NIST-data fit
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: TRAPP nonpolar one-fluid transport is predictive; composition-specific experimental validation required
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: Supplied phase density replaces the original TRAPP pVT calculation; reported historical errors are not a validation of this adaptation
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: Critical thermal-conductivity enhancement and mixture diffusion/critical anomalies are not represented
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: CuCrZr conductivity uses selected source/screening data; actual lot/build and manufacturing-condition validation required
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: hydrocarbon cracking/coking and deposit resistance/lifetime require fuel/material-specific validation
+WARNING:lpa.thermal.solver:thermal applicability=unsupported: circuit_1: coolant-side wall exceeds saturation/bubble temperature; subcooled boiling/CHF/dryout unsupported
+WARNING:lpa.thermal.solver:thermal applicability=unsupported: circuit_1: CuCrZr: wall temperature outside conductivity data range [293.15, 973.15] K; out-of-range conductivity queries clamp to endpoints; wall solution is diagnostic only
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: Gnielinski (2013) Re=2300..4000 transition interpolation; rectangular/conjugate adaptation is not experimentally validated
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: transition Darcy friction uses continuous endpoint interpolation; transition hydraulics require validation
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: turbulent thermal-entry factor adapted from circular tubes; rectangular/conjugate channel requires validation
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: RP-1 uses a newly fitted two-component engineering surrogate, not the published NIST four-component RP-1 model
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: RP-1 surrogate density calibration and independent Cp/transport checks do not validate an individual fuel lot or its vapor-liquid envelope
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: RP-1 high-temperature transport remains predictive; thermal decomposition/coking and deposit resistance are not modelled
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: RP-1 viscosity uses a low-temperature empirical residual correction to TRAPP; conductivity is a separate radiation-corrected NIST-data fit
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: TRAPP nonpolar one-fluid transport is predictive; composition-specific experimental validation required
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: Supplied phase density replaces the original TRAPP pVT calculation; reported historical errors are not a validation of this adaptation
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: Critical thermal-conductivity enhancement and mixture diffusion/critical anomalies are not represented
+INFO:lpa.thermal.solver:regen outlet id=circuit_1 T_K=567.18 p_bar=19.8843 h_J_kg=362299 phase=liquid x_mass=nan solved=300/300
+Saved docs\coolant_review_outputs_0180\coolant_channel_validation.json

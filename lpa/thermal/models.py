@@ -135,6 +135,10 @@ class ThermalAnalysisResult:
     coolant_nusselt: tuple[float, ...] = ()
     coolant_raw_coefficient_w_m2k: tuple[float, ...] = ()
     station_applicability: tuple[str | None, ...] = ()
+    coolant_temperature_glide_k: tuple[float, ...] = ()
+    coolant_boiling_mass_transfer_factor: tuple[float, ...] = ()
+    coolant_boiling_convective_factor: tuple[float, ...] = ()
+    coolant_wet_wall_assumed: tuple[bool | None, ...] = ()
 
     def __post_init__(self) -> None:
         station_count = self.section_count
@@ -144,11 +148,15 @@ class ThermalAnalysisResult:
             self.coolant_vapor_quality = (float("nan"),) * station_count
         if not self.coolant_flow_regime:
             self.coolant_flow_regime = (None,) * station_count
-        for name in ("coolant_reynolds", "coolant_nusselt", "coolant_raw_coefficient_w_m2k"):
+        for name in ("coolant_reynolds", "coolant_nusselt", "coolant_raw_coefficient_w_m2k",
+                     "coolant_temperature_glide_k", "coolant_boiling_mass_transfer_factor",
+                     "coolant_boiling_convective_factor"):
             if not getattr(self, name):
                 setattr(self, name, (float("nan"),) * station_count)
         if not self.station_applicability:
             self.station_applicability = (None,) * station_count
+        if not self.coolant_wet_wall_assumed:
+            self.coolant_wet_wall_assumed = (None,) * station_count
         if self.physical_validity not in {"valid", "screening", "invalid", "unsupported"}:
             raise ValueError("unknown physical validity")
         arrays = {
@@ -173,6 +181,10 @@ class ThermalAnalysisResult:
             "coolant_nusselt": self.coolant_nusselt,
             "coolant_raw_coefficient_w_m2k": self.coolant_raw_coefficient_w_m2k,
             "station_applicability": self.station_applicability,
+            "coolant_temperature_glide_k": self.coolant_temperature_glide_k,
+            "coolant_boiling_mass_transfer_factor": self.coolant_boiling_mass_transfer_factor,
+            "coolant_boiling_convective_factor": self.coolant_boiling_convective_factor,
+            "coolant_wet_wall_assumed": self.coolant_wet_wall_assumed,
         }
         wrong = [name for name, values in arrays.items() if len(values) != station_count]
         if wrong:

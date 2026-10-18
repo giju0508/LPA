@@ -8,3 +8,6 @@
 
 *.ico binary
 *.png binary
+
+# Preserve original release tool output bytes, including Windows line endings.
+docs/coolant_review_outputs_0180/*.txt -text

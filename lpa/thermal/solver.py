@@ -10,7 +10,7 @@ from typing import Any
 
 from .coolants import (CoolantState, CoolantPropertyModel, coolant_state,
     coolant_state_from_enthalpy, coolant_saturation_pressure, get_coolant_model)
-from .two_phase import TwoPhaseApplicabilityError, saturated_boiling
+from .two_phase import TwoPhaseApplicabilityError, saturated_boiling, mixture_saturated_boiling
 from .correlations import (
     adiabatic_wall_temperature,
     annular_wall_area,
@@ -74,6 +74,8 @@ class ThermalSolverSettings:
     coupled_max_iterations: int = 40
     two_phase_model: str = "auto"
     two_phase_max_quality: float = 0.7
+    mixture_boiling_model: str = "shah_gungor_winterton"
+    mixture_mass_transfer_coefficient_m_s: float = 3e-4
 
     def __post_init__(self) -> None:
         normalise_resolution(self.resolution)
@@ -83,6 +85,10 @@ class ThermalSolverSettings:
             raise ValueError("unknown two-phase model")
         if not 0 < self.two_phase_max_quality <= 0.7:
             raise ValueError("Beta two-phase quality limit must be in (0,0.7]")
+        if self.mixture_boiling_model not in {"shah_gungor_winterton", "disabled"}:
+            raise ValueError("unknown mixture boiling model")
+        if not isfinite(self.mixture_mass_transfer_coefficient_m_s) or self.mixture_mass_transfer_coefficient_m_s <= 0:
+            raise ValueError("mixture mass-transfer coefficient must be finite and positive")
         if self.coupled_max_iterations < 2:
             raise ValueError("coupled max iterations must be >= 2")
         for name in (
@@ -185,6 +191,8 @@ def _settings_from(raw: object, resolution_hint: object | None) -> ThermalSolver
         coupled_max_iterations=int(_read_setting(raw, "coupled_max_iterations", default=40)),
         two_phase_model=str(_read_setting(raw, "two_phase_model", default="auto")),
         two_phase_max_quality=float(_read_setting(raw, "two_phase_max_quality", default=0.7)),
+        mixture_boiling_model=str(_read_setting(raw, "mixture_boiling_model", default="shah_gungor_winterton")),
+        mixture_mass_transfer_coefficient_m_s=float(_read_setting(raw, "mixture_mass_transfer_coefficient_m_s", default=3e-4)),
     )
 
 
@@ -987,6 +995,10 @@ class _StationSolution:
     coolant_nusselt: float = nan
     coolant_raw_coefficient_w_m2k: float = nan
     applicability: str = "screening"
+    coolant_temperature_glide_k: float = nan
+    coolant_boiling_mass_transfer_factor: float = nan
+    coolant_boiling_convective_factor: float = nan
+    coolant_wet_wall_assumed: bool | None = None
 
 
 def _solve_regen_station(
@@ -1058,18 +1070,22 @@ def _solve_regen_station(
         )
         physical_issues.extend(internal.warnings)
         if bulk_state.phase == "two_phase":
-            wall_pressure = coolant_saturation_pressure(_coolant_name(coolant_definition),
-                wall_cold_temperature, backend="REFPROP" if settings.coolant_property_backend=="refprop" else "HEOS")
             # Flux is per actual coolant heated area, not hot-wall area. The
             # previous fin-area estimate is updated along with the wall solve.
             heated_ratio = area_ratio if iteration > 1 else cold_radius/mesh.radius_m[index]
-            boiling = saturated_boiling(state=bulk_state,
-                mass_flow_kg_s=coolant_mass_flow_kg_s,total_flow_area_m2=flow_area,
-                hydraulic_diameter_m=hydraulic_diameter,
+            common = dict(state=bulk_state,mass_flow_kg_s=coolant_mass_flow_kg_s,
+                total_flow_area_m2=flow_area,hydraulic_diameter_m=hydraulic_diameter,
                 wall_temperature_k=wall_cold_temperature,
-                wall_heat_flux_w_m2=heat_flux/heated_ratio if iteration>1 else 1.0,
-                wall_saturation_pressure_pa=wall_pressure,
-                model=settings.two_phase_model,max_quality=settings.two_phase_max_quality)
+                wall_heat_flux_w_m2=heat_flux/heated_ratio if iteration>1 else 1.0)
+            if len(bulk_state.mixture_component_names) > 1:
+                boiling = mixture_saturated_boiling(**common,
+                    model="disabled" if settings.two_phase_model=="disabled" else settings.mixture_boiling_model,
+                    mass_transfer_coefficient_m_s=settings.mixture_mass_transfer_coefficient_m_s)
+            else:
+                wall_pressure = coolant_saturation_pressure(_coolant_name(coolant_definition),
+                    wall_cold_temperature, backend="REFPROP" if settings.coolant_property_backend=="refprop" else "HEOS")
+                boiling = saturated_boiling(**common,wall_saturation_pressure_pa=wall_pressure,
+                    model=settings.two_phase_model,max_quality=settings.two_phase_max_quality)
             internal = replace(internal,coefficient_w_m2k=boiling.coefficient_w_m2k,
                                velocity_m_s=boiling.velocity_m_s)
             physical_issues.extend(boiling.warnings)
@@ -1156,7 +1172,11 @@ def _solve_regen_station(
         coolant_reynolds=nan if boiling else internal.reynolds,
         coolant_nusselt=nan if boiling else internal.nusselt,
         coolant_raw_coefficient_w_m2k=internal.coefficient_w_m2k,
-        applicability="screening" if boiling else getattr(internal, "applicability", "screening"),
+        applicability=boiling.applicability if boiling else getattr(internal, "applicability", "screening"),
+        coolant_temperature_glide_k=boiling.liquid_composition_glide_k if boiling else nan,
+        coolant_boiling_mass_transfer_factor=boiling.mass_transfer_correction_factor if boiling else nan,
+        coolant_boiling_convective_factor=boiling.convective_correction_factor if boiling else nan,
+        coolant_wet_wall_assumed=boiling.wet_wall_assumed if boiling else None,
     )
 
 
@@ -1180,6 +1200,10 @@ class _Arrays:
     coolant_nusselt: list[float]
     coolant_raw_coefficient_w_m2k: list[float]
     station_applicability: list[str | None]
+    coolant_temperature_glide_k: list[float]
+    coolant_boiling_mass_transfer_factor: list[float]
+    coolant_boiling_convective_factor: list[float]
+    coolant_wet_wall_assumed: list[bool | None]
 
     @classmethod
     def empty(cls, count: int) -> "_Arrays":
@@ -1202,6 +1226,10 @@ class _Arrays:
             coolant_nusselt=[nan] * count,
             coolant_raw_coefficient_w_m2k=[nan] * count,
             station_applicability=[None] * count,
+            coolant_temperature_glide_k=[nan] * count,
+            coolant_boiling_mass_transfer_factor=[nan] * count,
+            coolant_boiling_convective_factor=[nan] * count,
+            coolant_wet_wall_assumed=[None] * count,
         )
 
 
@@ -1539,6 +1567,9 @@ def _solve_regens(
         sources[identifier] = state.source
         LOGGER.info("regen start id=%s coolant=%s T_K=%g p_bar=%g mdot_kg_s=%g source=%s phase=%s",
             identifier,_coolant_name(definition),inlet_temperature,inlet_pressure_pa/1e5,mass_flow,state.source,state.phase)
+        LOGGER.info("regen model id=%s transport=%s property_applicability=%s pure_boiling=%s mixture_boiling=%s beta_m_s=%g wet_wall_only=True CHF_predicted=False dryout_predicted=False",
+            identifier,state.transport_source,state.property_applicability,settings.two_phase_model,
+            settings.mixture_boiling_model,settings.mixture_mass_transfer_coefficient_m_s)
         current_enthalpy = inlet_enthalpy
         integrated_heat = 0.0
         kinetic_energy_change_w = 0.0
@@ -1602,6 +1633,10 @@ def _solve_regens(
             arrays.coolant_nusselt[index] = solution.coolant_nusselt
             arrays.coolant_raw_coefficient_w_m2k[index] = solution.coolant_raw_coefficient_w_m2k
             arrays.station_applicability[index] = solution.applicability
+            arrays.coolant_temperature_glide_k[index] = solution.coolant_temperature_glide_k
+            arrays.coolant_boiling_mass_transfer_factor[index] = solution.coolant_boiling_mass_transfer_factor
+            arrays.coolant_boiling_convective_factor[index] = solution.coolant_boiling_convective_factor
+            arrays.coolant_wet_wall_assumed[index] = solution.coolant_wet_wall_assumed
             arrays.active[index] = identifier
             sources[identifier] = solution.coolant_source
             fin_areas[identifier] = (solution.effective_cooling_area_ratio, solution.fin_efficiency)
@@ -1613,7 +1648,7 @@ def _solve_regens(
                 arrays.station_applicability[index] = "unsupported"
                 issue(f"{identifier}: coolant phase unverified; single-phase correlation is diagnostic only", "unsupported")
             saturation = state.saturation_temperature_k
-            if state.phase != "two_phase" and isfinite(saturation) and solution.Twc >= saturation:
+            if state.phase == "liquid" and isfinite(saturation) and solution.Twc >= saturation:
                 arrays.station_applicability[index] = "unsupported"
                 issue(f"{identifier}: coolant-side wall exceeds saturation/bubble temperature; subcooled boiling/CHF/dryout unsupported", "unsupported")
             if state.phase in {"supercritical", "supercritical_liquid", "critical_point"}:
@@ -1709,22 +1744,37 @@ def _solve_regens(
         # its phase and EOS issues before exposing this state to linked circuits
         # or an engine-feed feedback calculation.
         outlet_phases[identifier]=state.phase if current_pressure_pa>0 else "unknown"
+        outlet_mach=nan
+        outlet_flow_supported=True
+        if (state.phase in {"gas","supercritical_gas","supercritical"}
+                and isfinite(state.speed_of_sound_m_s) and state.speed_of_sound_m_s>0
+                and state.density_kg_m3>0):
+            outlet_position=bounds[1] if coflow else bounds[0]
+            outlet_radius=_radius_at(mesh,outlet_position)+wall.coating_thickness_m+wall.thickness_m
+            ow,oh,on,_=_channel_dimensions(segment,outlet_position,outlet_radius,
+                bounds[0],mesh.x_m[mesh.throat_index],bounds[1])
+            outlet_mach=mass_flow/(ow*oh*on*state.density_kg_m3*state.speed_of_sound_m_s)
+            if outlet_mach>=.3:
+                outlet_flow_supported=False
+                issue(f"{identifier}: outlet coolant Mach >= 0.3; compressible channel momentum/energy model unavailable", "unsupported")
         property_metadata[identifier]["last_state"] = {
             "temperature_k":state.temperature_k,"pressure_pa":current_pressure_pa,"phase":state.phase,
             "property_applicability":getattr(state,"property_applicability","screening"),
             "thermodynamic_applicability":getattr(state,"thermodynamic_applicability","screening"),
             "transport_applicability":getattr(state,"transport_applicability","screening"),
             "property_evidence":getattr(state,"property_evidence",()),
+            "mach_number":outlet_mach,"flow_supported":outlet_flow_supported,
         }
         outlet_enthalpies[identifier]=state.enthalpy_j_kg
         if getattr(state,"property_applicability","")=="unsupported":
             issue(f"{identifier}: outlet coolant outside supported property data", "unsupported")
         if state.phase=="two_phase":
             issue(f"{identifier}: outlet coolant is bulk two-phase; Beta pre-dryout assumption, CHF/dryout not predicted")
-            if ("&" in state.source or settings.two_phase_model=="disabled"
+            mixture_outlet=len(state.mixture_component_names)>1
+            if ((mixture_outlet and settings.mixture_boiling_model=="disabled") or settings.two_phase_model=="disabled"
                     or not isfinite(state.vapor_quality_mass_fraction)
                     or state.saturated_liquid is None or state.saturated_vapor is None
-                    or state.vapor_quality_mass_fraction>settings.two_phase_max_quality):
+                    or (not mixture_outlet and state.vapor_quality_mass_fraction>settings.two_phase_max_quality)):
                 issue(f"{identifier}: outlet two-phase state outside configured heat-transfer model", "unsupported")
         for diagnostic in state.issues:
             validity="unsupported" if state.phase=="unknown" and "EOS" in diagnostic else "screening"
@@ -1738,6 +1788,7 @@ def _solve_regens(
             "residual_w": integrated_heat-mass_flow*(state.enthalpy_j_kg-inlet_enthalpy)-kinetic_energy_change_w,
         }
         if (bool(march) and all(isfinite(arrays.Twg[i]) for i in march) and current_pressure_pa>0
+                and outlet_flow_supported
                 and getattr(state,"property_applicability","")!="unsupported"
                 and not (state.phase=="unknown" and "EOS" in " ".join(state.issues))):
             completed_segments.add(identifier)
@@ -2391,10 +2442,12 @@ def analyze_thermal(
             "throat_upstream_curvature_radius_m":gas_data.throat_radius_of_curvature_m},
         "coolant_side_model": solver_settings.internal_flow_correlation+" with developing rectangular laminar flow, Re 2300–4000 transition and rib fin effective area",
         "coolant_pressure_model": "Darcy-Weisbach single phase; Lockhart-Martinelli two-phase friction plus homogeneous variable-area acceleration",
-        "two_phase_model": "Beta pure-fluid Li-Wu/Chen-Bennett pre-dryout boiling; Lockhart-Martinelli friction; homogeneous acceleration",
+        "two_phase_model": "Beta pure-fluid Li-Wu/Chen-Bennett or Shah/GW87 mixture wet-wall boiling; Lockhart-Martinelli friction; homogeneous acceleration",
         "two_phase_model_by_segment": {
             segment_id(seg): {"configured_model":solver_settings.two_phase_model,
-                "max_vapor_mass_quality":solver_settings.two_phase_max_quality,
+                "pure_fluid_max_vapor_mass_quality":solver_settings.two_phase_max_quality,
+                "mixture_model":solver_settings.mixture_boiling_model,
+                "mixture_quality_domain":"0 <= x < 1, assumed wet wall; no predicted dryout boundary",
                 "quality_limit_is_dryout_prediction":False,
                 "regimes":tuple(sorted({str(arrays.coolant_flow_regime[i]) for i in range(section_count)
                     if arrays.active[i]==segment_id(seg) and arrays.coolant_flow_regime[i]}))}
@@ -2417,7 +2470,7 @@ def analyze_thermal(
             "bulk_enthalpy_march": True, "rib_fin_effective_area": True,
             "cylindrical_conduction": True, "coupled_film_regen_iteration": True,
             "two_phase_heat_transfer": solver_settings.two_phase_model!="disabled", "critical_heat_flux": False,
-            "two_phase_mixture_heat_transfer":False,
+            "two_phase_mixture_heat_transfer":solver_settings.two_phase_model!="disabled" and solver_settings.mixture_boiling_model!="disabled",
             "two_phase_thermodynamic_quality":True,
             "dryout": False, "supercritical_htd_validated": False,
             "ablation": False, "transient_heat_storage": False,
@@ -2430,6 +2483,14 @@ def analyze_thermal(
             "manifold_flow_distribution":False, "structural_life":False,
         },
         "coolant_property_sources": regen_result.property_sources,
+        "mixture_boiling_model": {
+            "method":solver_settings.mixture_boiling_model,
+            "mass_transfer_coefficient_m_s":solver_settings.mixture_mass_transfer_coefficient_m_s,
+            "wet_wall_assumption":True,"critical_heat_flux_predicted":False,
+            "dryout_predicted":False,"post_dryout_model":False,
+            "quality_domain":"0 <= x < 1 engineering wet-wall evaluation; no validated global quality interval",
+            "dew_endpoint":"single-phase gas convection; wet-wall/gas correlations can be discontinuous",
+        },
         "coolant_property_metadata":regen_result.property_metadata,
         "regen_segment_completion":regen_result.segment_completion,
         "fin_area_by_segment": regen_result.fin_area_by_segment,
@@ -2497,6 +2558,10 @@ def analyze_thermal(
         coolant_nusselt=tuple(arrays.coolant_nusselt),
         coolant_raw_coefficient_w_m2k=tuple(arrays.coolant_raw_coefficient_w_m2k),
         station_applicability=tuple(arrays.station_applicability),
+        coolant_temperature_glide_k=tuple(arrays.coolant_temperature_glide_k),
+        coolant_boiling_mass_transfer_factor=tuple(arrays.coolant_boiling_mass_transfer_factor),
+        coolant_boiling_convective_factor=tuple(arrays.coolant_boiling_convective_factor),
+        coolant_wet_wall_assumed=tuple(arrays.coolant_wet_wall_assumed),
     )
 
 

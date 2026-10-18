@@ -3,6 +3,15 @@
 모든 시각은 대한민국 표준시(KST, UTC+09:00) 기준입니다.
 
 
+## 0.18.0b1 — 2026-10-19 05:13:41 KST
+
+1. Chamber Pressure 왼쪽·Mixture ratio (O/F) 오른쪽을 같은 입력 행으로 복원합니다. `Auto O/F: maximum theoretical vacuum Isp` 문구 자체를 단일 행으로 표시하고, 농도 입력 유무에 따라 산화제/연료 selector 높이가 달라지던 정렬을 수정합니다. 최소 창·DPI 검수와 화면 기록을 남깁니다.
+2. RP-1의 333.15 K 점도 제한을 새 LPA 2성분 공학 surrogate로 보강합니다. 공개 NIST 성분 EOS, 측정 밀도 조성 fit, 저온 점도 residual 보정과 방사 보정 열전도율을 사용하며 Cp/고온 transport를 별도 자료로 비교합니다. 270≤T<650 K·P≤50 MPa·예측 비등점 미만의 액상으로 제한하고 분해·coking 및 원 NIST 4성분 정확도를 주장하지 않습니다.
+3. LNG의 native 혼합물 수송물성 NaN을 NBS TRAPP 상별 조성/밀도 계산으로 대체합니다. 에탄올/물의 점도·열전도율에 공개 ThermoML 실측 기반 excess 식을 추가하고 독립 연구/압력 holdout을 기록합니다. 수치 보호 경계와 실제 측정 범위는 구분합니다.
+4. 혼합물 2상에 Shah/GW87 + Thome–Shakir/Bell–Ghaly 보정을 도입합니다. 액상 조성에 따른 glide, fixed-pressure dT/dh, 상별 물성과 건도로 계속 젖은 벽을 가정해 x<1까지 계산하고, dew endpoint는 기체 대류로 전환합니다. CHF/dryout·실제 사각채널 검증은 미지원이며 extrapolation은 unsupported로 표시합니다.
+5. 에탄올 혼합물의 특정 조성에서 실패하는 dew PQ flash를 동일 EOS의 bracketed QT 역산으로 복구합니다. 필수 phase transport 실패, 마지막 출구 Mach 및 계산 완료 여부를 검사하고 glide/보정계수/wet-wall 가정과 물성 근거를 CSV·표·로그에 기록합니다.
+6. Python·Windows·문서 버전을 0.18.0b1 Beta로 통일하고 전체 회귀, 원본 RP-1 사례, 전 구간 혼합물 계산, EXE 번들/실행 및 GitHub prerelease 검증을 기록합니다. 실제 실행 결과·잔여 한계는 `docs/THERMAL_REVIEW_0180.md`와 `docs/VALIDATION.md`에 남깁니다.
+
 ## 0.17.0b1 — 2026-10-19 04:43:00 KST
 
 1. 냉각측 완전발달 층류 가정에 Muzychka–Yovanovich 직사각형 채널 입구 열전달을 추가하고, 실제 채널 경로를 따라 cell 평균을 적분합니다. Gnielinski 전이구간을 Re 2300–4000으로 정리하며 마찰·열전달의 적용범위와 입구/경계조건 가정을 기록합니다.
