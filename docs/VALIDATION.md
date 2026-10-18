@@ -280,6 +280,6 @@ RPA 유동 관계식은 같은 Me/K로 평가했을 때의 실측 일치이며, 
 | Beta ZIP | `LPA-0.16.0b1-Windows-x64-Beta.zip`, **81,212,520 bytes**. EXE, README, third-party notices/licenses 포함 |
 | ZIP SHA-256 | `cd4dbfe7304349adfd246201961b519c20bc363f923948fcba1c60aebd06fea9` |
 | RocketCEA 소스 | 수정하지 않은 **1.2.3** PyPI sdist, **69,126,862 bytes**. PyPI SHA-256 일치 `66f306407f11ba36186342dc2716417d3a5c9d94c95b0c5663380091bb11caa9` |
-| 업로드 대상 | 기존 비공개 **giju0508/LPA**, main 및 **v0.16.0b1** prerelease. 공개 범위 변경 없음 |
+| GitHub 게시 확인 | 기존 비공개 **giju0508/LPA** main 업로드, **v0.16.0b1** prerelease 게시 완료. release ID **416589174**, release code commit **29dc05aa5e8e3587e8b51d3753d7f137cad7f797**. ZIP·RocketCEA 소스·SHA256SUMS의 GitHub server digest 일치, 3개 asset uploaded. `github_publication.json`; 공개 범위 변경 없음 |
 
 수치 수렴·에너지 수지·RPA 대조는 실제 엔진 검증을 대체하지 않는다. x=0.7은 dryout 예측이 아닌 계산 제한이다. 혼합물 비등 열전달, CHF/dryout/post-dryout, 검증된 초임계 HTD, subcooled boiling, 유동 불안정·choking, 매니폴드/국소 손실 및 구조·수명은 여전히 미지원 또는 미검증이다. REFPROP는 별도 설치·사용권이 필요하며 배포본에 포함하지 않았다. RP-1의 완전한 NIST surrogate는 필요한 성분/FLD 부재로 적용하지 않았다. clean PC/VM 전체 계산·실제 OS DPI 전환·코드 서명·연소/열시험은 수행하지 않았다.

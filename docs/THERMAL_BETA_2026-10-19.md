@@ -85,6 +85,12 @@ working source and Beta distribution to the owner's private GitHub repository.
   does not prevent application startup.
 - Windows build, binary smoke check, hashes and publication results are
   recorded in [VALIDATION.md](VALIDATION.md).
+- Publication completed to private giju0508/LPA main. The annotated tag
+  v0.16.0b1 points to release code commit 29dc05aa5e8e3587e8b51d3753d7f137cad7f797.
+  GitHub prerelease 416589174 contains the Windows ZIP, unmodified RocketCEA
+  source and checksums. Asset server digests match local values. The publication
+  receipt is retained in thermal_beta_outputs_0160/github_publication.json and
+  committed as a documentation-only follow-up; it does not change release code.
 
 ## Sources and detailed reviews
 

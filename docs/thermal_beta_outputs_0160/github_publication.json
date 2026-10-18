@@ -1,0 +1,36 @@
+{
+  "repository": "https://github.com/giju0508/LPA",
+  "visibility": "private",
+  "release_url": "https://github.com/giju0508/LPA/releases/tag/v0.16.0b1",
+  "release_id": 416589174,
+  "tag": "v0.16.0b1",
+  "prerelease": true,
+  "published_at": "2026-10-18T17:18:24Z",
+  "release_commit": "29dc05aa5e8e3587e8b51d3753d7f137cad7f797",
+  "assets": [
+    {
+      "id": 654024468,
+      "name": "LPA-0.16.0b1-Windows-x64-Beta.zip",
+      "state": "uploaded",
+      "size": 81212520,
+      "digest": "sha256:cd4dbfe7304349adfd246201961b519c20bc363f923948fcba1c60aebd06fea9",
+      "browser_download_url": "https://github.com/giju0508/LPA/releases/download/v0.16.0b1/LPA-0.16.0b1-Windows-x64-Beta.zip"
+    },
+    {
+      "id": 654024944,
+      "name": "rocketcea-1.2.3.tar.gz",
+      "state": "uploaded",
+      "size": 69126862,
+      "digest": "sha256:66f306407f11ba36186342dc2716417d3a5c9d94c95b0c5663380091bb11caa9",
+      "browser_download_url": "https://github.com/giju0508/LPA/releases/download/v0.16.0b1/rocketcea-1.2.3.tar.gz"
+    },
+    {
+      "id": 654025205,
+      "name": "SHA256SUMS.txt",
+      "state": "uploaded",
+      "size": 266,
+      "digest": "sha256:25e78cfa6e059e5ca8de7f9b61067c53c164518bf2c9512b79a8e8c850858871",
+      "browser_download_url": "https://github.com/giju0508/LPA/releases/download/v0.16.0b1/SHA256SUMS.txt"
+    }
+  ]
+}
