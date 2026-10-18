@@ -344,3 +344,6 @@ RPA 유동 관계식은 같은 Me/K로 평가했을 때의 실측 일치이며, 
 | LPA.exe | 81859474 | `ba9f9f873a628f630e3a30dcd51e1bcd94349940bff9047478da19bb1c55507f` |
 | LPA-0.17.0b1-Windows-x64-Beta.zip | 81323798 | `9103a9ebef32438eeb47728b73bc56d05f9cd9fc1ebda5a04866c8de5649b68f` |
 | rocketcea-1.2.3.tar.gz | 69126862 | `66f306407f11ba36186342dc2716417d3a5c9d94c95b0c5663380091bb11caa9` |
+
+
+GitHub 최종 게시 확인: [giju0508/LPA](https://github.com/giju0508/LPA)를 **public**으로 전환하고 [v0.17.0b1 Beta](https://github.com/giju0508/LPA/releases/tag/v0.17.0b1)를 **published prerelease**로 게시했다. 게시 시각 **2026-10-19 04:52:19 KST**, release ID **416669826**, release code commit **b6caefbd58a8b54b69e589901a9522e656d37392**. ZIP·RocketCEA 대응 소스·SHA256SUMS **3개 asset**은 uploaded 상태이며 각 GitHub SHA-256 digest가 로컬 파일과 일치한다. 인증 없는 API에서 저장소/Release를 읽고 모든 asset의 다운로드 HEAD **HTTP 200 / 정확한 크기**를 확인했다. 현재 게시된 최신 Beta가 v0.17.0b1임을 별도로 확인했다. `github_publication.json`, `anonymous_publication_check.json`.

@@ -8,5 +8,6 @@
 - `source_smoke.json`, `exe_smoke.json`: actual source/EXE window startup and normal close on this Windows host.
 - `release_manifest.json`: versioned binary/ZIP/source sizes, SHA-256 and byte-verified ZIP members.
 - `github_publication.json`: public repository and published Beta prerelease, release code commit and matching server asset digests.
+- `anonymous_publication_check.json`: repository/release accessible without authentication; latest published Beta and all three public asset download HTTP 200/length checks.
 
 Read `../THERMAL_REVIEW_0170.md` and `../property_review_0170.md` before interpreting these software checks as physical validation. The RP-1 case stops at the supported default viscosity-temperature boundary; the last state is not a full-circuit outlet.

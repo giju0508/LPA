@@ -1,0 +1,24 @@
+{
+  "repository_visibility": "public",
+  "anonymous_repo_read": true,
+  "anonymous_release_read": true,
+  "latest_published_beta": "v0.17.0b1",
+  "annotated_tag_commit": "b6caefbd58a8b54b69e589901a9522e656d37392",
+  "asset_download_checks": [
+    {
+      "name": "LPA-0.17.0b1-Windows-x64-Beta.zip",
+      "anonymous_http_status": 200,
+      "content_length": 81323798
+    },
+    {
+      "name": "rocketcea-1.2.3.tar.gz",
+      "anonymous_http_status": 200,
+      "content_length": 69126862
+    },
+    {
+      "name": "SHA256SUMS.txt",
+      "anonymous_http_status": 200,
+      "content_length": 266
+    }
+  ]
+}
