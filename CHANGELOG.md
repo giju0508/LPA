@@ -2,6 +2,12 @@
 
 모든 시각은 대한민국 표준시(KST, UTC+09:00) 기준입니다.
 
+## 0.16.0b2 — 2026-10-19 03:54:45 KST
+
+1. GUI mainloop에 들어가기 전 Matplotlib/Tk 등 시작 import 도중에도 `KeyboardInterrupt`를 명시적인 실행 중단으로 처리하도록 launcher의 포착 범위를 넓힙니다. 중단을 기록하고 종료 코드 130을 반환하며, 실제 import/라이브러리 오류는 그대로 노출합니다.
+2. VS Code Python 확장의 인터프리터 선택과 Code Runner의 별도 executor/PATH 설정을 구분하는 실행 안내를 추가합니다. 의존성은 실행에 쓰는 동일한 Python의 `-m pip install --requirement requirements.txt`로 설치하도록 안내하며, traceback의 마지막 import 위치만으로 Matplotlib 결함을 단정하지 않습니다.
+3. Python·README·Windows 문자열 버전을 `0.16.0b2`, 고정 버전을 `0.16.0.2`로 맞추고 Beta/prerelease 표기를 유지합니다. 0.16.0b1의 열전달 기능·검증 기록은 이전 Beta 이력으로 보존하며, b2의 실제 시험·빌드·해시는 `docs/VALIDATION.md`에 별도로 기록합니다.
+
 ## 0.16.0b1 — 2026-10-19 01:59:25 KST
 
 1. 재생냉각의 순수유체 포화 2상 구간을 계산하는 **Beta** 경로를 추가합니다. `auto`는 수력직경 0.19–3.1 mm에 Li–Wu, 3.1 mm 초과–32 mm에 Chen–Bennett를 선택하며, Chen–Bennett 직접 선택은 3 mm 이상에서 허용합니다. 사각채널의 수력직경 적용과 유체별 상관식 신뢰도는 screening이며, 혼합물 2상 열전달·미지원 transport·근임계 상태는 진단 후 중단합니다.

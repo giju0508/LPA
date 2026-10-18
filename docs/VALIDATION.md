@@ -283,3 +283,32 @@ RPA 유동 관계식은 같은 Me/K로 평가했을 때의 실측 일치이며, 
 | GitHub 게시 확인 | 기존 비공개 **giju0508/LPA** main 업로드, **v0.16.0b1** prerelease 게시 완료. release ID **416589174**, release code commit **29dc05aa5e8e3587e8b51d3753d7f137cad7f797**. ZIP·RocketCEA 소스·SHA256SUMS의 GitHub server digest 일치, 3개 asset uploaded. `github_publication.json`; 공개 범위 변경 없음 |
 
 수치 수렴·에너지 수지·RPA 대조는 실제 엔진 검증을 대체하지 않는다. x=0.7은 dryout 예측이 아닌 계산 제한이다. 혼합물 비등 열전달, CHF/dryout/post-dryout, 검증된 초임계 HTD, subcooled boiling, 유동 불안정·choking, 매니폴드/국소 손실 및 구조·수명은 여전히 미지원 또는 미검증이다. REFPROP는 별도 설치·사용권이 필요하며 배포본에 포함하지 않았다. RP-1의 완전한 NIST surrogate는 필요한 성분/FLD 부재로 적용하지 않았다. clean PC/VM 전체 계산·실제 OS DPI 전환·코드 서명·연소/열시험은 수행하지 않았다.
+
+## 검증 기록 (0.16.0b2 Beta)
+
+기록일: **2026-10-19 KST**. 시작 import 도중의 `KeyboardInterrupt` 처리와 소스 실행환경 안내를 보강했다. 아래 값은 [startup_beta_outputs_0160b2](startup_beta_outputs_0160b2/)의 JSON·시험·빌드 원본을 대조하여 기록했다. 0.16.0b1 및 이전 검증 결과는 해당 버전의 이력으로 보존한다.
+
+| 항목 | 실제 결과 |
+|---|---|
+| 버전 | **0.16.0b2 Beta**. Python·README·CHANGELOG·Windows 버전 정합 회귀 포함 |
+| 시작 중단 처리 | launcher의 시작 import/GUI 생성 중 `KeyboardInterrupt`를 기록하고 **exit 130** 반환. 실제 subprocess에서 traceback·표준출력·표준오류 없이 종료하는 회귀, 정상 실행 및 실제 `ModuleNotFoundError` 전달 회귀 포함. 기존 GUI mainloop의 정상 종료 처리는 유지 |
+| 소스 Python | **`C:\Python314\python.exe`, CPython 3.14.0**. user-site의 NumPy 2.4.2, SciPy 1.17.0, Matplotlib 3.10.8, RocketCEA 1.2.3, CoolProp 8.0.0과 고정 버전 의존성 확인. `runtime_import_check.json` |
+| 누락 의존성 조치 | 위 소스 Python에 **ht 1.2.0 / fluids 1.3.1**을 `requirements.txt`로 설치. `pip check`: **No broken requirements found.** `dependency_install.txt`, `runtime_import_check.json` |
+| import 확인 | 기록된 실행에서 TkAgg import **0.21848 s**, app import **0.30527 s**. 원래의 패키지/import 실패는 재현되지 않음. 이는 해당 import 측정이며 전체 최초 시작시간이나 원래 중단 신호의 발생 원인을 확정하는 시험은 아님 |
+| 전체 회귀시험 | **603 passed in 77.10 s**, failure/error/skip 없음. `test_run.txt` |
+| 실제 소스 GUI | 글로벌 Python으로 `-u main.py` 실행. 창 **LPA 0.16.0b2 Beta**, 응답 **true**, 정상 닫기 **true**, exit **0**. stdout/stderr 모두 **0 bytes**. `source_smoke.json`, `source_stdout.txt`, `source_stderr.txt` |
+| 빌드 | `build_exe.ps1 -SkipInstall` 성공. PyInstaller 최종 완료 시각 기준 **85.36 s**. CPython 3.14.0/Tk 8.6 및 수치 라이브러리·CoolProp/CEA preflight 포함. `build_run.txt` |
+| 내장 코드·리소스 | **35개 LPA 모듈 및 main.py**가 현재 소스의 optimize=1 bytecode와 일치. icon/Rao PNG 일치. CoolProp·RocketCEA·SciPy·ht·fluids의 라이선스 포함 확인. `archive_check.json` |
+| 실제 frozen GUI | `dist/LPA.exe` 실행. 창 **LPA 0.16.0b2 Beta**, 응답 **true**, 정상 닫기 **true**, 부모 프로세스 exit **0**. Windows PowerShell 5.1의 종료 코드 확인을 위해 Process.Handle 유지. `exe_smoke.json` |
+| Windows 버전·서명 | FileVersion/ProductVersion **0.16.0b2 / 0.16.0b2**, 고정 버전 **0.16.0.2**, prerelease flag **0x2** / `IsPreRelease=true`. 코드 서명 없음 |
+| 추출 번들 실행 | host site-packages 없이 **isolated -I -S CPython 3.14**에서 EXE 추출 코드/native 실행. CoolProp/NumPy가 `tmp/release-0.16.0b2-bundle`에서 로드됨. `native_runtime_check.json`. 호스트 interpreter를 사용하므로 clean-machine frozen EXE 전체 계산 검증과 구분 |
+| 추출 번들 물성·CEA | LOX 150 K/20 bar gas rho **61.402430 kg/m³**; CH4 200 K/50 bar supercritical Cp **7272.58668 J/(kg·K)**, Cp peak **193.28393 K**; LNG 150 K/25 bar rho **384.368775 kg/m³**. 실제 CEA vacuum Isp **288.665295 s** |
+| 추출 번들 자동 O/F·열수지 | `rocketcea`, maximum theoretical vacuum specific impulse 목적의 O/F **1.31342081877**, 이론 진공 Isp **278.718641352 s**. 단상 열해석 수렴·적용성 **screening**, 수지 잔차 **7.28e-5 W**. 2상 **16 station** 사례의 운동에너지 포함 잔차 **2.18e-11 W**, 사례 전체 적용성은 **unsupported** 유지. `native_runtime_check.json` |
+| EXE 크기 | **81,826,332 bytes**. `release_manifest.json` |
+| EXE SHA-256 | `f9eb9b300cf2d09b88263d17e9d6dbc1a2d26dad9a598db5ac299be8a6f8ba98` |
+| Beta ZIP | `LPA-0.16.0b2-Windows-x64-Beta.zip`, **81,212,876 bytes**. EXE·README·third-party notices/licenses 포함, ZIP 무결성 및 EXE/README 원본 일치. `release_manifest.json` |
+| ZIP SHA-256 | `f9be161ddc6c61b3a50f3df09f961a26ed33aece510529c4eb4efb5e15c4d7ea` |
+| 게시 상태 | 이 기록 작성 시점에 **GitHub b2 게시는 아직 수행 전**. 게시 성공·서버 digest 일치는 후속 실제 게시 결과로 별도 기록 |
+| 미수행 검증 | **clean PC/VM**, 실제 **VS Code/Code Runner UI 자동조작**, 실제 OS DPI 전환, 코드 서명·보안 스캐너 및 연소/열시험은 수행하지 않음 |
+
+`KeyboardInterrupt` traceback은 중단 신호를 받은 실행 위치를 나타낸다. Matplotlib import 위치에서 중단되었다는 사실과 글로벌 Python에서 두 의존성이 누락되었던 사실은 구분하며, 누락된 의존성을 원래 `KeyboardInterrupt`의 직접 원인으로 확정하지 않는다. 소스 GUI smoke는 명시한 Python의 실행·응답·정상 종료 검증이며 VS Code 확장의 실제 실행 설정이나 Stop 버튼을 자동 조작한 시험이 아니다. b1에 명시한 열전달 Beta의 물리 적용 한계는 그대로 유지한다.

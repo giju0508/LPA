@@ -1,0 +1,42 @@
+{
+  "python": "C:\\Python314\\python.exe",
+  "python_version": "3.14.0",
+  "packages": {
+    "numpy": {
+      "version": "2.4.2",
+      "path": "C:\\Users\\LGJ\\AppData\\Roaming\\Python\\Python314\\site-packages\\numpy\\__init__.py"
+    },
+    "scipy": {
+      "version": "1.17.0",
+      "path": "C:\\Users\\LGJ\\AppData\\Roaming\\Python\\Python314\\site-packages\\scipy\\__init__.py"
+    },
+    "matplotlib": {
+      "version": "3.10.8",
+      "path": "C:\\Users\\LGJ\\AppData\\Roaming\\Python\\Python314\\site-packages\\matplotlib\\__init__.py"
+    },
+    "rocketcea": {
+      "version": "1.2.3",
+      "path": "C:\\Users\\LGJ\\AppData\\Roaming\\Python\\Python314\\site-packages\\rocketcea\\__init__.py"
+    },
+    "CoolProp": {
+      "version": "8.0.0",
+      "path": "C:\\Users\\LGJ\\AppData\\Roaming\\Python\\Python314\\site-packages\\CoolProp\\__init__.py"
+    },
+    "ht": {
+      "version": "1.2.0",
+      "path": "C:\\Users\\LGJ\\AppData\\Roaming\\Python\\Python314\\site-packages\\ht\\__init__.py"
+    },
+    "fluids": {
+      "version": "1.3.1",
+      "path": "C:\\Users\\LGJ\\AppData\\Roaming\\Python\\Python314\\site-packages\\fluids\\__init__.py"
+    }
+  },
+  "tkagg_import_seconds": 0.2184826000011526,
+  "app_import_seconds": 0.3052656000072602,
+  "pip_check": "No broken requirements found.",
+  "LNG_150K_25bar": {
+    "phase": "liquid",
+    "density_kg_m3": 384.3687745559994
+  },
+  "interpretation": "Original KeyboardInterrupt indicates an interrupt during import; package/import failure was not reproduced. Initial global ht and fluids were missing and have been installed from pinned requirements."
+}

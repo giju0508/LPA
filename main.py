@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ctypes
+import logging
 import os
 import sys
 
@@ -34,13 +35,22 @@ def _configure_windows_dpi() -> None:
 
 
 def main() -> int:
-    _configure_windows_app_identity()
-    _configure_windows_dpi()
-    from lpa.logging_config import configure_logging
-    configure_logging()
-    from lpa.app import run
+    try:
+        _configure_windows_app_identity()
+        _configure_windows_dpi()
+        from lpa.logging_config import configure_logging
 
-    run()
+        configure_logging()
+        logger = logging.getLogger("lpa")
+        logger.info("Starting GUI with Python %s (%s)", sys.version.split()[0], sys.executable)
+        from lpa.app import run
+
+        run()
+    except KeyboardInterrupt:
+        # Ctrl+C / VS Code Stop can also arrive while importing Matplotlib
+        # or constructing the GUI, before app.run() owns the event loop.
+        logging.getLogger("lpa").info("Startup cancelled by an interrupt")
+        return 130
     return 0
 
 

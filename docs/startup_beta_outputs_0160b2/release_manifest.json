@@ -1,0 +1,52 @@
+{
+  "version": "0.16.0b2",
+  "artifacts": [
+    {
+      "file": "LPA.exe",
+      "bytes": 81826332,
+      "sha256": "f9eb9b300cf2d09b88263d17e9d6dbc1a2d26dad9a598db5ac299be8a6f8ba98"
+    },
+    {
+      "file": "LPA-0.16.0b2-Windows-x64-Beta.zip",
+      "bytes": 81212876,
+      "sha256": "f9be161ddc6c61b3a50f3df09f961a26ed33aece510529c4eb4efb5e15c4d7ea"
+    },
+    {
+      "file": "rocketcea-1.2.3.tar.gz",
+      "bytes": 69126862,
+      "sha256": "66f306407f11ba36186342dc2716417d3a5c9d94c95b0c5663380091bb11caa9"
+    }
+  ],
+  "zip_members": [
+    "LPA.exe",
+    "README.md",
+    "THIRD_PARTY_NOTICES.md",
+    "third_party_licenses/CoolProp/licenses/LICENSE",
+    "third_party_licenses/fluids/licenses/AUTHORS",
+    "third_party_licenses/fluids/licenses/LICENSE.txt",
+    "third_party_licenses/ht/licenses/AUTHORS",
+    "third_party_licenses/ht/licenses/LICENSE.txt",
+    "third_party_licenses/matplotlib/LICENSE",
+    "third_party_licenses/numpy/licenses/LICENSE.txt",
+    "third_party_licenses/numpy/licenses/numpy/_core/include/numpy/libdivide/LICENSE.txt",
+    "third_party_licenses/numpy/licenses/numpy/_core/src/common/pythoncapi-compat/COPYING",
+    "third_party_licenses/numpy/licenses/numpy/_core/src/highway/LICENSE",
+    "third_party_licenses/numpy/licenses/numpy/_core/src/multiarray/dragon4_LICENSE.txt",
+    "third_party_licenses/numpy/licenses/numpy/_core/src/npysort/x86-simd-sort/LICENSE.md",
+    "third_party_licenses/numpy/licenses/numpy/_core/src/umath/svml/LICENSE",
+    "third_party_licenses/numpy/licenses/numpy/fft/pocketfft/LICENSE.md",
+    "third_party_licenses/numpy/licenses/numpy/linalg/lapack_lite/LICENSE.txt",
+    "third_party_licenses/numpy/licenses/numpy/ma/LICENSE",
+    "third_party_licenses/numpy/licenses/numpy/random/LICENSE.md",
+    "third_party_licenses/numpy/licenses/numpy/random/src/distributions/LICENSE.md",
+    "third_party_licenses/numpy/licenses/numpy/random/src/mt19937/LICENSE.md",
+    "third_party_licenses/numpy/licenses/numpy/random/src/pcg64/LICENSE.md",
+    "third_party_licenses/numpy/licenses/numpy/random/src/philox/LICENSE.md",
+    "third_party_licenses/numpy/licenses/numpy/random/src/sfc64/LICENSE.md",
+    "third_party_licenses/numpy/licenses/numpy/random/src/splitmix64/LICENSE.md",
+    "third_party_licenses/rocketcea/LICENSE.txt",
+    "third_party_licenses/scipy/LICENSE.txt"
+  ],
+  "zip_integrity": true,
+  "zip_exe_and_readme_match": true
+}

@@ -2,13 +2,13 @@
 
 LPA는 액체로켓 연소기의 성능, 추력실 형상, 열역학 상태와 정상상태 열전달을 예비 설계 단계에서 계산하는 Windows 데스크톱 도구입니다. RPA와 유사한 좌측 입력/결과 탐색 구조를 사용하며, 추진 성능은 RocketCEA, 고온가스측 열전달은 Bartz 상관식을 기본으로 합니다.
 
-현재 버전: **0.16.0b1** · **Beta 사전 배포판** · [변경 이력](CHANGELOG.md) · [검증 기록](docs/VALIDATION.md)
+현재 버전: **0.16.0b2** · **Beta 사전 배포판** · [변경 이력](CHANGELOG.md) · [검증 기록](docs/VALIDATION.md)
 
 이 버전은 순수유체 포화 2상 재생냉각 경로를 추가한 **Beta**입니다. 구현된 상관식, 계산이 완료된 범위와 수치 수렴 여부를 확인할 수 있지만, 전체 엔진이나 실제 채널의 열전달·CHF·dryout·수명 검증이 완료된 버전은 아닙니다. 특히 증기 질량분율 0.7 제한은 계산 보호 경계이며 실제 dryout 발생점을 뜻하지 않습니다. 물리 적용 상태와 중단 이유를 함께 확인하십시오.
 
-배포 태그: [v0.16.0b1](https://github.com/giju0508/LPA/releases/tag/v0.16.0b1). 소스, 실행 파일 및 시험·빌드 결과의 버전이 같은지 확인하십시오. 이번 변경의 근거·실행 기록은 [열전달 Beta 구현 기록](docs/THERMAL_BETA_2026-10-19.md), [가스측 RPA 비교](docs/THERMAL_GAS_METHOD_2026-10-19.md), [물성 검증](docs/COOLANT_PROPERTIES_2026-10-19.md), [2상 결과 UI 기록](docs/TWO_PHASE_UI_2026-10-19.md)에 있습니다. 이전 [배포 검토](docs/RELEASE_REMEDIATION_2026-10-11.md)와 [자동 O/F 검토](docs/OF_OPTIMIZATION_REVIEW_2026-10-11.md)도 보존합니다.
+배포 태그: [v0.16.0b2](https://github.com/giju0508/LPA/releases/tag/v0.16.0b2). 소스, 실행 파일 및 시험·빌드 결과의 버전이 같은지 확인하십시오. 이번 시작 중단 수정은 [VS Code 확인 기록](docs/STARTUP_VSCODE_2026-10-19.md)에 있습니다. 열전달 변경의 근거·실행 기록은 [열전달 Beta 구현 기록](docs/THERMAL_BETA_2026-10-19.md), [가스측 RPA 비교](docs/THERMAL_GAS_METHOD_2026-10-19.md), [물성 검증](docs/COOLANT_PROPERTIES_2026-10-19.md), [2상 결과 UI 기록](docs/TWO_PHASE_UI_2026-10-19.md)에 있습니다. 이전 [배포 검토](docs/RELEASE_REMEDIATION_2026-10-11.md)와 [자동 O/F 검토](docs/OF_OPTIMIZATION_REVIEW_2026-10-11.md)도 보존합니다.
 
-기능, 해석 로직 또는 주요 GUI가 변경되는 릴리스마다 `lpa.__version__`을 올리고 같은 버전의 변경 내용과 KST 일시를 `CHANGELOG.md`에 기록합니다. README와 Windows FileVersion/ProductVersion 문자열을 일치시키며, 이 Beta의 Windows 고정 버전은 `0.16.0.1`, prerelease flag는 `0x2`입니다. 빌드·회귀시험 출력은 `tmp/build-<version>.log`, `tmp/test-<version>.log`에 남기고 실행 파일·버전별 ZIP의 SHA-256 및 실제 수행한 검증 결과를 `docs/VALIDATION.md`에 기록합니다.
+기능, 해석 로직 또는 주요 GUI가 변경되는 릴리스마다 `lpa.__version__`을 올리고 같은 버전의 변경 내용과 KST 일시를 `CHANGELOG.md`에 기록합니다. README와 Windows FileVersion/ProductVersion 문자열을 일치시키며, 이 Beta의 Windows 고정 버전은 `0.16.0.2`, prerelease flag는 `0x2`입니다. 빌드·회귀시험 출력은 `tmp/build-<version>.log`, `tmp/test-<version>.log`에 남기고 실행 파일·버전별 ZIP의 SHA-256 및 실제 수행한 검증 결과를 `docs/VALIDATION.md`에 기록합니다.
 
 > **중요:** LPA의 결과는 개념/예비 설계 및 비교 검토용입니다. 시험, 상세 CFD/FEA, 구조·피로·수명 해석, 제작 공정 검증, 독립적인 수계산과 전문 엔지니어의 검토를 대체하지 않으며 비행·시험 안전 인증 자료로 사용할 수 없습니다.
 
@@ -25,6 +25,20 @@ py -3.14 -m venv .venv
 RocketCEA가 로드되지 않거나 계산에 실패하면 LPA는 화면의 backend/warning에 이를 표시하고 검증 범위가 제한된 이상기체 screening 추정값으로 폴백할 수 있습니다. 폴백을 보수적 추정으로 취급하지 마십시오. 배포 결과를 검증할 때는 backend뿐 아니라 전체 경고와 물리 적용범위를 확인하십시오.
 
 런타임 의존성은 `requirements.txt`에 고정합니다. 주요 계산 패키지는 RocketCEA 1.2.3, CoolProp 8.0.0, `ht` 1.2.0, `fluids` 1.3.1입니다. 기본 물성 backend는 **CoolProp native HEOS**입니다. 선택적 **REFPROP**는 사용자가 별도로 설치하고 유효한 사용권 및 유체 데이터를 준비해야 하며, LPA 소스/EXE에 REFPROP 라이브러리나 유체 파일을 포함하지 않습니다. REFPROP 선택 자체가 모든 유체의 온도·압력 범위나 transport 및 열전달 모델의 적용성을 보장하지 않습니다.
+
+### VS Code와 Code Runner에서 실행
+
+VS Code의 **Python: Select Interpreter**는 Python 확장의 실행/디버깅 환경을 선택합니다. Code Runner는 별도의 executor 설정을 사용하며 기본 `python -u`는 터미널 PATH의 Python을 실행할 수 있습니다. Python 확장에서 가상환경을 선택했더라도 Code Runner가 같은 Python을 사용한다고 가정하지 마십시오. Code Runner를 사용할 경우 executor도 같은 Python 경로를 사용하도록 설정하거나, 선택한 환경의 터미널에서 직접 실행하십시오.
+
+설치와 실행은 **같은 인터프리터**로 수행합니다. 아래 `sys.executable`이 의도한 Python인지 먼저 확인하고, 다른 환경이라면 앞 절처럼 가상환경의 `python.exe` 전체 경로를 사용하십시오.
+
+```powershell
+python -c "import sys; print(sys.executable)"
+python -m pip install --requirement requirements.txt
+python main.py
+```
+
+`python -u main.py`도 같은 실행 방식이며 `-u`는 출력 버퍼링만 변경합니다. Matplotlib 등을 불러오는 도중 `KeyboardInterrupt`가 나타났다면 중단 신호를 받은 위치를 보여 주는 것이므로, 그 traceback만으로 Matplotlib 결함이라고 판단할 수 없습니다. Code Runner의 **Stop Code**나 터미널 `Ctrl+C`로 시작 단계를 중단할 때도 발생할 수 있습니다. 0.16.0b2는 시작 import와 GUI 생성 중 받은 `KeyboardInterrupt`를 기록하고 종료 코드 **130**으로 반환합니다. 실제 `ImportError`나 라이브러리 로딩 오류는 숨기지 않으므로, 누락된 의존성은 같은 Python의 `-m pip`로 설치하십시오.
 
 ## 기본 사용 흐름과 프로젝트 저장
 
