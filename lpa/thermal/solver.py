@@ -873,11 +873,11 @@ def _coolant_state(
     conductivity = _property_override(definition, "conductivity_w_mk", conductivity)
     viscosity = _property_override(overrides, "viscosity_pa_s", base.viscosity_pa_s)
     viscosity = _property_override(definition, "viscosity_pa_s", viscosity)
-    if min(density, cp, conductivity, viscosity) <= 0:
-        raise ValueError("coolant thermophysical properties must be positive")
     direct_names = ("density_kg_m3", "specific_heat_j_kgk", "cp_j_kgk", "conductivity_w_mk", "viscosity_pa_s")
     explicit = overrides is not None or any(value_of(definition, n, default=None) is not None for n in direct_names)
     if explicit:
+        if not all(isfinite(v) and v > 0 for v in (density, cp, conductivity, viscosity)):
+            raise ValueError("custom coolant thermophysical properties must be finite and positive")
         cp_override=any(value_of(source,n,default=None) is not None
             for source in (overrides,definition) if source is not None
             for n in ("specific_heat_j_kgk","cp_j_kgk","specific_heat","cp"))
@@ -983,6 +983,10 @@ class _StationSolution:
     effective_cooling_area_ratio: float = nan
     fin_efficiency: float = nan
     coolant_flow_regime: str = "single_phase"
+    coolant_reynolds: float = nan
+    coolant_nusselt: float = nan
+    coolant_raw_coefficient_w_m2k: float = nan
+    applicability: str = "screening"
 
 
 def _solve_regen_station(
@@ -1001,6 +1005,8 @@ def _solve_regen_station(
     gas: _GasData,
     settings: ThermalSolverSettings,
     coolant_bulk_state: CoolantState | None = None,
+    distance_from_inlet_m: float | None = None,
+    cell_length_m: float | None = None,
 ) -> _StationSolution:
     start_m, end_m = segment_range
     cold_radius = mesh.radius_m[index] + wall.coating_thickness_m + wall.thickness_m
@@ -1047,6 +1053,8 @@ def _solve_regen_station(
             correlation=settings.internal_flow_correlation,
             channel_aspect_ratio=width/height,
             heated_length_m=end_m-start_m,
+            distance_from_inlet_m=distance_from_inlet_m,
+            cell_length_m=cell_length_m,
         )
         physical_issues.extend(internal.warnings)
         if bulk_state.phase == "two_phase":
@@ -1143,7 +1151,12 @@ def _solve_regen_station(
         coolant_source=bulk_state.source,
         effective_cooling_area_ratio=area_ratio,
         fin_efficiency=fin_efficiency,
-        coolant_flow_regime=boiling.model if boiling else "single_phase",
+        coolant_flow_regime=(boiling.model if boiling else "unknown_phase_screening"
+            if bulk_state.phase == "unknown" else internal.flow_regime),
+        coolant_reynolds=nan if boiling else internal.reynolds,
+        coolant_nusselt=nan if boiling else internal.nusselt,
+        coolant_raw_coefficient_w_m2k=internal.coefficient_w_m2k,
+        applicability="screening" if boiling else getattr(internal, "applicability", "screening"),
     )
 
 
@@ -1163,6 +1176,10 @@ class _Arrays:
     coolant_phase: list[str | None]
     coolant_vapor_quality: list[float]
     coolant_flow_regime: list[str | None]
+    coolant_reynolds: list[float]
+    coolant_nusselt: list[float]
+    coolant_raw_coefficient_w_m2k: list[float]
+    station_applicability: list[str | None]
 
     @classmethod
     def empty(cls, count: int) -> "_Arrays":
@@ -1181,6 +1198,10 @@ class _Arrays:
             coolant_phase=[None] * count,
             coolant_vapor_quality=[nan] * count,
             coolant_flow_regime=[None] * count,
+            coolant_reynolds=[nan] * count,
+            coolant_nusselt=[nan] * count,
+            coolant_raw_coefficient_w_m2k=[nan] * count,
+            station_applicability=[None] * count,
         )
 
 
@@ -1213,6 +1234,7 @@ class _RegenSolveResult:
     outlet_phases: dict[str, str] = field(default_factory=dict)
     outlet_enthalpies_j_kg: dict[str, float] = field(default_factory=dict)
     property_metadata: dict[str,object] = field(default_factory=dict)
+    segment_completion: dict[str, dict[str, object]] = field(default_factory=dict)
     inactive_ids: set[str] = field(default_factory=set)
 
 
@@ -1362,7 +1384,7 @@ def _advance_coolant_state(
                 return candidate
             temperature = max(1.0,temperature-residual/candidate.specific_heat_j_kgk)
         raise ValueError("custom coolant enthalpy inversion failed; provide at_enthalpy")
-    if state.source.startswith("CoolProp"):
+    if settings.coolant_property_backend in {"coolprop", "refprop"}:
         advanced = coolant_state_from_enthalpy(name, enthalpy_j_kg, pressure_pa,
             temperature_hint_k=state.temperature_k,
             backend="REFPROP" if settings.coolant_property_backend=="refprop" else "HEOS")
@@ -1392,7 +1414,8 @@ def _material_range_issue(wall: _Wall, minimum_k: float, maximum_k: float) -> st
     material = get_material(wall.material)
     low, high = material.valid_temperature_range_k
     if minimum_k < low or maximum_k > high:
-        return f"{material.name}: wall temperature outside conductivity data range [{low:g}, {high:g}] K; endpoint conductivity clamped"
+        return (f"{material.name}: wall temperature outside conductivity data range [{low:g}, {high:g}] K; "
+                "out-of-range conductivity queries clamp to endpoints; wall solution is diagnostic only")
     return None
 
 
@@ -1425,6 +1448,8 @@ def _solve_regens(
     outlet_states: dict[str,CoolantState] = {}
     completed_segments: set[str] = set()
     property_metadata: dict[str,object] = {}
+    heated_path_lengths: dict[str, float] = {}
+    segment_completion: dict[str, dict[str, object]] = {}
     def issue(text: str, validity: str = "screening") -> None:
         nonlocal physical_validity
         if text not in physical_issues:
@@ -1451,6 +1476,7 @@ def _solve_regens(
             links[identifier] = linked
             source_state = outlet_states.get(linked)
             if (linked not in completed_segments or inlet_pressure_pa <= 0 or source_state is None
+                    or getattr(source_state,"property_applicability","")=="unsupported"
                     or (source_state.phase=="unknown" and "EOS" in " ".join(source_state.issues))):
                 inactive.add(identifier)
                 issue(f"{identifier}: source circuit '{linked}' has no usable physical outlet state; linked circuit stopped", "unsupported")
@@ -1470,13 +1496,47 @@ def _solve_regens(
         indices = _indices_in_range(mesh, bounds)
         coflow = bool(value_of(segment, "coflow", "same_direction", default=False))
         march = indices if coflow else list(reversed(indices))
+        heated_distance = 0.0
+        entrance_basis = "new specified channel inlet"
+        if linked is not None:
+            previous_segment = regen_by_id[linked]
+            previous_bounds = resolve_segment_range(previous_segment, contour)
+            previous_coflow = bool(value_of(previous_segment,"coflow","same_direction",default=False))
+            previous_exit = previous_bounds[1] if previous_coflow else previous_bounds[0]
+            this_inlet = bounds[0] if coflow else bounds[1]
+            continuous = previous_coflow == coflow and abs(previous_exit-this_inlet) <= 1e-9
+            if continuous:
+                previous_wall = _wall_for(previous_segment, settings)
+                junction_radius = _radius_at(mesh,this_inlet)
+                previous_geometry = _channel_dimensions(previous_segment,this_inlet,
+                    junction_radius+previous_wall.thickness_m+previous_wall.coating_thickness_m,
+                    previous_bounds[0],mesh.x_m[mesh.throat_index],previous_bounds[1])
+                this_geometry = _channel_dimensions(segment,this_inlet,
+                    junction_radius+wall.thickness_m+wall.coating_thickness_m,
+                    bounds[0],mesh.x_m[mesh.throat_index],bounds[1])
+                continuous = all(abs(a-b) <= 1e-9*max(1.0,abs(a),abs(b))
+                                 for a,b in zip(previous_geometry[:3],this_geometry[:3]))
+            if continuous:
+                heated_distance = heated_path_lengths.get(linked,0.0)
+                entrance_basis = "continued from contiguous equal-section source channel"
+            else:
+                entrance_basis = "restarted at linked segment; boundary-layer continuity unverified"
+                issue(f"{identifier}: linked channel entrance redevelopment assumed; boundary-layer continuity unverified")
         current_temperature = inlet_temperature
         current_pressure_pa = inlet_pressure_pa
         state = outlet_states[linked] if linked is not None else _coolant_state(definition, inlet_temperature, settings, identifier, inlet_pressure_pa)
         inlet_enthalpy = state.enthalpy_j_kg
         property_metadata[identifier]={"thermodynamic_source":state.thermodynamic_source,
             "transport_source":state.transport_source,
-            "limits":asdict(state.property_limits) if state.property_limits is not None else None}
+            "limits":asdict(state.property_limits) if state.property_limits is not None else None,
+            "property_applicability":getattr(state,"property_applicability","screening"),
+            "thermodynamic_applicability":getattr(state,"thermodynamic_applicability","screening"),
+            "transport_applicability":getattr(state,"transport_applicability","screening"),
+            "property_notes":getattr(state,"property_notes",()),
+            "property_references":getattr(state,"property_references",()),
+            "property_evidence":getattr(state,"property_evidence",()),
+            "thermal_entrance_basis":entrance_basis}
+        sources[identifier] = state.source
         LOGGER.info("regen start id=%s coolant=%s T_K=%g p_bar=%g mdot_kg_s=%g source=%s phase=%s",
             identifier,_coolant_name(definition),inlet_temperature,inlet_pressure_pa/1e5,mass_flow,state.source,state.phase)
         current_enthalpy = inlet_enthalpy
@@ -1494,20 +1554,34 @@ def _solve_regens(
             arrays.coolant_vapor_quality[index] = state.vapor_quality_mass_fraction
             arrays.coolant_flow_regime[index] = state.phase
             arrays.active[index] = identifier
+            arrays.station_applicability[index] = "unsupported"
             if current_pressure_pa <= 0:
                 issue(f"{identifier}: coolant supply pressure exhausted; remaining stations unsupported", "invalid")
                 break
             if state.phase == "unknown" and "EOS" in " ".join(state.issues):
                 issue(f"{identifier}: EOS flash unavailable; coolant physical state unsupported", "unsupported")
                 break
+            if getattr(state,"property_applicability","")=="unsupported":
+                arrays.coolant_flow_regime[index] = "unsupported_properties"
+                for diagnostic in state.issues:
+                    issue(f"{identifier}: {diagnostic}","unsupported")
+                issue(f"{identifier}: coolant outside supported property data; wall march stopped", "unsupported")
+                break
+            if not all(isfinite(v) and v > 0 for v in (state.temperature_k,state.density_kg_m3,
+                    state.specific_heat_j_kgk,state.conductivity_w_mk,state.viscosity_pa_s)):
+                arrays.coolant_flow_regime[index] = "unsupported_properties"
+                issue(f"{identifier}: finite positive coolant properties unavailable; wall march stopped", "unsupported")
+                break
             arrays.Tc[index] = current_temperature
+            channel_path_length = _channel_path_length_in_range(mesh,index,bounds)
             try:
                 solution = _solve_regen_station(
                     index=index,segment=segment,identifier=identifier,wall=wall,
                     coolant_definition=definition,coolant_temperature_k=current_temperature,
                     coolant_pressure_pa=current_pressure_pa,coolant_mass_flow_kg_s=mass_flow,
                     effective_recovery_temperature_k=effective_recovery_k[index],
-                    segment_range=bounds,mesh=mesh,gas=gas,settings=settings,coolant_bulk_state=state)
+                    segment_range=bounds,mesh=mesh,gas=gas,settings=settings,coolant_bulk_state=state,
+                    distance_from_inlet_m=heated_distance,cell_length_m=channel_path_length)
             except TwoPhaseApplicabilityError as error:
                 arrays.coolant_flow_regime[index] = "unsupported_two_phase"
                 issue(f"{identifier}: {error}; two-phase wall solution stopped", "unsupported")
@@ -1524,35 +1598,49 @@ def _solve_regens(
             arrays.coolant_density_kg_m3[index] = solution.coolant_density_kg_m3
             arrays.coolant_phase[index] = solution.coolant_phase
             arrays.coolant_flow_regime[index] = solution.coolant_flow_regime
+            arrays.coolant_reynolds[index] = solution.coolant_reynolds
+            arrays.coolant_nusselt[index] = solution.coolant_nusselt
+            arrays.coolant_raw_coefficient_w_m2k[index] = solution.coolant_raw_coefficient_w_m2k
+            arrays.station_applicability[index] = solution.applicability
             arrays.active[index] = identifier
             sources[identifier] = solution.coolant_source
             fin_areas[identifier] = (solution.effective_cooling_area_ratio, solution.fin_efficiency)
             for diagnostic in solution.physical_issues:
                 issue(f"{identifier}: {diagnostic}")
+            if solution.applicability == "unsupported":
+                issue(f"{identifier}: coolant heat-transfer correlation outside its supported domain", "unsupported")
+            if state.phase == "unknown":
+                arrays.station_applicability[index] = "unsupported"
+                issue(f"{identifier}: coolant phase unverified; single-phase correlation is diagnostic only", "unsupported")
             saturation = state.saturation_temperature_k
             if state.phase != "two_phase" and isfinite(saturation) and solution.Twc >= saturation:
+                arrays.station_applicability[index] = "unsupported"
                 issue(f"{identifier}: coolant-side wall exceeds saturation/bubble temperature; subcooled boiling/CHF/dryout unsupported", "unsupported")
             if state.phase in {"supercritical", "supercritical_liquid", "critical_point"}:
                 issue(f"{identifier}: supercritical convection/heat-transfer deterioration requires validated variable-property correlation")
             if isfinite(state.pseudocritical_temperature_k) and min(current_temperature,solution.Twc) <= state.pseudocritical_temperature_k <= max(current_temperature,solution.Twc):
+                arrays.station_applicability[index] = "unsupported"
                 issue(f"{identifier}: wall/bulk temperature straddles pseudocritical cp peak; heat-transfer deterioration correlation unsupported", "unsupported")
             if state.phase in {"gas", "supercritical_gas", "supercritical"} and isfinite(state.speed_of_sound_m_s):
                 if solution.coolant_velocity_m_s/state.speed_of_sound_m_s >= 0.3:
+                    arrays.station_applicability[index] = "unsupported"
                     issue(f"{identifier}: coolant Mach >= 0.3; compressible channel momentum/energy model unavailable", "unsupported")
             model = get_coolant_model(_coolant_name(definition))
             liquid_identity = model.name in {"H2O","LOX", "LCH4", "LH2", "N2O", "Propane","LNG"} or model.name.startswith("Ethanol")
             if liquid_identity and index == march[0] and state.phase in {"gas", "supercritical_gas"}:
+                arrays.station_applicability[index] = "invalid"
                 issue(f"{identifier}: specified liquid coolant inlet is gaseous at its pressure/temperature", "invalid")
             material_issue = _material_range_issue(wall, solution.Twc, solution.Twi)
             if material_issue:
-                issue(f"{identifier}: {material_issue}")
+                arrays.station_applicability[index] = "unsupported"
+                issue(f"{identifier}: {material_issue}", "unsupported")
             if wall.material is not None and get_material(wall.material).name in {"CuCrZr","C103","AlSi10Mg"}:
                 issue(f"{identifier}: {get_material(wall.material).name} conductivity uses selected source/screening data; actual lot/build and manufacturing-condition validation required")
             if model.name.startswith("H2O2") or model.name == "N2O":
                 issue(f"{identifier}: reactive coolant decomposition/material compatibility not modelled; temperature alone is not a stability criterion")
             if model.name in {"RP-1", "Jet A-1", "Propane", "LNG"}:
                 issue(f"{identifier}: hydrocarbon cracking/coking and deposit resistance/lifetime require fuel/material-specific validation")
-            channel_path_length = _channel_path_length_in_range(mesh, index, bounds)
+            heated_distance += channel_path_length
             if channel_path_length > 0:
                 area = annular_wall_area(mesh.radius_m[index], channel_path_length)
                 heat = solution.heat_flux*area
@@ -1621,7 +1709,16 @@ def _solve_regens(
         # its phase and EOS issues before exposing this state to linked circuits
         # or an engine-feed feedback calculation.
         outlet_phases[identifier]=state.phase if current_pressure_pa>0 else "unknown"
+        property_metadata[identifier]["last_state"] = {
+            "temperature_k":state.temperature_k,"pressure_pa":current_pressure_pa,"phase":state.phase,
+            "property_applicability":getattr(state,"property_applicability","screening"),
+            "thermodynamic_applicability":getattr(state,"thermodynamic_applicability","screening"),
+            "transport_applicability":getattr(state,"transport_applicability","screening"),
+            "property_evidence":getattr(state,"property_evidence",()),
+        }
         outlet_enthalpies[identifier]=state.enthalpy_j_kg
+        if getattr(state,"property_applicability","")=="unsupported":
+            issue(f"{identifier}: outlet coolant outside supported property data", "unsupported")
         if state.phase=="two_phase":
             issue(f"{identifier}: outlet coolant is bulk two-phase; Beta pre-dryout assumption, CHF/dryout not predicted")
             if ("&" in state.source or settings.two_phase_model=="disabled"
@@ -1640,9 +1737,19 @@ def _solve_regens(
             "two_phase_kinetic_energy_change_w":kinetic_energy_change_w,
             "residual_w": integrated_heat-mass_flow*(state.enthalpy_j_kg-inlet_enthalpy)-kinetic_energy_change_w,
         }
-        if (all(isfinite(arrays.Twg[i]) for i in march) and current_pressure_pa>0
+        if (bool(march) and all(isfinite(arrays.Twg[i]) for i in march) and current_pressure_pa>0
+                and getattr(state,"property_applicability","")!="unsupported"
                 and not (state.phase=="unknown" and "EOS" in " ".join(state.issues))):
             completed_segments.add(identifier)
+        heated_path_lengths[identifier] = heated_distance
+        segment_completion[identifier] = {
+            "solved_wall_stations":sum(isfinite(arrays.Twg[i]) for i in march),
+            "requested_wall_stations":len(march),
+            "wall_march_completed":identifier in completed_segments,
+            "heated_distance_at_outlet_m":heated_distance,
+            "thermal_entrance_basis":entrance_basis,
+            "outlet_property_applicability":getattr(state,"property_applicability","screening"),
+        }
         outlets[identifier] = current_temperature
         outlet_states[identifier] = state
         LOGGER.info("regen outlet id=%s T_K=%g p_bar=%g h_J_kg=%g phase=%s x_mass=%g solved=%d/%d",
@@ -1677,6 +1784,7 @@ def _solve_regens(
         outlet_enthalpies_j_kg=outlet_enthalpies,
         property_metadata=property_metadata,
         inactive_ids=set(inactive),
+        segment_completion=segment_completion,
     )
 
 
@@ -1724,6 +1832,7 @@ def _film_profiles(
     contour: object,
     mesh: _Mesh,
     settings: ThermalSolverSettings,
+    source_completion: Mapping[str, Mapping[str, object]] | None = None,
 ) -> tuple[tuple[float, ...], tuple[float, ...], list[str]]:
     effective_temperature = list(float(value) for value in base_recovery_k)
     total_effectiveness = [0.0] * len(mesh.x_m)
@@ -1738,6 +1847,11 @@ def _film_profiles(
     # Applying films in gas-flow order gives deterministic sequential mixing.
     film_rows.sort(key=lambda item: item[0])
     for injection, film, identifier in film_rows:
+        linked = linked_film_temperature_id(film)
+        if linked is not None and source_completion is not None and not source_completion.get(linked, {}).get("wall_march_completed", False):
+            inactive.add(identifier)
+            warnings.append(f"film segment '{identifier}' is inactive because linked Regen '{linked}' has no complete usable outlet state")
+            continue
         coolant_temperature = _film_temperature(
             film,
             identifier,
@@ -1937,9 +2051,11 @@ def _solve_radiation(
             arrays.gas_h[index] = solution.gas_h
             arrays.coolant_h[index] = nan
             arrays.active[index] = identifier
+            arrays.station_applicability[index] = "screening"
             material_issue = _material_range_issue(wall, solution.Twc, solution.Twi)
             if material_issue:
                 warnings.append(material_issue)
+                arrays.station_applicability[index] = "unsupported"
             if wall.material is not None and get_material(wall.material).name in {"CuCrZr","C103","AlSi10Mg"}:
                 warnings.append(f"{get_material(wall.material).name} conductivity uses selected source/screening data; actual lot/build and manufacturing-condition validation required")
     return warnings
@@ -2151,6 +2267,7 @@ def analyze_thermal(
             base_recovery_k=gas_data.recovery_temperature_k,
             source_arrays=regen_result.arrays,
             source_outlets=regen_result.outlet_temperatures_k,
+            source_completion=regen_result.segment_completion,
             contour=contour, mesh=mesh, settings=solver_settings,
         )
         film_warnings.extend(current_film_warnings)
@@ -2216,7 +2333,11 @@ def analyze_thermal(
     for diagnostic in radiation_warnings:
         if "data range" in diagnostic or "source/screening" in diagnostic:
             physical_issues.append(diagnostic)
+        if "data range" in diagnostic and physical_validity != "invalid":
+            physical_validity = "unsupported"
     for film in films:
+        if segment_id(film) in inactive:
+            continue
         physical_issues.append("gaseous-film mixing/layer parameters and injection coverage require experimental validation")
         name = value_of(film,"coolant","coolant_name",default=None)
         if name is None:
@@ -2239,9 +2360,10 @@ def analyze_thermal(
             physical_issues.append("peroxide film decomposition/chemical heat release unsupported")
     if physical_validity == "valid" and physical_issues:
         physical_validity = "screening"
-    unsolved_stations = sum(active is None for active in arrays.active)
+    unsolved_stations = sum(not isfinite(temperature) for temperature in arrays.Twg)
     if unsolved_stations == len(arrays.active):
-        physical_validity = "unsupported"
+        if physical_validity != "invalid":
+            physical_validity = "unsupported"
         physical_issues.append("no thermal wall stations solved; specify a supported cooling boundary condition")
     elif unsolved_stations:
         physical_issues.append("thermal wall boundary unavailable for part of the contour; omitted stations have no predicted temperature")
@@ -2267,7 +2389,7 @@ def analyze_thermal(
             "viscosity_pa_s":gas_data.reference_viscosity_pa_s,
             "prandtl":gas_data.reference_prandtl,"gamma":gas_data.reference_gamma,
             "throat_upstream_curvature_radius_m":gas_data.throat_radius_of_curvature_m},
-        "coolant_side_model": solver_settings.internal_flow_correlation+" with rectangular laminar correction and rib fin effective area",
+        "coolant_side_model": solver_settings.internal_flow_correlation+" with developing rectangular laminar flow, Re 2300–4000 transition and rib fin effective area",
         "coolant_pressure_model": "Darcy-Weisbach single phase; Lockhart-Martinelli two-phase friction plus homogeneous variable-area acceleration",
         "two_phase_model": "Beta pure-fluid Li-Wu/Chen-Bennett pre-dryout boiling; Lockhart-Martinelli friction; homogeneous acceleration",
         "two_phase_model_by_segment": {
@@ -2309,6 +2431,7 @@ def analyze_thermal(
         },
         "coolant_property_sources": regen_result.property_sources,
         "coolant_property_metadata":regen_result.property_metadata,
+        "regen_segment_completion":regen_result.segment_completion,
         "fin_area_by_segment": regen_result.fin_area_by_segment,
         "energy_balance_by_segment": regen_result.energy_balance_by_segment,
         "coolant_outlet_phase":regen_result.outlet_phases,
@@ -2326,6 +2449,9 @@ def analyze_thermal(
             "bounds_basis":"emissivity in [0,1], fixed calculated wall temperature; not calibrated uncertainty interval",
         },
         "unsolved_station_count":unsolved_stations,
+        "solved_wall_station_count": section_count-unsolved_stations,
+        "wall_solution_complete": unsolved_stations == 0,
+        "unsupported_station_count":sum(value in {"unsupported","invalid"} for value in arrays.station_applicability),
         "temperature_labels": {
             "Twg": "hot-gas-facing surface",
             "Twi": "TBC/base-wall interface",
@@ -2358,7 +2484,7 @@ def analyze_thermal(
         linked_coolant_source=regen_result.links,
         warnings=tuple(warnings),
         iterations=stats.iterations,
-        converged=stats.converged,
+        converged=stats.converged and unsolved_stations < section_count,
         metadata=metadata,
         physical_validity=physical_validity,
         physical_issues=tuple(physical_issues),
@@ -2367,6 +2493,10 @@ def analyze_thermal(
         coolant_flow_regime=tuple(arrays.coolant_flow_regime),
         coolant_outlet_phase=regen_result.outlet_phases,
         coolant_outlet_enthalpy_j_kg=regen_result.outlet_enthalpies_j_kg,
+        coolant_reynolds=tuple(arrays.coolant_reynolds),
+        coolant_nusselt=tuple(arrays.coolant_nusselt),
+        coolant_raw_coefficient_w_m2k=tuple(arrays.coolant_raw_coefficient_w_m2k),
+        station_applicability=tuple(arrays.station_applicability),
     )
 
 

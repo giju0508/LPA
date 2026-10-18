@@ -1,0 +1,15 @@
+{
+  "checked_utc": "2026-10-18T19:49:40.943475+00:00",
+  "version": "0.17.0b1",
+  "compileall": "passed",
+  "pip_check": "No broken requirements found",
+  "source_input_sha256": "e42823bc38930bd52397d9a19743697888777928a32f95029f0498537ed038c4",
+  "windows_version": {
+    "FileVersion": "0.17.0b1",
+    "ProductVersion": "0.17.0b1",
+    "fixed_version": "0.17.0.1",
+    "IsPreRelease": true
+  },
+  "source_and_exe_smoke": "passed",
+  "code_signature": "unsigned"
+}

@@ -148,7 +148,7 @@ class EngineDefinitionPage(InputPage):
         self.mixture_ratio_auto_var = self.boolean("mixture_ratio_auto", False)
         self.automatic_mixture_ratio_checkbox = ttk.Checkbutton(
             ratio_box,
-            text="Auto O/F: maximum\ntheoretical vacuum Isp",
+            text="Auto O/F: maximum theoretical vacuum Isp",
             variable=self.mixture_ratio_auto_var,
             command=self._on_auto_mixture_ratio,
         )
@@ -161,7 +161,7 @@ class EngineDefinitionPage(InputPage):
         )
         self.mixture_ratio_status.grid(row=2, column=0, sticky="w", pady=(3, 0))
         self.mixture_ratio_status.grid_remove()
-        fields.add("Mixture ratio (O/F)", ratio_box)
+        fields.add("Mixture ratio (O/F)", ratio_box, columnspan=2)
 
         oxidizer_box = ttk.Frame(fields, style="Surface.TFrame")
         oxidizer_box.grid_columnconfigure(0, weight=1)
@@ -1718,15 +1718,20 @@ class SegmentDialog(tk.Toplevel):
             command=self._refresh,
         ).pack(anchor="w")
         self.rough_frame = FieldGrid(rough.content, columns=2)
+        self.roughness_height_entry = ttk.Entry(
+            self.rough_frame, textvariable=self.var("roughness_height_mm"))
         self.rough_frame.add(
-            "Roughness height",
-            ttk.Entry(self.rough_frame, textvariable=self.var("roughness_height_mm")),
+            "Equivalent sand-grain height",
+            self.roughness_height_entry,
             unit="mm",
         )
+        self.roughness_step_entry = ttk.Entry(
+            self.rough_frame, textvariable=self.var("roughness_step_mm"), state="disabled")
         self.rough_frame.add(
             "Roughness step",
-            ttk.Entry(self.rough_frame, textvariable=self.var("roughness_step_mm")),
+            self.roughness_step_entry,
             unit="mm",
+            hint="Spacing not used by this model",
         )
         if bool(rough_enabled.get()):
             self.rough_frame.pack(fill="x", pady=(6, 0))

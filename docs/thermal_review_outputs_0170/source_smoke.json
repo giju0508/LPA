@@ -1,0 +1,11 @@
+﻿{
+    "version":  "0.17.0b1",
+    "launch_kind":  "source",
+    "executable":  "C:\\Python314\\python.exe",
+    "title":  "LPA 0.17.0b1 Beta",
+    "responding":  true,
+    "parent_process_id":  29960,
+    "window_process_id":  29960,
+    "normal_close":  true,
+    "exit_code":  0
+}

@@ -1,0 +1,42 @@
+{
+  "validation_mode": "Extracted EXE modules and native libraries under isolated -I -S CPython 3.14; not a clean-machine frozen-executable run",
+  "CoolProp_version": "8.0.0",
+  "CoolProp_file": "C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\tmp\\release-0.17.0b1-bundle\\CoolProp\\__init__.pyc",
+  "numpy_file": "C:\\Users\\LGJ\\LGJ\\Development\\Rocketry\\LPA\\tmp\\release-0.17.0b1-bundle\\numpy\\__init__.pyc",
+  "oxygen_150K_20bar_density": 61.40243014573238,
+  "oxygen_phase": "gas",
+  "methane_200K_50bar_cp": 7272.586681461298,
+  "methane_phase": "supercritical",
+  "methane_pseudocritical_T": 193.28393416655086,
+  "performance_source": "rocketcea",
+  "vacuum_isp_s": 288.66529503951773,
+  "thermal_converged": true,
+  "thermal_physical_validity": "screening",
+  "thermal_energy_residual_w": 7.010296030784957e-05,
+  "beta_boiling": {
+    "two_phase_stations": 35,
+    "physical_validity": "unsupported",
+    "energy_balance": {
+      "water": {
+        "heat_pickup_w": 88625.1974112681,
+        "coolant_enthalpy_rise_w": 88620.12972171335,
+        "two_phase_kinetic_energy_change_w": 5.067689554684329,
+        "residual_w": 6.693934295753934e-11
+      }
+    }
+  },
+  "LNG_150K_25bar_density": 384.3687745559994,
+  "RP1_450K_20bar": {
+    "property_applicability": "unsupported",
+    "phase": "unknown",
+    "viscosity_available": false,
+    "transport_source": "NISTIR 6646 partial measurements plus explicit screening estimates"
+  },
+  "thermal_wall_solution_complete": true,
+  "automatic_of": {
+    "objective": "maximum theoretical vacuum specific impulse",
+    "source": "rocketcea",
+    "mixture_ratio": 1.31342081877,
+    "theoretical_vacuum_isp_s": 278.71864135201787
+  }
+}

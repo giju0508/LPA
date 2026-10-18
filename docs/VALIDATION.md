@@ -24,7 +24,7 @@ Windows Tcl/Tk 시험은 `pytest.ini`의 `--capture=sys`를 사용한다. OS 표
 - [ ] 모든 명령의 exit code가 0이다.
 - [ ] `python main.py` 실행 후 창이 잘리지 않고 1080 x 700 최소 크기에서 각 입력 페이지를 끝까지 스크롤할 수 있다.
 - [ ] DPI 100%, 125%, 150%에서 텍스트, combobox, 표 헤더와 Matplotlib toolbar가 겹치거나 잘리지 않는다.
-- [ ] 메인 창 제목은 프로젝트 저장·수정 상태와 관계없이 `LPA 0.15.0`만 표시되고, 탭 제목은 Save/Run 옆 상단 영역에 한 번만 표시된다. LNG 선택 시 적용 조성이 표시되고, 탭 설명은 필요한 경우에만 표시된다.
+- [ ] 메인 창 제목은 프로젝트 저장·수정 상태와 관계없이 현재 버전의 `LPA <version> Beta`만 표시되고, 탭 제목은 Save/Run 옆 상단 영역에 한 번만 표시된다. LNG 선택 시 적용 조성이 표시되고, 탭 설명은 필요한 경우에만 표시된다.
 - [ ] VS Code Code Runner Stop 또는 터미널 `Ctrl+C`로 중단해도 `KeyboardInterrupt` traceback 없이 executor와 Tk 창이 정리된다.
 - [ ] 좌측 INPUT/RESULTS 항목의 숫자 접두어가 선택·비선택 상태 및 DPI 100~150%에서 깨지지 않는다.
 - [ ] 자동 O/F를 선택하면 입력란이 잠기고 현재 추진제 조성·공급 상태·압력·수축비·노즐 출구조건·동결 모델의 최대 이론 진공 Isp O/F가 적용되며, 해제하면 직접 입력할 수 있다. 출구압 지정은 후보별 확장비를 계산하고, 직접 Dc+명목추력의 결합은 수렴한다. 분석/공급 피드백에서 다시 계산한 O/F와 냉각 유량이 일치한다.
@@ -312,3 +312,35 @@ RPA 유동 관계식은 같은 Me/K로 평가했을 때의 실측 일치이며, 
 | 미수행 검증 | **clean PC/VM**, 실제 **VS Code/Code Runner UI 자동조작**, 실제 OS DPI 전환, 코드 서명·보안 스캐너 및 연소/열시험은 수행하지 않음 |
 
 `KeyboardInterrupt` traceback은 중단 신호를 받은 실행 위치를 나타낸다. Matplotlib import 위치에서 중단되었다는 사실과 글로벌 Python에서 두 의존성이 누락되었던 사실은 구분하며, 누락된 의존성을 원래 `KeyboardInterrupt`의 직접 원인으로 확정하지 않는다. 소스 GUI smoke는 명시한 Python의 실행·응답·정상 종료 검증이며 VS Code 확장의 실제 실행 설정이나 Stop 버튼을 자동 조작한 시험이 아니다. b1에 명시한 열전달 Beta의 물리 적용 한계는 그대로 유지한다.
+
+
+## 검증 기록 (0.17.0b1 Beta)
+
+2026-10-19 KST, Windows 11 x64 / CPython 3.14.0 / Tk 8.6에서 실행했다. 근거는 [버전별 원본 출력](thermal_review_outputs_0170/README.md)에 보존한다. 방법과 한계는 [열전달 검토](THERMAL_REVIEW_0170.md), [채널 상관식](CHANNEL_ENTRY_METHOD_2026-10-19.md), [물성 근거](property_review_0170.md)를 참조한다.
+
+| 확인 | 실제 결과 |
+|---|---|
+| 버전 | Python/README/CHANGELOG/Windows 문자열 **0.17.0b1 Beta**, 고정 **0.17.0.1**, `IsPreRelease=true` |
+| 전체 회귀 | **668 passed in 73.51 s**. 최종 원본 로그는 `test_run.txt`에 기록 |
+| 실패 원인 교정 | 첫 전체 시험에서 GUI 2건이 실패했다. 새 DPI 시험이 Tk display scaling을 다음 시험에 남긴 문제로 확인하여 finally에서 원래 배율을 복원했다. 제품 assertions를 약화하지 않았다. 새 미계산 표시 시험의 예약 Matplotlib draw도 Tcl 종료 전에 처리한다 |
+| 소스/환경 | compileall, `pip check` 통과. 기존 pinned runtime/build dependencies 유지 |
+| 독립 문헌 대조 | NIST Table 10의 465개 k 데이터와 Table 12의 30개 μρ 데이터·단위를 원문과 전수 대조. low-P 점도식과 일치하지 않는 계측자료를 임의로 자동 연결하지 않음 |
+| 채널 수식 | 입구식의 원문 shape 지수/길이척도/Fanning 대 Darcy를 확인. 12/120/700 셀 분할 적분, Re 2300/4000의 Nu/f 연속성·적용범위 회귀 포함 |
+| 실제 입력 재검토 | 원본 CFG 미변경 SHA-256 확인. 1.3 mm: **49/300** 벽 해, 마지막 Tc **334.107562 K**, 부분 Δp **0.0453234 bar**. 1.8 mm 비교: **51/300**, 마지막 Tc **333.784448 K**. 둘 다 **unsupported**이며 실제 전체 채널 출구값으로 사용하지 않음 |
+| 물성 행렬 | 실제 **21 PT + 8 포화상** 상태를 출처·상·수송/열역학 적용성과 함께 저장. N₂O/Ethanol 고온 transport 결측, native no-EOS 유체, RP-1 범위 이탈을 구분. LNG 150 K/25 bar는 액상 EOS 밀도 **384.368775 kg/m³**, 점도 결측으로 기본 열전달 미승인 |
+| Windows 빌드 | PyInstaller **6.21.0**, hooks **2026.6** 단일 EXE 빌드 성공. `build_run.txt` |
+| 소스/번들 일치 | EXE 추출 **36개 LPA 모듈 + main** 코드와 현재 소스 일치, native/resources 및 주요 dependency license 확인. `archive_check.json` |
+| 실제 GUI 실행 | 글로벌 Python source 및 frozen EXE 모두 창 **LPA 0.17.0b1 Beta**, responding **true**, normal close **true**, exit **0**. source stdout/stderr 0 bytes |
+| 추출 native 계산 | host site-packages 없는 `-I -S`에서 EXE 코드/native 라이브러리 실행. 실제 CEA/자동 O/F/LNG EOS/RP-1 450 K 거부/물 재생냉각·비등 통과. 실제 frozen EXE를 깨끗한 PC에서 전체 계산한 검증과는 구분 |
+| 비등 수지 | 0.05 kg/s 물 원통 fixture에서 120개 벽 해, 35개 bulk 2상 지점. 열유입 **88625.197411 W**, 엔탈피 상승 **88620.129722 W**, 운동에너지 변화 **5.067690 W**, 잔차 **6.69e-11 W**. subcooled-boiling 가드 때문에 물리 상태는 **unsupported**로 유지 |
+| ZIP | **53개** member의 원본 byte 일치와 ZIP 무결성 확인. EXE/최신 README/CHANGELOG/방법 근거 및 직접·간접 runtime 원본 license notices 포함. `release_manifest.json` |
+| 공개 전 점검 | 기존 **5개 commit / 644 text blob occurrences**의 credential signature matches **0**. 비밀 전체 부재를 증명하는 검사는 아니며 실제 token 값은 출력하지 않음. 사용자 CFG/attachments/tmp/dist는 Git에 포함하지 않음 |
+| 잔여 범위 | 실제 채널·하드웨어/clean-PC 전체 계산/코드 서명 미검증. 혼합물 2상 열전달, CHF/dryout, 검증된 고온 RP-1 EOS, 초임계 HTD·수명 미지원 |
+
+파일 크기와 SHA-256:
+
+| 파일 | bytes | SHA-256 |
+|---|---:|---|
+| LPA.exe | 81859474 | `ba9f9f873a628f630e3a30dcd51e1bcd94349940bff9047478da19bb1c55507f` |
+| LPA-0.17.0b1-Windows-x64-Beta.zip | 81323798 | `9103a9ebef32438eeb47728b73bc56d05f9cd9fc1ebda5a04866c8de5649b68f` |
+| rocketcea-1.2.3.tar.gz | 69126862 | `66f306407f11ba36186342dc2716417d3a5c9d94c95b0c5663380091bb11caa9` |

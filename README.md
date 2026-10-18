@@ -2,13 +2,15 @@
 
 LPA는 액체로켓 연소기의 성능, 추력실 형상, 열역학 상태와 정상상태 열전달을 예비 설계 단계에서 계산하는 Windows 데스크톱 도구입니다. RPA와 유사한 좌측 입력/결과 탐색 구조를 사용하며, 추진 성능은 RocketCEA, 고온가스측 열전달은 Bartz 상관식을 기본으로 합니다.
 
-현재 버전: **0.16.0b2** · **Beta 사전 배포판** · [변경 이력](CHANGELOG.md) · [검증 기록](docs/VALIDATION.md)
+현재 버전: **0.17.0b1** · **Beta 사전 배포판** · [변경 이력](CHANGELOG.md) · [검증 기록](docs/VALIDATION.md)
 
-이 버전은 순수유체 포화 2상 재생냉각 경로를 추가한 **Beta**입니다. 구현된 상관식, 계산이 완료된 범위와 수치 수렴 여부를 확인할 수 있지만, 전체 엔진이나 실제 채널의 열전달·CHF·dryout·수명 검증이 완료된 버전은 아닙니다. 특히 증기 질량분율 0.7 제한은 계산 보호 경계이며 실제 dryout 발생점을 뜻하지 않습니다. 물리 적용 상태와 중단 이유를 함께 확인하십시오.
+이 버전은 냉각채널 입구·전이 열전달, 물성 적용범위와 진단 표시를 보강한 **Beta**입니다. 구현된 상관식, 계산이 완료된 범위와 수치 수렴 여부를 확인할 수 있지만, 전체 엔진이나 실제 채널의 열전달·CHF·dryout·수명 검증이 완료된 버전은 아닙니다. 특히 증기 질량분율 0.7 제한은 계산 보호 경계이며 실제 dryout 발생점을 뜻하지 않습니다. 물리 적용 상태와 중단 이유를 함께 확인하십시오.
 
-배포 태그: [v0.16.0b2](https://github.com/giju0508/LPA/releases/tag/v0.16.0b2). 소스, 실행 파일 및 시험·빌드 결과의 버전이 같은지 확인하십시오. 이번 시작 중단 수정은 [VS Code 확인 기록](docs/STARTUP_VSCODE_2026-10-19.md)에 있습니다. 열전달 변경의 근거·실행 기록은 [열전달 Beta 구현 기록](docs/THERMAL_BETA_2026-10-19.md), [가스측 RPA 비교](docs/THERMAL_GAS_METHOD_2026-10-19.md), [물성 검증](docs/COOLANT_PROPERTIES_2026-10-19.md), [2상 결과 UI 기록](docs/TWO_PHASE_UI_2026-10-19.md)에 있습니다. 이전 [배포 검토](docs/RELEASE_REMEDIATION_2026-10-11.md)와 [자동 O/F 검토](docs/OF_OPTIMIZATION_REVIEW_2026-10-11.md)도 보존합니다.
+이번 변경의 근거와 결과는 [0.17.0 Beta 검토 기록](docs/THERMAL_REVIEW_0170.md)에 있습니다.
 
-기능, 해석 로직 또는 주요 GUI가 변경되는 릴리스마다 `lpa.__version__`을 올리고 같은 버전의 변경 내용과 KST 일시를 `CHANGELOG.md`에 기록합니다. README와 Windows FileVersion/ProductVersion 문자열을 일치시키며, 이 Beta의 Windows 고정 버전은 `0.16.0.2`, prerelease flag는 `0x2`입니다. 빌드·회귀시험 출력은 `tmp/build-<version>.log`, `tmp/test-<version>.log`에 남기고 실행 파일·버전별 ZIP의 SHA-256 및 실제 수행한 검증 결과를 `docs/VALIDATION.md`에 기록합니다.
+배포 태그: [v0.17.0b1](https://github.com/giju0508/LPA/releases/tag/v0.17.0b1). 소스, 실행 파일 및 시험·빌드 결과의 버전이 같은지 확인하십시오. 이번 시작 중단 수정은 [VS Code 확인 기록](docs/STARTUP_VSCODE_2026-10-19.md)에 있습니다. 열전달 변경의 근거·실행 기록은 [열전달 Beta 구현 기록](docs/THERMAL_BETA_2026-10-19.md), [가스측 RPA 비교](docs/THERMAL_GAS_METHOD_2026-10-19.md), [물성 검증](docs/COOLANT_PROPERTIES_2026-10-19.md), [2상 결과 UI 기록](docs/TWO_PHASE_UI_2026-10-19.md)에 있습니다. 이전 [배포 검토](docs/RELEASE_REMEDIATION_2026-10-11.md)와 [자동 O/F 검토](docs/OF_OPTIMIZATION_REVIEW_2026-10-11.md)도 보존합니다.
+
+기능, 해석 로직 또는 주요 GUI가 변경되는 릴리스마다 `lpa.__version__`을 올리고 같은 버전의 변경 내용과 KST 일시를 `CHANGELOG.md`에 기록합니다. README와 Windows FileVersion/ProductVersion 문자열을 일치시키며, 이 Beta의 Windows 고정 버전은 `0.17.0.1`, prerelease flag는 `0x2`입니다. 빌드·회귀시험 출력은 `tmp/build-<version>.log`, `tmp/test-<version>.log`에 남기고 실행 파일·버전별 ZIP의 SHA-256 및 실제 수행한 검증 결과를 `docs/VALIDATION.md`에 기록합니다.
 
 > **중요:** LPA의 결과는 개념/예비 설계 및 비교 검토용입니다. 시험, 상세 CFD/FEA, 구조·피로·수명 해석, 제작 공정 검증, 독립적인 수계산과 전문 엔지니어의 검토를 대체하지 않으며 비행·시험 안전 인증 자료로 사용할 수 없습니다.
 
@@ -51,11 +53,13 @@ python main.py
 
 Engine Definition에서 H2O2, Ethanol, IPA를 선택하면 별도의 `Mass fraction` 입력란에 질량 백분율을 지정합니다(`0 < wt% ≤ 100`, 소수점 허용). 나머지는 액체 물이며, O/F는 물을 포함한 산화제 공급류/연료 공급류의 질량비입니다. 기존 농도별 H2O2/Ethanol 프로젝트는 이름과 질량분율로 자동 변환됩니다. LNG는 상용 천연가스의 대표 조성(CH4 94%, C2H6 4.7%, C3H8 0.8%, 부탄 0.2%, N2 0.3%, 몰 기준)을 질량 기준으로 변환한 액체 연료 모델입니다. 전체 추진제의 상태·CEA 카드·물성 출처와 근사 범위는 [추진제 검토 기록](docs/PROPELLANT_AUDIT.md)에 정리했습니다.
 
-`Automatically optimize O/F (maximum theoretical vacuum Isp)`는 현재 추진제 조성·공급 상태, 연소실 압력, 수축비, 노즐 출구조건과 shifting/throat-frozen 모델에서 **이론 진공 비추력이 최대**인 O/F를 탐색합니다. 고정 확장비는 모든 후보에 같은 `Ae/At`를 적용하며, 출구압 지정은 후보 O/F마다 해당 압력을 만족하는 `Ae/At`를 계산합니다. 반응효율·노즐 손실·Film·운전 외압을 적용한 delivered Isp는 목적함수에 포함하지 않습니다. 직접 `Dc`와 명목 추력을 함께 지정하면 O/F와 `Ac/At`의 결합이 수렴할 때까지 반복하므로 사이징 조건이 간접적으로 영향을 줄 수 있습니다. 입력 변경과 분석 실행 시 자동값을 갱신하며, 재생냉각 공급 피드백에서도 매 반복의 반응물 상태로 다시 최적화합니다. 조성과 자동 선택 여부를 `*.cfg`에 저장하며 분석 결과에는 실제 적용 O/F와 목적함수·이론 Isp·계산 출처를 기록합니다. RocketCEA를 사용할 수 없으면 같은 진공 Isp 목적의 공학적 fallback임을 경고합니다.
+`Auto O/F: maximum theoretical vacuum Isp`는 현재 추진제 조성·공급 상태, 연소실 압력, 수축비, 노즐 출구조건과 shifting/throat-frozen 모델에서 **이론 진공 비추력이 최대**인 O/F를 탐색합니다. 고정 확장비는 모든 후보에 같은 `Ae/At`를 적용하며, 출구압 지정은 후보 O/F마다 해당 압력을 만족하는 `Ae/At`를 계산합니다. 반응효율·노즐 손실·Film·운전 외압을 적용한 delivered Isp는 목적함수에 포함하지 않습니다. 직접 `Dc`와 명목 추력을 함께 지정하면 O/F와 `Ac/At`의 결합이 수렴할 때까지 반복하므로 사이징 조건이 간접적으로 영향을 줄 수 있습니다. 입력 변경과 분석 실행 시 자동값을 갱신하며, 재생냉각 공급 피드백에서도 매 반복의 반응물 상태로 다시 최적화합니다. 조성과 자동 선택 여부를 `*.cfg`에 저장하며 분석 결과에는 실제 적용 O/F와 목적함수·이론 Isp·계산 출처를 기록합니다. RocketCEA를 사용할 수 없으면 같은 진공 Isp 목적의 공학적 fallback임을 경고합니다.
 
 시작 및 New Project의 `LPA Demonstrator` 기본값은 **추력 2000 N @ 1 atm, Pc 20 bar(a), Ac/At 6.25, L* 1200 mm, O/F 1.3, LOX / Ethanol 70 wt%**입니다. 자동 O/F는 해제 상태로 시작합니다. 공급 온도·압력은 선택 입력이며, 입력하면 EOS의 상대 엔탈피 변화가 CEA 카드에 적용됩니다. 둘 다 비우면 기존 CEA 기준 상태를 사용하고, 온도만 입력하면 압력 1.01325 bar(LNG 5 bar), 압력만 입력하면 추진제 기준 온도를 사용합니다. LNG는 공통 111.66 K·5 bar 기준의 혼합물 엔탈피를 사용하고 실제 공급 상태를 지정할 수 있습니다. IPA/H2O2 및 kerosene의 공급 엔탈피는 별도 screening 근사와 경고를 유지합니다.
 
 수치 수렴과 물리 적용범위를 별도로 표시합니다. 냉각제의 압력 의존 EOS와 엔탈피 행진, 리브 fin·원통벽 면적 보정, 사각채널 층류, 연결 Film/Regen 반복을 사용합니다. 지원 범위 안의 순수유체 포화 비등은 아래 Beta 모델로 계산하고, 혼합물 2상 열전달·CHF/dryout·검증되지 않은 초임계 열전달·액체 Film 증발·발열 분해·coking·비정상/ablative 영역은 별도로 진단합니다. `screening`, `unsupported`, `invalid`와 수치 수렴·계산 완료 개수를 함께 확인하며, 수렴만으로 실제 설계 적합성을 판정하지 않습니다.
+
+0.17.0b1의 RP-1 기본 점도는 NIST 자료의 **243.29–333.15 K**에 제한되며 압력 독립 진단용입니다. 밀도/Cp와 상 판정은 검증된 RP-1 EOS가 아니므로 고온 전 구간 재생냉각을 지원 완료한 것으로 해석하지 마십시오. HEOS의 필수 transport가 없거나 유체 모델 자체가 없는 경우에는 기본 열해석 행진을 중단합니다. 결과 표·전체 CSV에 Reynolds/Nusselt 수, 원래 냉각측 열전달계수와 지점별 적용성을 기록하며, 부분 계산의 마지막 상태는 정상 출구로 연결하지 않습니다. [추진제별 물성 근거](docs/property_review_0170.md)를 확인하십시오.
 
 RPA는 내부 탐색 범위·정련 알고리즘·수렴 허용값을 공개하지 않습니다. LPA는 관측된 목적함수와 출구조건 의미를 따르되, O/F 0.10–30.0의 49점 bounded coarse scan 후 최상 구간을 golden-section 30회로 정련합니다. RocketCEA의 공개 API는 RPA처럼 임의의 pressure-ratio/area-ratio 위치에서 동결시키는 기능을 제공하지 않으므로, 신규 입력은 shifting 또는 throat freezing을 제공합니다. 현재 유한면적 연소기(FAC)에서 chamber freezing은 CEA station 출력이 유효하지 않아 차단하며, 임의 동결 위치는 지원하지 않습니다. 열역학 데이터베이스와 비공개 수치 설정까지 포함한 RPA와의 완전한 수치 일치도 보장하지 않습니다. RocketCEA 계산이 실패하면 engineering fallback을 사용하며 분석 결과 warning에 기록합니다.
 

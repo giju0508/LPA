@@ -1,0 +1,4301 @@
+{
+  "version": "0.17.0b1",
+  "generated_utc": "2026-10-18T19:45:14.895623+00:00",
+  "property_matrix": [
+    {
+      "name": "H2O",
+      "specified_T_K": 290,
+      "specified_p_Pa": 4000000.0,
+      "state": {
+        "density_kg_m3": 1000.6031324373522,
+        "specific_heat_j_kgk": 4173.927775293769,
+        "conductivity_w_mk": 0.5946441345049558,
+        "viscosity_pa_s": 0.0010822622745013473,
+        "temperature_k": 290.0,
+        "pressure_pa": 4000000.0,
+        "enthalpy_j_kg": 74524.90839633478,
+        "phase": "liquid",
+        "source": "CoolProp HEOS: Water",
+        "saturation_temperature_k": 523.5040452887833,
+        "saturation_pressure_pa": 1919.9990855297588,
+        "critical_temperature_k": 647.0959999999873,
+        "critical_pressure_pa": 22063999.999997754,
+        "pseudocritical_temperature_k": null,
+        "speed_of_sound_m_s": 1478.6640244180062,
+        "specific_heat_cv_j_kgk": 4153.713292532378,
+        "gas_constant_j_kgk": 461.51804999997773,
+        "issues": [],
+        "vapor_quality_mass_fraction": null,
+        "saturated_liquid": null,
+        "saturated_vapor": null,
+        "surface_tension_n_m": null,
+        "thermodynamic_source": "CoolProp HEOS: Water",
+        "transport_source": "CoolProp HEOS: Water",
+        "property_limits": {
+          "name": "H2O",
+          "backend": "HEOS",
+          "minimum_temperature_k": 273.16,
+          "maximum_temperature_k": 1273.0,
+          "maximum_pressure_pa": 1000000000.0,
+          "thermodynamic_source": "CoolProp HEOS: Water",
+          "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+          "references": [
+            "https://coolprop.org/fluid_properties/fluids/Water.html",
+            "https://iapws.org/technical-guidance/release/IAPWS-95"
+          ],
+          "notes": [
+            "EOS limits do not imply validation of viscosity or thermal conductivity.",
+            "IAPWS-95 stable-fluid validity cap: 1273 K; melting boundary still applies."
+          ],
+          "transport_limits": [
+            {
+              "property_name": "conductivity_w_mk",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/Water.html",
+                "https://iapws.org/technical-guidance/release/IAPWS-95"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            },
+            {
+              "property_name": "viscosity_pa_s",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/Water.html",
+                "https://iapws.org/technical-guidance/release/IAPWS-95"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            }
+          ]
+        },
+        "equilibrium_energy_residual_j_kg": null,
+        "property_applicability": "eos",
+        "thermodynamic_applicability": "eos",
+        "transport_applicability": "eos",
+        "property_notes": [
+          "EOS denotes the provider's model domain, not independent experimental validation of every state.",
+          "Thermodynamic bounds and transport-correlation bounds are separate; unreported transport limits remain unknown."
+        ],
+        "property_references": [
+          "https://coolprop.org/fluid_properties/fluids/Water.html",
+          "https://iapws.org/technical-guidance/release/IAPWS-95"
+        ],
+        "property_evidence": [
+          {
+            "property_name": "density_kg_m3",
+            "source": "CoolProp HEOS: Water",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "specific_heat_j_kgk",
+            "source": "CoolProp HEOS: Water",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "conductivity_w_mk",
+            "source": "CoolProp HEOS: Water",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "source": "CoolProp HEOS: Water",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "H2O",
+      "specified_T_K": 3000,
+      "specified_p_Pa": 4000000.0,
+      "state": {
+        "density_kg_m3": 199.60000000000002,
+        "specific_heat_j_kgk": 6446.0093400000005,
+        "conductivity_w_mk": 0.27426074,
+        "viscosity_pa_s": 8e-05,
+        "temperature_k": 3000.0,
+        "pressure_pa": 4000000.0,
+        "enthalpy_j_kg": 14384213.5409895,
+        "phase": "unknown",
+        "source": "screening",
+        "saturation_temperature_k": null,
+        "saturation_pressure_pa": null,
+        "critical_temperature_k": null,
+        "critical_pressure_pa": null,
+        "pseudocritical_temperature_k": null,
+        "speed_of_sound_m_s": null,
+        "specific_heat_cv_j_kgk": null,
+        "gas_constant_j_kgk": null,
+        "issues": [
+          "H2O: EOS state unavailable (EOS temperature 3000 K outside documented bounds [273.16, 1273] K); physical state unsupported"
+        ],
+        "vapor_quality_mass_fraction": null,
+        "saturated_liquid": null,
+        "saturated_vapor": null,
+        "surface_tension_n_m": null,
+        "thermodynamic_source": "screening",
+        "transport_source": "screening",
+        "property_limits": null,
+        "equilibrium_energy_residual_j_kg": null,
+        "property_applicability": "unsupported",
+        "thermodynamic_applicability": "unsupported",
+        "transport_applicability": "screening",
+        "property_notes": [
+          "reference estimates have no independently established pressure, phase, or temperature validity range"
+        ],
+        "property_references": [],
+        "property_evidence": []
+      }
+    },
+    {
+      "name": "LOX",
+      "specified_T_K": 90,
+      "specified_p_Pa": 3000000.0,
+      "state": {
+        "density_kg_m3": 1148.4200358450057,
+        "specific_heat_j_kgk": 1684.781756190704,
+        "conductivity_w_mk": 0.15320894600861315,
+        "viscosity_pa_s": 0.00020138873062293123,
+        "temperature_k": 90.0,
+        "pressure_pa": 3000000.0,
+        "enthalpy_j_kg": -132132.10925762367,
+        "phase": "liquid",
+        "source": "CoolProp HEOS: Oxygen",
+        "saturation_temperature_k": 141.69479760813775,
+        "saturation_pressure_pa": 99350.32152800723,
+        "critical_temperature_k": 154.59938983528554,
+        "critical_pressure_pa": 5046410.521187217,
+        "pseudocritical_temperature_k": null,
+        "speed_of_sound_m_s": 919.6211202761059,
+        "specific_heat_cv_j_kgk": 935.3993304282668,
+        "gas_constant_j_kgk": 259.8328687325775,
+        "issues": [],
+        "vapor_quality_mass_fraction": null,
+        "saturated_liquid": null,
+        "saturated_vapor": null,
+        "surface_tension_n_m": null,
+        "thermodynamic_source": "CoolProp HEOS: Oxygen",
+        "transport_source": "CoolProp HEOS: Oxygen",
+        "property_limits": {
+          "name": "LOX",
+          "backend": "HEOS",
+          "minimum_temperature_k": 54.361000000000004,
+          "maximum_temperature_k": 2000.0,
+          "maximum_pressure_pa": 80000000.0,
+          "thermodynamic_source": "CoolProp HEOS: Oxygen",
+          "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+          "references": [
+            "https://coolprop.org/fluid_properties/fluids/Oxygen.html"
+          ],
+          "notes": [
+            "EOS limits do not imply validation of viscosity or thermal conductivity."
+          ],
+          "transport_limits": [
+            {
+              "property_name": "conductivity_w_mk",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/Oxygen.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            },
+            {
+              "property_name": "viscosity_pa_s",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/Oxygen.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            }
+          ]
+        },
+        "equilibrium_energy_residual_j_kg": null,
+        "property_applicability": "eos",
+        "thermodynamic_applicability": "eos",
+        "transport_applicability": "eos",
+        "property_notes": [
+          "EOS denotes the provider's model domain, not independent experimental validation of every state.",
+          "Thermodynamic bounds and transport-correlation bounds are separate; unreported transport limits remain unknown."
+        ],
+        "property_references": [
+          "https://coolprop.org/fluid_properties/fluids/Oxygen.html"
+        ],
+        "property_evidence": [
+          {
+            "property_name": "density_kg_m3",
+            "source": "CoolProp HEOS: Oxygen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "specific_heat_j_kgk",
+            "source": "CoolProp HEOS: Oxygen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "conductivity_w_mk",
+            "source": "CoolProp HEOS: Oxygen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "source": "CoolProp HEOS: Oxygen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "LOX",
+      "specified_T_K": 150,
+      "specified_p_Pa": 2000000.0,
+      "state": {
+        "density_kg_m3": 61.40243014573238,
+        "specific_heat_j_kgk": 1229.8991897166266,
+        "conductivity_w_mk": 0.016135526232826877,
+        "viscosity_pa_s": 1.192789975840158e-05,
+        "temperature_k": 150.0,
+        "pressure_pa": 2000000.0,
+        "enthalpy_j_kg": 116816.81969030965,
+        "phase": "gas",
+        "source": "CoolProp HEOS: Oxygen",
+        "saturation_temperature_k": 132.74292718240093,
+        "saturation_pressure_pa": 4218605.455088524,
+        "critical_temperature_k": 154.59938983528554,
+        "critical_pressure_pa": 5046410.521187217,
+        "pseudocritical_temperature_k": null,
+        "speed_of_sound_m_s": 213.91854900348136,
+        "specific_heat_cv_j_kgk": 712.2468601343128,
+        "gas_constant_j_kgk": 259.8328687325775,
+        "issues": [],
+        "vapor_quality_mass_fraction": null,
+        "saturated_liquid": null,
+        "saturated_vapor": null,
+        "surface_tension_n_m": null,
+        "thermodynamic_source": "CoolProp HEOS: Oxygen",
+        "transport_source": "CoolProp HEOS: Oxygen",
+        "property_limits": {
+          "name": "LOX",
+          "backend": "HEOS",
+          "minimum_temperature_k": 54.361000000000004,
+          "maximum_temperature_k": 2000.0,
+          "maximum_pressure_pa": 80000000.0,
+          "thermodynamic_source": "CoolProp HEOS: Oxygen",
+          "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+          "references": [
+            "https://coolprop.org/fluid_properties/fluids/Oxygen.html"
+          ],
+          "notes": [
+            "EOS limits do not imply validation of viscosity or thermal conductivity."
+          ],
+          "transport_limits": [
+            {
+              "property_name": "conductivity_w_mk",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/Oxygen.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            },
+            {
+              "property_name": "viscosity_pa_s",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/Oxygen.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            }
+          ]
+        },
+        "equilibrium_energy_residual_j_kg": null,
+        "property_applicability": "eos",
+        "thermodynamic_applicability": "eos",
+        "transport_applicability": "eos",
+        "property_notes": [
+          "EOS denotes the provider's model domain, not independent experimental validation of every state.",
+          "Thermodynamic bounds and transport-correlation bounds are separate; unreported transport limits remain unknown."
+        ],
+        "property_references": [
+          "https://coolprop.org/fluid_properties/fluids/Oxygen.html"
+        ],
+        "property_evidence": [
+          {
+            "property_name": "density_kg_m3",
+            "source": "CoolProp HEOS: Oxygen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "specific_heat_j_kgk",
+            "source": "CoolProp HEOS: Oxygen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "conductivity_w_mk",
+            "source": "CoolProp HEOS: Oxygen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "source": "CoolProp HEOS: Oxygen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "LCH4",
+      "specified_T_K": 150,
+      "specified_p_Pa": 2500000.0,
+      "state": {
+        "density_kg_m3": 361.3665139562845,
+        "specific_heat_j_kgk": 3950.259797604797,
+        "conductivity_w_mk": 0.13205807829189223,
+        "viscosity_pa_s": 5.895181111713705e-05,
+        "temperature_k": 150.0,
+        "pressure_pa": 2500000.0,
+        "enthalpy_j_kg": 143211.1702172733,
+        "phase": "liquid",
+        "source": "CoolProp HEOS: Methane",
+        "saturation_temperature_k": 171.99170666277186,
+        "saturation_pressure_pa": 1039961.2967653951,
+        "critical_temperature_k": 190.56400265128698,
+        "critical_pressure_pa": 4599200.474282439,
+        "pseudocritical_temperature_k": null,
+        "speed_of_sound_m_s": 951.6848426029105,
+        "specific_heat_cv_j_kgk": 1920.4742389662558,
+        "gas_constant_j_kgk": 518.2705014087317,
+        "issues": [],
+        "vapor_quality_mass_fraction": null,
+        "saturated_liquid": null,
+        "saturated_vapor": null,
+        "surface_tension_n_m": null,
+        "thermodynamic_source": "CoolProp HEOS: Methane",
+        "transport_source": "CoolProp HEOS: Methane",
+        "property_limits": {
+          "name": "LCH4",
+          "backend": "HEOS",
+          "minimum_temperature_k": 90.6941,
+          "maximum_temperature_k": 625.0,
+          "maximum_pressure_pa": 1000000000.0,
+          "thermodynamic_source": "CoolProp HEOS: Methane",
+          "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+          "references": [
+            "https://coolprop.org/fluid_properties/fluids/Methane.html"
+          ],
+          "notes": [
+            "EOS limits do not imply validation of viscosity or thermal conductivity."
+          ],
+          "transport_limits": [
+            {
+              "property_name": "conductivity_w_mk",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/Methane.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            },
+            {
+              "property_name": "viscosity_pa_s",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/Methane.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            }
+          ]
+        },
+        "equilibrium_energy_residual_j_kg": null,
+        "property_applicability": "eos",
+        "thermodynamic_applicability": "eos",
+        "transport_applicability": "eos",
+        "property_notes": [
+          "EOS denotes the provider's model domain, not independent experimental validation of every state.",
+          "Thermodynamic bounds and transport-correlation bounds are separate; unreported transport limits remain unknown."
+        ],
+        "property_references": [
+          "https://coolprop.org/fluid_properties/fluids/Methane.html"
+        ],
+        "property_evidence": [
+          {
+            "property_name": "density_kg_m3",
+            "source": "CoolProp HEOS: Methane",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "specific_heat_j_kgk",
+            "source": "CoolProp HEOS: Methane",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "conductivity_w_mk",
+            "source": "CoolProp HEOS: Methane",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "source": "CoolProp HEOS: Methane",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "LCH4",
+      "specified_T_K": 200,
+      "specified_p_Pa": 5000000.0,
+      "state": {
+        "density_kg_m3": 87.76399754661693,
+        "specific_heat_j_kgk": 7272.586681461298,
+        "conductivity_w_mk": 0.04039586664777097,
+        "viscosity_pa_s": 1.0926921218872234e-05,
+        "temperature_k": 200.0,
+        "pressure_pa": 5000000.0,
+        "enthalpy_j_kg": 544398.1790386556,
+        "phase": "supercritical",
+        "source": "CoolProp HEOS: Methane",
+        "saturation_temperature_k": null,
+        "saturation_pressure_pa": null,
+        "critical_temperature_k": 190.56400265128698,
+        "critical_pressure_pa": 4599200.474282439,
+        "pseudocritical_temperature_k": 193.28393416655086,
+        "speed_of_sound_m_s": 291.29337138550284,
+        "specific_heat_cv_j_kgk": 1996.4577147403259,
+        "gas_constant_j_kgk": 518.2705014087317,
+        "issues": [],
+        "vapor_quality_mass_fraction": null,
+        "saturated_liquid": null,
+        "saturated_vapor": null,
+        "surface_tension_n_m": null,
+        "thermodynamic_source": "CoolProp HEOS: Methane",
+        "transport_source": "CoolProp HEOS: Methane",
+        "property_limits": {
+          "name": "LCH4",
+          "backend": "HEOS",
+          "minimum_temperature_k": 90.6941,
+          "maximum_temperature_k": 625.0,
+          "maximum_pressure_pa": 1000000000.0,
+          "thermodynamic_source": "CoolProp HEOS: Methane",
+          "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+          "references": [
+            "https://coolprop.org/fluid_properties/fluids/Methane.html"
+          ],
+          "notes": [
+            "EOS limits do not imply validation of viscosity or thermal conductivity."
+          ],
+          "transport_limits": [
+            {
+              "property_name": "conductivity_w_mk",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/Methane.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            },
+            {
+              "property_name": "viscosity_pa_s",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/Methane.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            }
+          ]
+        },
+        "equilibrium_energy_residual_j_kg": null,
+        "property_applicability": "eos",
+        "thermodynamic_applicability": "eos",
+        "transport_applicability": "eos",
+        "property_notes": [
+          "EOS denotes the provider's model domain, not independent experimental validation of every state.",
+          "Thermodynamic bounds and transport-correlation bounds are separate; unreported transport limits remain unknown."
+        ],
+        "property_references": [
+          "https://coolprop.org/fluid_properties/fluids/Methane.html"
+        ],
+        "property_evidence": [
+          {
+            "property_name": "density_kg_m3",
+            "source": "CoolProp HEOS: Methane",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "specific_heat_j_kgk",
+            "source": "CoolProp HEOS: Methane",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "conductivity_w_mk",
+            "source": "CoolProp HEOS: Methane",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "source": "CoolProp HEOS: Methane",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "LH2",
+      "specified_T_K": 21,
+      "specified_p_Pa": 2000000.0,
+      "state": {
+        "density_kg_m3": 72.53556678311436,
+        "specific_heat_j_kgk": 9324.750954733521,
+        "conductivity_w_mk": 0.10709267884270672,
+        "viscosity_pa_s": 1.4690480266591026e-05,
+        "temperature_k": 21.0,
+        "pressure_pa": 2000000.0,
+        "enthalpy_j_kg": 24141.67716116091,
+        "phase": "supercritical_liquid",
+        "source": "CoolProp HEOS: Hydrogen",
+        "saturation_temperature_k": null,
+        "saturation_pressure_pa": 121498.40761387176,
+        "critical_temperature_k": 33.1443326883113,
+        "critical_pressure_pa": 1296357.6060553084,
+        "pseudocritical_temperature_k": 36.45101455503995,
+        "speed_of_sound_m_s": 1193.6891875244596,
+        "specific_heat_cv_j_kgk": 5718.7529323624385,
+        "gas_constant_j_kgk": 4124.487568704487,
+        "issues": [
+          "normal-hydrogen EOS assumed; ortho/para composition and conversion heat not modelled"
+        ],
+        "vapor_quality_mass_fraction": null,
+        "saturated_liquid": null,
+        "saturated_vapor": null,
+        "surface_tension_n_m": null,
+        "thermodynamic_source": "CoolProp HEOS: Hydrogen",
+        "transport_source": "CoolProp HEOS: Hydrogen",
+        "property_limits": {
+          "name": "LH2",
+          "backend": "HEOS",
+          "minimum_temperature_k": 13.957,
+          "maximum_temperature_k": 1000.0,
+          "maximum_pressure_pa": 2000000000.0,
+          "thermodynamic_source": "CoolProp HEOS: Hydrogen",
+          "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+          "references": [
+            "https://coolprop.org/fluid_properties/fluids/Hydrogen.html"
+          ],
+          "notes": [
+            "EOS limits do not imply validation of viscosity or thermal conductivity."
+          ],
+          "transport_limits": [
+            {
+              "property_name": "conductivity_w_mk",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/Hydrogen.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            },
+            {
+              "property_name": "viscosity_pa_s",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/Hydrogen.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            }
+          ]
+        },
+        "equilibrium_energy_residual_j_kg": null,
+        "property_applicability": "eos",
+        "thermodynamic_applicability": "eos",
+        "transport_applicability": "eos",
+        "property_notes": [
+          "EOS denotes the provider's model domain, not independent experimental validation of every state.",
+          "Thermodynamic bounds and transport-correlation bounds are separate; unreported transport limits remain unknown."
+        ],
+        "property_references": [
+          "https://coolprop.org/fluid_properties/fluids/Hydrogen.html"
+        ],
+        "property_evidence": [
+          {
+            "property_name": "density_kg_m3",
+            "source": "CoolProp HEOS: Hydrogen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "specific_heat_j_kgk",
+            "source": "CoolProp HEOS: Hydrogen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "conductivity_w_mk",
+            "source": "CoolProp HEOS: Hydrogen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "source": "CoolProp HEOS: Hydrogen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "LNG",
+      "specified_T_K": 150,
+      "specified_p_Pa": 2500000.0,
+      "state": {
+        "density_kg_m3": 384.3687745559994,
+        "specific_heat_j_kgk": 3657.6021062565383,
+        "conductivity_w_mk": 0.14041369415269755,
+        "viscosity_pa_s": 6.519706486136622e-05,
+        "temperature_k": 150.0,
+        "pressure_pa": 2500000.0,
+        "enthalpy_j_kg": 118399.83405759047,
+        "phase": "liquid",
+        "source": "CoolProp HEOS: Methane&Ethane&Propane&n-Butane&Nitrogen",
+        "saturation_temperature_k": 174.02029911615944,
+        "saturation_pressure_pa": null,
+        "critical_temperature_k": 204.7154430914566,
+        "critical_pressure_pa": 5710830.595360006,
+        "pseudocritical_temperature_k": null,
+        "speed_of_sound_m_s": 1007.9442130280069,
+        "specific_heat_cv_j_kgk": 1869.5857301797002,
+        "gas_constant_j_kgk": 487.7511280880616,
+        "issues": [
+          "viscosity unavailable in EOS; screening transport/property used",
+          "mixture EOS/transport require composition-specific validation",
+          "mixture bubble-temperature diagnostic uses pressure rounded down by at most 0.1 bar"
+        ],
+        "vapor_quality_mass_fraction": null,
+        "saturated_liquid": null,
+        "saturated_vapor": null,
+        "surface_tension_n_m": null,
+        "thermodynamic_source": "CoolProp HEOS: Methane&Ethane&Propane&n-Butane&Nitrogen",
+        "transport_source": "CoolProp HEOS: Methane&Ethane&Propane&n-Butane&Nitrogen; screening fallback present",
+        "property_limits": {
+          "name": "LNG",
+          "backend": "HEOS",
+          "minimum_temperature_k": 90.64319300000001,
+          "maximum_temperature_k": 575.0,
+          "maximum_pressure_pa": 12000000.0,
+          "thermodynamic_source": "CoolProp HEOS: Methane&Ethane&Propane&n-Butane&Nitrogen",
+          "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+          "references": [
+            "https://coolprop.org/fluid_properties/Mixtures.html",
+            "https://coolprop.org/coolprop/REFPROP.html",
+            "https://www.nist.gov/publications/eos-lng-fundamental-equation-state-calculation-thermodynamic-properties-liquefied"
+          ],
+          "notes": [
+            "EOS limits do not imply validation of viscosity or thermal conductivity.",
+            "Mixture limits also depend on composition and phase-envelope convergence.",
+            "Upper bounds conservatively include every constituent EOS limit; mixture freezing is not modelled."
+          ],
+          "transport_limits": [
+            {
+              "property_name": "conductivity_w_mk",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/Mixtures.html",
+                "https://coolprop.org/coolprop/REFPROP.html",
+                "https://www.nist.gov/publications/eos-lng-fundamental-equation-state-calculation-thermodynamic-properties-liquefied"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            },
+            {
+              "property_name": "viscosity_pa_s",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/Mixtures.html",
+                "https://coolprop.org/coolprop/REFPROP.html",
+                "https://www.nist.gov/publications/eos-lng-fundamental-equation-state-calculation-thermodynamic-properties-liquefied"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            }
+          ]
+        },
+        "equilibrium_energy_residual_j_kg": null,
+        "property_applicability": "unsupported",
+        "thermodynamic_applicability": "eos",
+        "transport_applicability": "screening",
+        "property_notes": [
+          "EOS denotes the provider's model domain, not independent experimental validation of every state.",
+          "Thermodynamic bounds and transport-correlation bounds are separate; unreported transport limits remain unknown."
+        ],
+        "property_references": [
+          "https://coolprop.org/fluid_properties/Mixtures.html",
+          "https://coolprop.org/coolprop/REFPROP.html",
+          "https://www.nist.gov/publications/eos-lng-fundamental-equation-state-calculation-thermodynamic-properties-liquefied"
+        ],
+        "property_evidence": [
+          {
+            "property_name": "density_kg_m3",
+            "source": "CoolProp HEOS: Methane&Ethane&Propane&n-Butane&Nitrogen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "specific_heat_j_kgk",
+            "source": "CoolProp HEOS: Methane&Ethane&Propane&n-Butane&Nitrogen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "conductivity_w_mk",
+            "source": "CoolProp HEOS: Methane&Ethane&Propane&n-Butane&Nitrogen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "source": "reference screening fallback",
+            "applicability": "screening",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "LNG",
+      "specified_T_K": 180,
+      "specified_p_Pa": 2500000.0,
+      "state": {
+        "density_kg_m3": 49.405749156256746,
+        "specific_heat_j_kgk": 3691.4897675937027,
+        "conductivity_w_mk": 0.05166291407409557,
+        "viscosity_pa_s": 2.372183553645252e-05,
+        "temperature_k": 179.9999999999999,
+        "pressure_pa": 2500000.0,
+        "enthalpy_j_kg": 468727.2663312421,
+        "phase": "two_phase",
+        "source": "CoolProp HEOS: Methane&Ethane&Propane&n-Butane&Nitrogen",
+        "saturation_temperature_k": 174.02029911615944,
+        "saturation_pressure_pa": null,
+        "critical_temperature_k": 204.7154430914566,
+        "critical_pressure_pa": 5710830.595360006,
+        "pseudocritical_temperature_k": null,
+        "speed_of_sound_m_s": null,
+        "specific_heat_cv_j_kgk": 2053.75943742511,
+        "gas_constant_j_kgk": 487.7511280880616,
+        "issues": [
+          "speed_sound unavailable in EOS; screening transport/property used",
+          "mixture EOS/transport require composition-specific validation",
+          "mixture bubble-temperature diagnostic uses pressure rounded down by at most 0.1 bar",
+          "two-phase bulk cp/transport are phase-weighted diagnostics; use saturated phase properties",
+          "two-phase surface tension unavailable in EOS"
+        ],
+        "vapor_quality_mass_fraction": 0.7458707348596846,
+        "saturated_liquid": {
+          "density_kg_m3": 381.2069930388644,
+          "specific_heat_j_kgk": 3654.9448369460374,
+          "conductivity_w_mk": 0.12900142175114318,
+          "viscosity_pa_s": 7.059210596628679e-05,
+          "temperature_k": 179.9999999999999,
+          "pressure_pa": 2499999.999999976,
+          "enthalpy_j_kg": 168977.09203404243,
+          "molar_mass_kg_mol": 0.019594101425911715,
+          "phase": "liquid",
+          "source": "CoolProp HEOS equilibrium phase",
+          "speed_of_sound_m_s": 823.8686600220996,
+          "specific_heat_cv_j_kgk": 1735.726649119482,
+          "issues": []
+        },
+        "saturated_vapor": {
+          "density_kg_m3": 38.10534127897823,
+          "specific_heat_j_kgk": 3703.941169607541,
+          "conductivity_w_mk": 0.025312532963199567,
+          "viscosity_pa_s": 7.75243651786468e-06,
+          "temperature_k": 179.9999999999999,
+          "pressure_pa": 2499999.999999976,
+          "enthalpy_j_kg": 570856.6137444193,
+          "molar_mass_kg_mol": 0.01632341764843347,
+          "phase": "gas",
+          "source": "CoolProp HEOS equilibrium phase",
+          "speed_of_sound_m_s": 291.89414895329446,
+          "specific_heat_cv_j_kgk": 1818.7812576389617,
+          "issues": []
+        },
+        "surface_tension_n_m": null,
+        "thermodynamic_source": "CoolProp HEOS: Methane&Ethane&Propane&n-Butane&Nitrogen",
+        "transport_source": "CoolProp HEOS: Methane&Ethane&Propane&n-Butane&Nitrogen",
+        "property_limits": {
+          "name": "LNG",
+          "backend": "HEOS",
+          "minimum_temperature_k": 90.64319300000001,
+          "maximum_temperature_k": 575.0,
+          "maximum_pressure_pa": 12000000.0,
+          "thermodynamic_source": "CoolProp HEOS: Methane&Ethane&Propane&n-Butane&Nitrogen",
+          "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+          "references": [
+            "https://coolprop.org/fluid_properties/Mixtures.html",
+            "https://coolprop.org/coolprop/REFPROP.html",
+            "https://www.nist.gov/publications/eos-lng-fundamental-equation-state-calculation-thermodynamic-properties-liquefied"
+          ],
+          "notes": [
+            "EOS limits do not imply validation of viscosity or thermal conductivity.",
+            "Mixture limits also depend on composition and phase-envelope convergence.",
+            "Upper bounds conservatively include every constituent EOS limit; mixture freezing is not modelled."
+          ],
+          "transport_limits": [
+            {
+              "property_name": "conductivity_w_mk",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/Mixtures.html",
+                "https://coolprop.org/coolprop/REFPROP.html",
+                "https://www.nist.gov/publications/eos-lng-fundamental-equation-state-calculation-thermodynamic-properties-liquefied"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            },
+            {
+              "property_name": "viscosity_pa_s",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/Mixtures.html",
+                "https://coolprop.org/coolprop/REFPROP.html",
+                "https://www.nist.gov/publications/eos-lng-fundamental-equation-state-calculation-thermodynamic-properties-liquefied"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            }
+          ]
+        },
+        "equilibrium_energy_residual_j_kg": 0.00011402228847146034,
+        "property_applicability": "eos",
+        "thermodynamic_applicability": "eos",
+        "transport_applicability": "eos",
+        "property_notes": [
+          "EOS denotes the provider's model domain, not independent experimental validation of every state.",
+          "Thermodynamic bounds and transport-correlation bounds are separate; unreported transport limits remain unknown."
+        ],
+        "property_references": [
+          "https://coolprop.org/fluid_properties/Mixtures.html",
+          "https://coolprop.org/coolprop/REFPROP.html",
+          "https://www.nist.gov/publications/eos-lng-fundamental-equation-state-calculation-thermodynamic-properties-liquefied"
+        ],
+        "property_evidence": [
+          {
+            "property_name": "density_kg_m3",
+            "source": "CoolProp HEOS: Methane&Ethane&Propane&n-Butane&Nitrogen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "specific_heat_j_kgk",
+            "source": "CoolProp HEOS: Methane&Ethane&Propane&n-Butane&Nitrogen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "conductivity_w_mk",
+            "source": "CoolProp HEOS: Methane&Ethane&Propane&n-Butane&Nitrogen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "source": "CoolProp HEOS: Methane&Ethane&Propane&n-Butane&Nitrogen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Ethanol (70%)",
+      "specified_T_K": 293.15,
+      "specified_p_Pa": 2500000.0,
+      "state": {
+        "density_kg_m3": 858.7021159586614,
+        "specific_heat_j_kgk": 3464.9297988702756,
+        "conductivity_w_mk": 0.527689765129511,
+        "viscosity_pa_s": 0.0008915907362322456,
+        "temperature_k": 293.15,
+        "pressure_pa": 2500000.0,
+        "enthalpy_j_kg": -99462.41053247065,
+        "phase": "liquid",
+        "source": "CoolProp HEOS: Ethanol&Water",
+        "saturation_temperature_k": 466.4969423185205,
+        "saturation_pressure_pa": null,
+        "critical_temperature_k": 584.9233542890612,
+        "critical_pressure_pa": 16025638.863842312,
+        "pseudocritical_temperature_k": null,
+        "speed_of_sound_m_s": 862.0399493125703,
+        "specific_heat_cv_j_kgk": 3165.875111910827,
+        "gas_constant_j_kgk": 264.79339917862535,
+        "issues": [
+          "mixture EOS/transport require composition-specific validation",
+          "mixture bubble-temperature diagnostic uses pressure rounded down by at most 0.1 bar"
+        ],
+        "vapor_quality_mass_fraction": null,
+        "saturated_liquid": null,
+        "saturated_vapor": null,
+        "surface_tension_n_m": null,
+        "thermodynamic_source": "CoolProp HEOS: Ethanol&Water",
+        "transport_source": "CoolProp HEOS: Ethanol&Water",
+        "property_limits": {
+          "name": "Ethanol (70%)",
+          "backend": "HEOS",
+          "minimum_temperature_k": 218.74045185111328,
+          "maximum_temperature_k": 650.0,
+          "maximum_pressure_pa": 280000000.0,
+          "thermodynamic_source": "CoolProp HEOS: Ethanol&Water",
+          "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+          "references": [
+            "https://coolprop.org/fluid_properties/Mixtures.html",
+            "https://coolprop.org/coolprop/REFPROP.html"
+          ],
+          "notes": [
+            "EOS limits do not imply validation of viscosity or thermal conductivity.",
+            "Mixture limits also depend on composition and phase-envelope convergence.",
+            "Upper bounds conservatively include every constituent EOS limit; mixture freezing is not modelled."
+          ],
+          "transport_limits": [
+            {
+              "property_name": "conductivity_w_mk",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/Mixtures.html",
+                "https://coolprop.org/coolprop/REFPROP.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            },
+            {
+              "property_name": "viscosity_pa_s",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/Mixtures.html",
+                "https://coolprop.org/coolprop/REFPROP.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            }
+          ]
+        },
+        "equilibrium_energy_residual_j_kg": null,
+        "property_applicability": "eos",
+        "thermodynamic_applicability": "eos",
+        "transport_applicability": "eos",
+        "property_notes": [
+          "EOS denotes the provider's model domain, not independent experimental validation of every state.",
+          "Thermodynamic bounds and transport-correlation bounds are separate; unreported transport limits remain unknown."
+        ],
+        "property_references": [
+          "https://coolprop.org/fluid_properties/Mixtures.html",
+          "https://coolprop.org/coolprop/REFPROP.html"
+        ],
+        "property_evidence": [
+          {
+            "property_name": "density_kg_m3",
+            "source": "CoolProp HEOS: Ethanol&Water",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "specific_heat_j_kgk",
+            "source": "CoolProp HEOS: Ethanol&Water",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "conductivity_w_mk",
+            "source": "CoolProp HEOS: Ethanol&Water",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "source": "CoolProp HEOS: Ethanol&Water",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Ethanol (100%)",
+      "specified_T_K": 293.15,
+      "specified_p_Pa": 2500000.0,
+      "state": {
+        "density_kg_m3": 791.5235543438733,
+        "specific_heat_j_kgk": 2393.0470795305637,
+        "conductivity_w_mk": 0.16572912237979098,
+        "viscosity_pa_s": 0.001211447971990682,
+        "temperature_k": 293.15,
+        "pressure_pa": 2500000.0,
+        "enthalpy_j_kg": -152663.17919555292,
+        "phase": "liquid",
+        "source": "CoolProp HEOS: Ethanol",
+        "saturation_temperature_k": 464.2960527534551,
+        "saturation_pressure_pa": 5875.937928272408,
+        "critical_temperature_k": 514.7092848812961,
+        "critical_pressure_pa": 6267914.582702095,
+        "pseudocritical_temperature_k": null,
+        "speed_of_sound_m_s": 1174.3954897395768,
+        "specific_heat_cv_j_kgk": 2007.5916136556943,
+        "gas_constant_j_kgk": 180.48086716198767,
+        "issues": [],
+        "vapor_quality_mass_fraction": null,
+        "saturated_liquid": null,
+        "saturated_vapor": null,
+        "surface_tension_n_m": null,
+        "thermodynamic_source": "CoolProp HEOS: Ethanol",
+        "transport_source": "CoolProp HEOS: Ethanol",
+        "property_limits": {
+          "name": "Ethanol (100%)",
+          "backend": "HEOS",
+          "minimum_temperature_k": 159.10000000000002,
+          "maximum_temperature_k": 650.0,
+          "maximum_pressure_pa": 280000000.0,
+          "thermodynamic_source": "CoolProp HEOS: Ethanol",
+          "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+          "references": [
+            "https://coolprop.org/fluid_properties/fluids/Ethanol.html"
+          ],
+          "notes": [
+            "EOS limits do not imply validation of viscosity or thermal conductivity.",
+            "Ethanol conductivity correlation: triple point to 600 K, up to 245 MPa."
+          ],
+          "transport_limits": [
+            {
+              "property_name": "conductivity_w_mk",
+              "minimum_temperature_k": 159.1,
+              "maximum_temperature_k": 600.0,
+              "maximum_pressure_pa": 245000000.0,
+              "references": [
+                "https://doi.org/10.1063/1.4797368"
+              ],
+              "notes": [
+                "Reference conductivity correlation; excludes unvalidated extrapolation."
+              ]
+            },
+            {
+              "property_name": "viscosity_pa_s",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/Ethanol.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            }
+          ]
+        },
+        "equilibrium_energy_residual_j_kg": null,
+        "property_applicability": "eos",
+        "thermodynamic_applicability": "eos",
+        "transport_applicability": "eos",
+        "property_notes": [
+          "EOS denotes the provider's model domain, not independent experimental validation of every state.",
+          "Thermodynamic bounds and transport-correlation bounds are separate; unreported transport limits remain unknown."
+        ],
+        "property_references": [
+          "https://coolprop.org/fluid_properties/fluids/Ethanol.html"
+        ],
+        "property_evidence": [
+          {
+            "property_name": "density_kg_m3",
+            "source": "CoolProp HEOS: Ethanol",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "specific_heat_j_kgk",
+            "source": "CoolProp HEOS: Ethanol",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "conductivity_w_mk",
+            "source": "CoolProp HEOS: Ethanol",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "source": "CoolProp HEOS: Ethanol",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Ethanol (100%)",
+      "specified_T_K": 620,
+      "specified_p_Pa": 2500000.0,
+      "state": {
+        "density_kg_m3": 23.512886578701497,
+        "specific_heat_j_kgk": 2577.032587148313,
+        "conductivity_w_mk": 0.15982173,
+        "viscosity_pa_s": 1.85646568115529e-05,
+        "temperature_k": 620.0,
+        "pressure_pa": 2500000.0,
+        "enthalpy_j_kg": 1376121.5578039421,
+        "phase": "supercritical_gas",
+        "source": "CoolProp HEOS: Ethanol",
+        "saturation_temperature_k": 464.2960527534551,
+        "saturation_pressure_pa": null,
+        "critical_temperature_k": 514.7092848812961,
+        "critical_pressure_pa": 6267914.582702095,
+        "pseudocritical_temperature_k": null,
+        "speed_of_sound_m_s": 334.9509886346575,
+        "specific_heat_cv_j_kgk": 2316.772670706679,
+        "gas_constant_j_kgk": 180.48086716198767,
+        "issues": [
+          "conductivity unavailable in EOS; screening transport/property used"
+        ],
+        "vapor_quality_mass_fraction": null,
+        "saturated_liquid": null,
+        "saturated_vapor": null,
+        "surface_tension_n_m": null,
+        "thermodynamic_source": "CoolProp HEOS: Ethanol",
+        "transport_source": "CoolProp HEOS: Ethanol; screening fallback present",
+        "property_limits": {
+          "name": "Ethanol (100%)",
+          "backend": "HEOS",
+          "minimum_temperature_k": 159.10000000000002,
+          "maximum_temperature_k": 650.0,
+          "maximum_pressure_pa": 280000000.0,
+          "thermodynamic_source": "CoolProp HEOS: Ethanol",
+          "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+          "references": [
+            "https://coolprop.org/fluid_properties/fluids/Ethanol.html"
+          ],
+          "notes": [
+            "EOS limits do not imply validation of viscosity or thermal conductivity.",
+            "Ethanol conductivity correlation: triple point to 600 K, up to 245 MPa."
+          ],
+          "transport_limits": [
+            {
+              "property_name": "conductivity_w_mk",
+              "minimum_temperature_k": 159.1,
+              "maximum_temperature_k": 600.0,
+              "maximum_pressure_pa": 245000000.0,
+              "references": [
+                "https://doi.org/10.1063/1.4797368"
+              ],
+              "notes": [
+                "Reference conductivity correlation; excludes unvalidated extrapolation."
+              ]
+            },
+            {
+              "property_name": "viscosity_pa_s",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/Ethanol.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            }
+          ]
+        },
+        "equilibrium_energy_residual_j_kg": null,
+        "property_applicability": "unsupported",
+        "thermodynamic_applicability": "eos",
+        "transport_applicability": "screening",
+        "property_notes": [
+          "EOS denotes the provider's model domain, not independent experimental validation of every state.",
+          "Thermodynamic bounds and transport-correlation bounds are separate; unreported transport limits remain unknown."
+        ],
+        "property_references": [
+          "https://coolprop.org/fluid_properties/fluids/Ethanol.html"
+        ],
+        "property_evidence": [
+          {
+            "property_name": "density_kg_m3",
+            "source": "CoolProp HEOS: Ethanol",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "specific_heat_j_kgk",
+            "source": "CoolProp HEOS: Ethanol",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "conductivity_w_mk",
+            "source": "reference screening fallback",
+            "applicability": "screening",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "source": "CoolProp HEOS: Ethanol",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "N2O",
+      "specified_T_K": 280,
+      "specified_p_Pa": 5000000.0,
+      "state": {
+        "density_kg_m3": 882.95186271614,
+        "specific_heat_j_kgk": 2331.7256516806215,
+        "conductivity_w_mk": 0.10510499999999999,
+        "viscosity_pa_s": 0.0002838431960215265,
+        "temperature_k": 280.0,
+        "pressure_pa": 5000000.0,
+        "enthalpy_j_kg": 179642.1213517719,
+        "phase": "liquid",
+        "source": "CoolProp HEOS: NitrousOxide",
+        "saturation_temperature_k": 292.69013893397306,
+        "saturation_pressure_pa": 3706842.7360919868,
+        "critical_temperature_k": 309.52067823146285,
+        "critical_pressure_pa": 7244816.70160716,
+        "pseudocritical_temperature_k": null,
+        "speed_of_sound_m_s": 532.059382443385,
+        "specific_heat_cv_j_kgk": 911.8868225369711,
+        "gas_constant_j_kgk": 188.91031699869131,
+        "issues": [
+          "conductivity unavailable in EOS; screening transport/property used",
+          "viscosity unavailable in EOS; screening transport/property used"
+        ],
+        "vapor_quality_mass_fraction": null,
+        "saturated_liquid": null,
+        "saturated_vapor": null,
+        "surface_tension_n_m": null,
+        "thermodynamic_source": "CoolProp HEOS: NitrousOxide",
+        "transport_source": "CoolProp HEOS: NitrousOxide; screening fallback present",
+        "property_limits": {
+          "name": "N2O",
+          "backend": "HEOS",
+          "minimum_temperature_k": 182.33,
+          "maximum_temperature_k": 525.0,
+          "maximum_pressure_pa": 50000000.0,
+          "thermodynamic_source": "CoolProp HEOS: NitrousOxide",
+          "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+          "references": [
+            "https://coolprop.org/fluid_properties/fluids/NitrousOxide.html"
+          ],
+          "notes": [
+            "EOS limits do not imply validation of viscosity or thermal conductivity."
+          ],
+          "transport_limits": [
+            {
+              "property_name": "conductivity_w_mk",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/NitrousOxide.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            },
+            {
+              "property_name": "viscosity_pa_s",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/NitrousOxide.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            }
+          ]
+        },
+        "equilibrium_energy_residual_j_kg": null,
+        "property_applicability": "unsupported",
+        "thermodynamic_applicability": "eos",
+        "transport_applicability": "screening",
+        "property_notes": [
+          "EOS denotes the provider's model domain, not independent experimental validation of every state.",
+          "Thermodynamic bounds and transport-correlation bounds are separate; unreported transport limits remain unknown."
+        ],
+        "property_references": [
+          "https://coolprop.org/fluid_properties/fluids/NitrousOxide.html"
+        ],
+        "property_evidence": [
+          {
+            "property_name": "density_kg_m3",
+            "source": "CoolProp HEOS: NitrousOxide",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "specific_heat_j_kgk",
+            "source": "CoolProp HEOS: NitrousOxide",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "conductivity_w_mk",
+            "source": "reference screening fallback",
+            "applicability": "screening",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "source": "reference screening fallback",
+            "applicability": "screening",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "RP-1",
+      "specified_T_K": 293,
+      "specified_p_Pa": 2000000.0,
+      "state": {
+        "density_kg_m3": 810.08505,
+        "specific_heat_j_kgk": 2049.9385,
+        "conductivity_w_mk": 0.13500405000000001,
+        "viscosity_pa_s": 0.0016546412932662432,
+        "temperature_k": 293.0,
+        "pressure_pa": 2000000.0,
+        "enthalpy_j_kg": -307.4953874999534,
+        "phase": "unknown",
+        "source": "screening",
+        "saturation_temperature_k": null,
+        "saturation_pressure_pa": null,
+        "critical_temperature_k": null,
+        "critical_pressure_pa": null,
+        "pseudocritical_temperature_k": null,
+        "speed_of_sound_m_s": null,
+        "specific_heat_cv_j_kgk": null,
+        "gas_constant_j_kgk": null,
+        "issues": [
+          "RP-1: no validated pressure/phase equation of state; phase unknown",
+          "RP-1 density and Cp remain pressure-independent screening estimates; no measured validity range claimed",
+          "RP-1 NIST viscosity data describe an atypical high-olefin sample; actual lot may differ",
+          "RP-1 dynamic viscosity is a pressure-independent screening diagnostic from atmospheric NIST kinematic viscosity times screening density; no validated compressed-liquid pressure correction",
+          "RP-1 conductivity outside NIST Table 10 measured convex hull; reference screening estimate used"
+        ],
+        "vapor_quality_mass_fraction": null,
+        "saturated_liquid": null,
+        "saturated_vapor": null,
+        "surface_tension_n_m": null,
+        "thermodynamic_source": "pressure-independent screening Cp/density; no RP-1 EOS",
+        "transport_source": "NISTIR 6646 partial measurements plus explicit screening estimates",
+        "property_limits": null,
+        "equilibrium_energy_residual_j_kg": null,
+        "property_applicability": "screening",
+        "thermodynamic_applicability": "screening",
+        "transport_applicability": "screening",
+        "property_notes": [
+          "Partial NIST measurements do not establish a validated four-property or phase model.",
+          "Interpolation hulls are property-specific and do not certify liquid-phase stability.",
+          "The original NIST RP-1 sample was atypical; fuel lot differences remain unresolved."
+        ],
+        "property_references": [
+          "https://nvlpubs.nist.gov/nistpubs/Legacy/IR/nistir6646.pdf"
+        ],
+        "property_evidence": [
+          {
+            "property_name": "kinematic_viscosity_m2_s",
+            "source": "NISTIR 6646 Eq. (1), original sample",
+            "applicability": "screening",
+            "temperature_range_k": [
+              243.29,
+              333.15
+            ],
+            "pressure_range_pa": [
+              83000.0,
+              83000.0
+            ],
+            "notes": [
+              "fit to atmospheric measurements; not a compressed-liquid pressure correlation"
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "source": "NISTIR 6646 atmospheric Eq. (1) times screening density",
+            "applicability": "screening",
+            "temperature_range_k": [
+              243.29,
+              333.15
+            ],
+            "pressure_range_pa": null,
+            "notes": [
+              "atmospheric Eq. (1), multiplied by screening density; pressure independence is a diagnostic assumption only",
+              "density conversion, operating pressure, and actual fuel-lot applicability are not validated"
+            ]
+          },
+          {
+            "property_name": "viscosity_density_product_kg2_m4_s",
+            "source": "NISTIR 6646 Table 12, separate instrument data",
+            "applicability": "unsupported",
+            "value": null,
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "not used by the default dynamic-viscosity curve; no automatic join between inconsistent instruments",
+              "log-linear interpolation only inside the original measured (T,P) convex hull",
+              "instrument-resolution limitations; model deviations -3.5 to -11.7 percent in report, p. 65"
+            ]
+          },
+          {
+            "property_name": "conductivity_w_mk",
+            "source": "reference screening estimate",
+            "applicability": "screening",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "valid only inside measured (Te,P) convex hull; bounding rectangle is insufficient",
+              "650 K measurements include reaction/composition/time dependence and approximately 4 percent uncertainty; not clean-fuel validation",
+              "sparse-data interpolation has no separately validated uncertainty and the source lot was atypical"
+            ]
+          },
+          {
+            "property_name": "density_kg_m3",
+            "source": "legacy reference-temperature screening estimate",
+            "applicability": "screening",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "no pressure correction"
+            ]
+          },
+          {
+            "property_name": "specific_heat_j_kgk",
+            "source": "legacy reference-temperature screening estimate",
+            "applicability": "screening",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "enthalpy integrates this Cp exactly; no independent EOS validation"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "RP-1",
+      "specified_T_K": 400,
+      "specified_p_Pa": 2000000.0,
+      "state": {
+        "density_kg_m3": 749.4160499999999,
+        "specific_heat_j_kgk": 2093.8085,
+        "conductivity_w_mk": 0.09388483846056354,
+        "viscosity_pa_s": null,
+        "temperature_k": 400.0,
+        "pressure_pa": 2000000.0,
+        "enthalpy_j_kg": 221382.96911250005,
+        "phase": "unknown",
+        "source": "screening",
+        "saturation_temperature_k": null,
+        "saturation_pressure_pa": null,
+        "critical_temperature_k": null,
+        "critical_pressure_pa": null,
+        "pseudocritical_temperature_k": null,
+        "speed_of_sound_m_s": null,
+        "specific_heat_cv_j_kgk": null,
+        "gas_constant_j_kgk": null,
+        "issues": [
+          "RP-1: no validated pressure/phase equation of state; phase unknown",
+          "RP-1 density and Cp remain pressure-independent screening estimates; no measured validity range claimed",
+          "RP-1 NIST viscosity data describe an atypical high-olefin sample; actual lot may differ",
+          "RP-1 default viscosity outside NIST Eq. (1) fit range [243.29, 333.15] K; extrapolation and viscosity floor disabled",
+          "NIST Table 12 mu*rho is separate evidence only; instrument-resolution uncertainty prevents splicing it into the atmospheric viscosity curve"
+        ],
+        "vapor_quality_mass_fraction": null,
+        "saturated_liquid": null,
+        "saturated_vapor": null,
+        "surface_tension_n_m": null,
+        "thermodynamic_source": "pressure-independent screening Cp/density; no RP-1 EOS",
+        "transport_source": "NISTIR 6646 partial measurements plus explicit screening estimates",
+        "property_limits": null,
+        "equilibrium_energy_residual_j_kg": null,
+        "property_applicability": "unsupported",
+        "thermodynamic_applicability": "screening",
+        "transport_applicability": "unsupported",
+        "property_notes": [
+          "Partial NIST measurements do not establish a validated four-property or phase model.",
+          "Interpolation hulls are property-specific and do not certify liquid-phase stability.",
+          "The original NIST RP-1 sample was atypical; fuel lot differences remain unresolved."
+        ],
+        "property_references": [
+          "https://nvlpubs.nist.gov/nistpubs/Legacy/IR/nistir6646.pdf"
+        ],
+        "property_evidence": [
+          {
+            "property_name": "kinematic_viscosity_m2_s",
+            "source": "NISTIR 6646 Eq. (1), original sample",
+            "applicability": "unsupported",
+            "temperature_range_k": [
+              243.29,
+              333.15
+            ],
+            "pressure_range_pa": [
+              83000.0,
+              83000.0
+            ],
+            "notes": [
+              "fit to atmospheric measurements; not a compressed-liquid pressure correlation"
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "source": "no viscosity data at this pressure/temperature",
+            "applicability": "unsupported",
+            "temperature_range_k": [
+              243.29,
+              333.15
+            ],
+            "pressure_range_pa": null,
+            "notes": [
+              "atmospheric Eq. (1), multiplied by screening density; pressure independence is a diagnostic assumption only",
+              "density conversion, operating pressure, and actual fuel-lot applicability are not validated"
+            ]
+          },
+          {
+            "property_name": "viscosity_density_product_kg2_m4_s",
+            "source": "NISTIR 6646 Table 12, separate instrument data",
+            "applicability": "measured_interpolation",
+            "value": 0.3110606850144734,
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "not used by the default dynamic-viscosity curve; no automatic join between inconsistent instruments",
+              "log-linear interpolation only inside the original measured (T,P) convex hull",
+              "instrument-resolution limitations; model deviations -3.5 to -11.7 percent in report, p. 65"
+            ]
+          },
+          {
+            "property_name": "conductivity_w_mk",
+            "source": "NISTIR 6646 Table 10 lambda_c",
+            "applicability": "measured_interpolation",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "valid only inside measured (Te,P) convex hull; bounding rectangle is insufficient",
+              "650 K measurements include reaction/composition/time dependence and approximately 4 percent uncertainty; not clean-fuel validation",
+              "sparse-data interpolation has no separately validated uncertainty and the source lot was atypical"
+            ]
+          },
+          {
+            "property_name": "density_kg_m3",
+            "source": "legacy reference-temperature screening estimate",
+            "applicability": "screening",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "no pressure correction"
+            ]
+          },
+          {
+            "property_name": "specific_heat_j_kgk",
+            "source": "legacy reference-temperature screening estimate",
+            "applicability": "screening",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "enthalpy integrates this Cp exactly; no independent EOS validation"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "RP-1",
+      "specified_T_K": 450,
+      "specified_p_Pa": 2000000.0,
+      "state": {
+        "density_kg_m3": 721.06605,
+        "specific_heat_j_kgk": 2114.3084999999996,
+        "conductivity_w_mk": 0.08544471681917987,
+        "viscosity_pa_s": null,
+        "temperature_k": 450.0,
+        "pressure_pa": 2000000.0,
+        "enthalpy_j_kg": 326585.8941125001,
+        "phase": "unknown",
+        "source": "screening",
+        "saturation_temperature_k": null,
+        "saturation_pressure_pa": null,
+        "critical_temperature_k": null,
+        "critical_pressure_pa": null,
+        "pseudocritical_temperature_k": null,
+        "speed_of_sound_m_s": null,
+        "specific_heat_cv_j_kgk": null,
+        "gas_constant_j_kgk": null,
+        "issues": [
+          "RP-1: no validated pressure/phase equation of state; phase unknown",
+          "RP-1 density and Cp remain pressure-independent screening estimates; no measured validity range claimed",
+          "RP-1 NIST viscosity data describe an atypical high-olefin sample; actual lot may differ",
+          "RP-1 default viscosity outside NIST Eq. (1) fit range [243.29, 333.15] K; extrapolation and viscosity floor disabled"
+        ],
+        "vapor_quality_mass_fraction": null,
+        "saturated_liquid": null,
+        "saturated_vapor": null,
+        "surface_tension_n_m": null,
+        "thermodynamic_source": "pressure-independent screening Cp/density; no RP-1 EOS",
+        "transport_source": "NISTIR 6646 partial measurements plus explicit screening estimates",
+        "property_limits": null,
+        "equilibrium_energy_residual_j_kg": null,
+        "property_applicability": "unsupported",
+        "thermodynamic_applicability": "screening",
+        "transport_applicability": "unsupported",
+        "property_notes": [
+          "Partial NIST measurements do not establish a validated four-property or phase model.",
+          "Interpolation hulls are property-specific and do not certify liquid-phase stability.",
+          "The original NIST RP-1 sample was atypical; fuel lot differences remain unresolved."
+        ],
+        "property_references": [
+          "https://nvlpubs.nist.gov/nistpubs/Legacy/IR/nistir6646.pdf"
+        ],
+        "property_evidence": [
+          {
+            "property_name": "kinematic_viscosity_m2_s",
+            "source": "NISTIR 6646 Eq. (1), original sample",
+            "applicability": "unsupported",
+            "temperature_range_k": [
+              243.29,
+              333.15
+            ],
+            "pressure_range_pa": [
+              83000.0,
+              83000.0
+            ],
+            "notes": [
+              "fit to atmospheric measurements; not a compressed-liquid pressure correlation"
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "source": "no viscosity data at this pressure/temperature",
+            "applicability": "unsupported",
+            "temperature_range_k": [
+              243.29,
+              333.15
+            ],
+            "pressure_range_pa": null,
+            "notes": [
+              "atmospheric Eq. (1), multiplied by screening density; pressure independence is a diagnostic assumption only",
+              "density conversion, operating pressure, and actual fuel-lot applicability are not validated"
+            ]
+          },
+          {
+            "property_name": "viscosity_density_product_kg2_m4_s",
+            "source": "NISTIR 6646 Table 12, separate instrument data",
+            "applicability": "unsupported",
+            "value": null,
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "not used by the default dynamic-viscosity curve; no automatic join between inconsistent instruments",
+              "log-linear interpolation only inside the original measured (T,P) convex hull",
+              "instrument-resolution limitations; model deviations -3.5 to -11.7 percent in report, p. 65"
+            ]
+          },
+          {
+            "property_name": "conductivity_w_mk",
+            "source": "NISTIR 6646 Table 10 lambda_c",
+            "applicability": "measured_interpolation",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "valid only inside measured (Te,P) convex hull; bounding rectangle is insufficient",
+              "650 K measurements include reaction/composition/time dependence and approximately 4 percent uncertainty; not clean-fuel validation",
+              "sparse-data interpolation has no separately validated uncertainty and the source lot was atypical"
+            ]
+          },
+          {
+            "property_name": "density_kg_m3",
+            "source": "legacy reference-temperature screening estimate",
+            "applicability": "screening",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "no pressure correction"
+            ]
+          },
+          {
+            "property_name": "specific_heat_j_kgk",
+            "source": "legacy reference-temperature screening estimate",
+            "applicability": "screening",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "enthalpy integrates this Cp exactly; no independent EOS validation"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Jet A-1",
+      "specified_T_K": 293,
+      "specified_p_Pa": 2000000.0,
+      "state": {
+        "density_kg_m3": 800.0840000000001,
+        "specific_heat_j_kgk": 2049.9385,
+        "conductivity_w_mk": 0.1300039,
+        "viscosity_pa_s": 0.0015022516883440662,
+        "temperature_k": 293.0,
+        "pressure_pa": 2000000.0,
+        "enthalpy_j_kg": -307.4953874999534,
+        "phase": "unknown",
+        "source": "screening",
+        "saturation_temperature_k": null,
+        "saturation_pressure_pa": null,
+        "critical_temperature_k": null,
+        "critical_pressure_pa": null,
+        "pseudocritical_temperature_k": null,
+        "speed_of_sound_m_s": null,
+        "specific_heat_cv_j_kgk": null,
+        "gas_constant_j_kgk": null,
+        "issues": [
+          "pressure-independent screening coolant properties",
+          "Jet A-1: no validated pressure/phase equation of state; native provider unsupported; screening diagnostics only"
+        ],
+        "vapor_quality_mass_fraction": null,
+        "saturated_liquid": null,
+        "saturated_vapor": null,
+        "surface_tension_n_m": null,
+        "thermodynamic_source": "screening",
+        "transport_source": "screening",
+        "property_limits": null,
+        "equilibrium_energy_residual_j_kg": null,
+        "property_applicability": "unsupported",
+        "thermodynamic_applicability": "unsupported",
+        "transport_applicability": "screening",
+        "property_notes": [
+          "reference estimates have no independently established pressure, phase, or temperature validity range"
+        ],
+        "property_references": [],
+        "property_evidence": [
+          {
+            "property_name": "density_kg_m3",
+            "source": "reference-temperature screening estimate",
+            "applicability": "screening",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Representative aviation kerosene values.",
+              "No independently established pressure, phase, or temperature range."
+            ]
+          },
+          {
+            "property_name": "specific_heat_j_kgk",
+            "source": "reference-temperature screening estimate",
+            "applicability": "screening",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Representative aviation kerosene values.",
+              "No independently established pressure, phase, or temperature range."
+            ]
+          },
+          {
+            "property_name": "conductivity_w_mk",
+            "source": "reference-temperature screening estimate",
+            "applicability": "screening",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Representative aviation kerosene values.",
+              "No independently established pressure, phase, or temperature range."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "source": "reference-temperature screening estimate",
+            "applicability": "screening",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Representative aviation kerosene values.",
+              "No independently established pressure, phase, or temperature range."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "IPA (100%)",
+      "specified_T_K": 293,
+      "specified_p_Pa": 2500000.0,
+      "state": {
+        "density_kg_m3": 785.0824250000001,
+        "specific_heat_j_kgk": 2679.9196,
+        "conductivity_w_mk": 0.13500405000000001,
+        "viscosity_pa_s": 0.0020430622961479304,
+        "temperature_k": 293.0,
+        "pressure_pa": 2500000.0,
+        "enthalpy_j_kg": -401.99396999993905,
+        "phase": "unknown",
+        "source": "screening",
+        "saturation_temperature_k": null,
+        "saturation_pressure_pa": null,
+        "critical_temperature_k": null,
+        "critical_pressure_pa": null,
+        "pseudocritical_temperature_k": null,
+        "speed_of_sound_m_s": null,
+        "specific_heat_cv_j_kgk": null,
+        "gas_constant_j_kgk": null,
+        "issues": [
+          "pressure-independent screening coolant properties",
+          "IPA (100%): no validated pressure/phase equation of state; native provider unsupported; screening diagnostics only"
+        ],
+        "vapor_quality_mass_fraction": null,
+        "saturated_liquid": null,
+        "saturated_vapor": null,
+        "surface_tension_n_m": null,
+        "thermodynamic_source": "screening",
+        "transport_source": "screening",
+        "property_limits": null,
+        "equilibrium_energy_residual_j_kg": null,
+        "property_applicability": "unsupported",
+        "thermodynamic_applicability": "unsupported",
+        "transport_applicability": "screening",
+        "property_notes": [
+          "reference estimates have no independently established pressure, phase, or temperature validity range"
+        ],
+        "property_references": [],
+        "property_evidence": [
+          {
+            "property_name": "density_kg_m3",
+            "source": "reference-temperature screening estimate",
+            "applicability": "screening",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Liquid isopropanol near 20 C; aqueous mixtures use ideal screening mixing rules.",
+              "No independently established pressure, phase, or temperature range."
+            ]
+          },
+          {
+            "property_name": "specific_heat_j_kgk",
+            "source": "reference-temperature screening estimate",
+            "applicability": "screening",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Liquid isopropanol near 20 C; aqueous mixtures use ideal screening mixing rules.",
+              "No independently established pressure, phase, or temperature range."
+            ]
+          },
+          {
+            "property_name": "conductivity_w_mk",
+            "source": "reference-temperature screening estimate",
+            "applicability": "screening",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Liquid isopropanol near 20 C; aqueous mixtures use ideal screening mixing rules.",
+              "No independently established pressure, phase, or temperature range."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "source": "reference-temperature screening estimate",
+            "applicability": "screening",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Liquid isopropanol near 20 C; aqueous mixtures use ideal screening mixing rules.",
+              "No independently established pressure, phase, or temperature range."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "H2O2 (90%)",
+      "specified_T_K": 293,
+      "specified_p_Pa": 2500000.0,
+      "state": {
+        "density_kg_m3": 1390.14595,
+        "specific_heat_j_kgk": 2719.9184,
+        "conductivity_w_mk": 0.5500165,
+        "viscosity_pa_s": 0.0012518764069533886,
+        "temperature_k": 293.0,
+        "pressure_pa": 2500000.0,
+        "enthalpy_j_kg": -407.99387999993814,
+        "phase": "unknown",
+        "source": "screening",
+        "saturation_temperature_k": null,
+        "saturation_pressure_pa": null,
+        "critical_temperature_k": null,
+        "critical_pressure_pa": null,
+        "pseudocritical_temperature_k": null,
+        "speed_of_sound_m_s": null,
+        "specific_heat_cv_j_kgk": null,
+        "gas_constant_j_kgk": null,
+        "issues": [
+          "pressure-independent screening coolant properties",
+          "H2O2 (90%): no validated pressure/phase equation of state; native provider unsupported; screening diagnostics only"
+        ],
+        "vapor_quality_mass_fraction": null,
+        "saturated_liquid": null,
+        "saturated_vapor": null,
+        "surface_tension_n_m": null,
+        "thermodynamic_source": "screening",
+        "transport_source": "screening",
+        "property_limits": null,
+        "equilibrium_energy_residual_j_kg": null,
+        "property_applicability": "unsupported",
+        "thermodynamic_applicability": "unsupported",
+        "transport_applicability": "screening",
+        "property_notes": [
+          "reference estimates have no independently established pressure, phase, or temperature validity range"
+        ],
+        "property_references": [],
+        "property_evidence": [
+          {
+            "property_name": "density_kg_m3",
+            "source": "reference-temperature screening estimate",
+            "applicability": "screening",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "90 percent hydrogen-peroxide solution screening values.",
+              "No independently established pressure, phase, or temperature range."
+            ]
+          },
+          {
+            "property_name": "specific_heat_j_kgk",
+            "source": "reference-temperature screening estimate",
+            "applicability": "screening",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "90 percent hydrogen-peroxide solution screening values.",
+              "No independently established pressure, phase, or temperature range."
+            ]
+          },
+          {
+            "property_name": "conductivity_w_mk",
+            "source": "reference-temperature screening estimate",
+            "applicability": "screening",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "90 percent hydrogen-peroxide solution screening values.",
+              "No independently established pressure, phase, or temperature range."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "source": "reference-temperature screening estimate",
+            "applicability": "screening",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "90 percent hydrogen-peroxide solution screening values.",
+              "No independently established pressure, phase, or temperature range."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Propane",
+      "specified_T_K": 280,
+      "specified_p_Pa": 2500000.0,
+      "state": {
+        "density_kg_m3": 523.3376616793857,
+        "specific_heat_j_kgk": 2514.8213787871446,
+        "conductivity_w_mk": 0.10450355308542698,
+        "viscosity_pa_s": 0.00012066383163313743,
+        "temperature_k": 280.0,
+        "pressure_pa": 2500000.0,
+        "enthalpy_j_kg": 218219.24113084786,
+        "phase": "liquid",
+        "source": "CoolProp HEOS: Propane",
+        "saturation_temperature_k": 341.4130271388911,
+        "saturation_pressure_pa": 581685.7351442272,
+        "critical_temperature_k": 369.8900089509634,
+        "critical_pressure_pa": 4251165.328013042,
+        "pseudocritical_temperature_k": null,
+        "speed_of_sound_m_s": 868.7845965561006,
+        "specific_heat_cv_j_kgk": 1596.7708932744843,
+        "gas_constant_j_kgk": 188.55550732703156,
+        "issues": [],
+        "vapor_quality_mass_fraction": null,
+        "saturated_liquid": null,
+        "saturated_vapor": null,
+        "surface_tension_n_m": null,
+        "thermodynamic_source": "CoolProp HEOS: Propane",
+        "transport_source": "CoolProp HEOS: Propane",
+        "property_limits": {
+          "name": "Propane",
+          "backend": "HEOS",
+          "minimum_temperature_k": 85.525,
+          "maximum_temperature_k": 650.0,
+          "maximum_pressure_pa": 1000000000.0,
+          "thermodynamic_source": "CoolProp HEOS: Propane",
+          "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+          "references": [
+            "https://coolprop.org/fluid_properties/fluids/Propane.html"
+          ],
+          "notes": [
+            "EOS limits do not imply validation of viscosity or thermal conductivity."
+          ],
+          "transport_limits": [
+            {
+              "property_name": "conductivity_w_mk",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/Propane.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            },
+            {
+              "property_name": "viscosity_pa_s",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/Propane.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            }
+          ]
+        },
+        "equilibrium_energy_residual_j_kg": null,
+        "property_applicability": "eos",
+        "thermodynamic_applicability": "eos",
+        "transport_applicability": "eos",
+        "property_notes": [
+          "EOS denotes the provider's model domain, not independent experimental validation of every state.",
+          "Thermodynamic bounds and transport-correlation bounds are separate; unreported transport limits remain unknown."
+        ],
+        "property_references": [
+          "https://coolprop.org/fluid_properties/fluids/Propane.html"
+        ],
+        "property_evidence": [
+          {
+            "property_name": "density_kg_m3",
+            "source": "CoolProp HEOS: Propane",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "specific_heat_j_kgk",
+            "source": "CoolProp HEOS: Propane",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "conductivity_w_mk",
+            "source": "CoolProp HEOS: Propane",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "source": "CoolProp HEOS: Propane",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "GH2",
+      "specified_T_K": 300,
+      "specified_p_Pa": 10000000.0,
+      "state": {
+        "density_kg_m3": 7.625441552934133,
+        "specific_heat_j_kgk": 14547.92724045716,
+        "conductivity_w_mk": 0.19562337385938033,
+        "viscosity_pa_s": 9.05760482158063e-06,
+        "temperature_k": 300.0,
+        "pressure_pa": 10000000.0,
+        "enthalpy_j_kg": 4005238.0456456807,
+        "phase": "supercritical",
+        "source": "CoolProp HEOS: Hydrogen",
+        "saturation_temperature_k": null,
+        "saturation_pressure_pa": null,
+        "critical_temperature_k": 33.1443326883113,
+        "critical_pressure_pa": 1296357.6060553084,
+        "pseudocritical_temperature_k": 57.36491697104231,
+        "speed_of_sound_m_s": 1404.4192483384456,
+        "specific_heat_cv_j_kgk": 10267.064714558273,
+        "gas_constant_j_kgk": 4124.487568704487,
+        "issues": [
+          "normal-hydrogen EOS assumed; ortho/para composition and conversion heat not modelled"
+        ],
+        "vapor_quality_mass_fraction": null,
+        "saturated_liquid": null,
+        "saturated_vapor": null,
+        "surface_tension_n_m": null,
+        "thermodynamic_source": "CoolProp HEOS: Hydrogen",
+        "transport_source": "CoolProp HEOS: Hydrogen",
+        "property_limits": {
+          "name": "GH2",
+          "backend": "HEOS",
+          "minimum_temperature_k": 13.957,
+          "maximum_temperature_k": 1000.0,
+          "maximum_pressure_pa": 2000000000.0,
+          "thermodynamic_source": "CoolProp HEOS: Hydrogen",
+          "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+          "references": [
+            "https://coolprop.org/fluid_properties/fluids/Hydrogen.html"
+          ],
+          "notes": [
+            "EOS limits do not imply validation of viscosity or thermal conductivity."
+          ],
+          "transport_limits": [
+            {
+              "property_name": "conductivity_w_mk",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/Hydrogen.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            },
+            {
+              "property_name": "viscosity_pa_s",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/Hydrogen.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            }
+          ]
+        },
+        "equilibrium_energy_residual_j_kg": null,
+        "property_applicability": "eos",
+        "thermodynamic_applicability": "eos",
+        "transport_applicability": "eos",
+        "property_notes": [
+          "EOS denotes the provider's model domain, not independent experimental validation of every state.",
+          "Thermodynamic bounds and transport-correlation bounds are separate; unreported transport limits remain unknown."
+        ],
+        "property_references": [
+          "https://coolprop.org/fluid_properties/fluids/Hydrogen.html"
+        ],
+        "property_evidence": [
+          {
+            "property_name": "density_kg_m3",
+            "source": "CoolProp HEOS: Hydrogen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "specific_heat_j_kgk",
+            "source": "CoolProp HEOS: Hydrogen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "conductivity_w_mk",
+            "source": "CoolProp HEOS: Hydrogen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "source": "CoolProp HEOS: Hydrogen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "saturated_x_mass_0p1": [
+    {
+      "name": "H2O",
+      "state": {
+        "density_kg_m3": 163.80250569288114,
+        "specific_heat_j_kgk": 4788.54704166889,
+        "conductivity_w_mk": 0.559901502633962,
+        "viscosity_pa_s": 9.725264124458656e-05,
+        "temperature_k": 523.5040452887833,
+        "pressure_pa": 4000000.0,
+        "enthalpy_j_kg": 1258824.500071417,
+        "phase": "two_phase",
+        "source": "CoolProp HEOS: Water",
+        "saturation_temperature_k": 523.5040452887833,
+        "saturation_pressure_pa": 3999999.999999996,
+        "critical_temperature_k": 647.0959999999873,
+        "critical_pressure_pa": 22063999.999997754,
+        "pseudocritical_temperature_k": null,
+        "speed_of_sound_m_s": null,
+        "specific_heat_cv_j_kgk": 34258107.59875466,
+        "gas_constant_j_kgk": 461.51804999997773,
+        "issues": [
+          "speed_sound unavailable in EOS; screening transport/property used",
+          "two-phase bulk cp/transport are phase-weighted diagnostics; use saturated phase properties"
+        ],
+        "vapor_quality_mass_fraction": 0.09999999999999999,
+        "saturated_liquid": {
+          "density_kg_m3": 798.3677754295686,
+          "specific_heat_j_kgk": 4873.905993601687,
+          "conductivity_w_mk": 0.6165082100090101,
+          "viscosity_pa_s": 0.00010612044363160668,
+          "temperature_k": 523.5040452887833,
+          "pressure_pa": 4000000.0,
+          "enthalpy_j_kg": 1087491.596582532,
+          "molar_mass_kg_mol": 0.018015268,
+          "phase": "liquid",
+          "source": "CoolProp HEOS equilibrium phase",
+          "speed_of_sound_m_s": 1146.76551642685,
+          "specific_heat_cv_j_kgk": 3155.5429560492394,
+          "issues": []
+        },
+        "saturated_vapor": {
+          "density_kg_m3": 20.089951923832952,
+          "specific_heat_j_kgk": 4020.3164742737135,
+          "conductivity_w_mk": 0.05044113625852868,
+          "viscosity_pa_s": 1.7442419761405376e-05,
+          "temperature_k": 523.5040452887833,
+          "pressure_pa": 4000000.0,
+          "enthalpy_j_kg": 2800820.631471382,
+          "molar_mass_kg_mol": 0.018015268,
+          "phase": "gas",
+          "source": "CoolProp HEOS equilibrium phase",
+          "speed_of_sound_m_s": 501.54972632803367,
+          "specific_heat_cv_j_kgk": 2468.5804375696835,
+          "issues": []
+        },
+        "surface_tension_n_m": 0.02574995972690173,
+        "thermodynamic_source": "CoolProp HEOS: Water",
+        "transport_source": "CoolProp HEOS: Water",
+        "property_limits": {
+          "name": "H2O",
+          "backend": "HEOS",
+          "minimum_temperature_k": 273.16,
+          "maximum_temperature_k": 1273.0,
+          "maximum_pressure_pa": 1000000000.0,
+          "thermodynamic_source": "CoolProp HEOS: Water",
+          "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+          "references": [
+            "https://coolprop.org/fluid_properties/fluids/Water.html",
+            "https://iapws.org/technical-guidance/release/IAPWS-95"
+          ],
+          "notes": [
+            "EOS limits do not imply validation of viscosity or thermal conductivity.",
+            "IAPWS-95 stable-fluid validity cap: 1273 K; melting boundary still applies."
+          ],
+          "transport_limits": [
+            {
+              "property_name": "conductivity_w_mk",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/Water.html",
+                "https://iapws.org/technical-guidance/release/IAPWS-95"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            },
+            {
+              "property_name": "viscosity_pa_s",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/Water.html",
+                "https://iapws.org/technical-guidance/release/IAPWS-95"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            }
+          ]
+        },
+        "equilibrium_energy_residual_j_kg": 2.3283064365386963e-10,
+        "property_applicability": "eos",
+        "thermodynamic_applicability": "eos",
+        "transport_applicability": "eos",
+        "property_notes": [
+          "EOS denotes the provider's model domain, not independent experimental validation of every state.",
+          "Thermodynamic bounds and transport-correlation bounds are separate; unreported transport limits remain unknown."
+        ],
+        "property_references": [
+          "https://coolprop.org/fluid_properties/fluids/Water.html",
+          "https://iapws.org/technical-guidance/release/IAPWS-95"
+        ],
+        "property_evidence": [
+          {
+            "property_name": "density_kg_m3",
+            "source": "CoolProp HEOS: Water",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "specific_heat_j_kgk",
+            "source": "CoolProp HEOS: Water",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "conductivity_w_mk",
+            "source": "CoolProp HEOS: Water",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "source": "CoolProp HEOS: Water",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "LOX",
+      "state": {
+        "density_kg_m3": 437.5009010794203,
+        "specific_heat_j_kgk": 2201.0015442934946,
+        "conductivity_w_mk": 0.0813773179583072,
+        "viscosity_pa_s": 6.644529802350933e-05,
+        "temperature_k": 132.74292718240093,
+        "pressure_pa": 2000000.0,
+        "enthalpy_j_kg": -39076.41749441681,
+        "phase": "two_phase",
+        "source": "CoolProp HEOS: Oxygen",
+        "saturation_temperature_k": 132.74292718240093,
+        "saturation_pressure_pa": 1999999.999999991,
+        "critical_temperature_k": 154.59938983528554,
+        "critical_pressure_pa": 5046410.521187217,
+        "pseudocritical_temperature_k": null,
+        "speed_of_sound_m_s": null,
+        "specific_heat_cv_j_kgk": 31093.905433822267,
+        "gas_constant_j_kgk": 259.8328687325775,
+        "issues": [
+          "speed_sound unavailable in EOS; screening transport/property used",
+          "two-phase bulk cp/transport are phase-weighted diagnostics; use saturated phase properties"
+        ],
+        "vapor_quality_mass_fraction": 0.1,
+        "saturated_liquid": {
+          "density_kg_m3": 880.3408655947879,
+          "specific_heat_j_kgk": 2252.141374468686,
+          "conductivity_w_mk": 0.08866202336501655,
+          "viscosity_pa_s": 7.263144342684521e-05,
+          "temperature_k": 132.74292718240093,
+          "pressure_pa": 2000000.0,
+          "enthalpy_j_kg": -53716.304877123126,
+          "molar_mass_kg_mol": 0.0319988,
+          "phase": "liquid",
+          "source": "CoolProp HEOS equilibrium phase",
+          "speed_of_sound_m_s": 509.37938568608047,
+          "specific_heat_cv_j_kgk": 827.8326916441935,
+          "issues": []
+        },
+        "saturated_vapor": {
+          "density_kg_m3": 79.15285532354702,
+          "specific_heat_j_kgk": 1740.743072716773,
+          "conductivity_w_mk": 0.015814969297923052,
+          "viscosity_pa_s": 1.076998939348638e-05,
+          "temperature_k": 132.74292718240093,
+          "pressure_pa": 2000000.0,
+          "enthalpy_j_kg": 92682.56894994002,
+          "molar_mass_kg_mol": 0.0319988,
+          "phase": "gas",
+          "source": "CoolProp HEOS equilibrium phase",
+          "speed_of_sound_m_s": 186.75049999399045,
+          "specific_heat_cv_j_kgk": 819.7092561592289,
+          "issues": []
+        },
+        "surface_tension_n_m": 0.0034953581022349072,
+        "thermodynamic_source": "CoolProp HEOS: Oxygen",
+        "transport_source": "CoolProp HEOS: Oxygen",
+        "property_limits": {
+          "name": "LOX",
+          "backend": "HEOS",
+          "minimum_temperature_k": 54.361000000000004,
+          "maximum_temperature_k": 2000.0,
+          "maximum_pressure_pa": 80000000.0,
+          "thermodynamic_source": "CoolProp HEOS: Oxygen",
+          "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+          "references": [
+            "https://coolprop.org/fluid_properties/fluids/Oxygen.html"
+          ],
+          "notes": [
+            "EOS limits do not imply validation of viscosity or thermal conductivity."
+          ],
+          "transport_limits": [
+            {
+              "property_name": "conductivity_w_mk",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/Oxygen.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            },
+            {
+              "property_name": "viscosity_pa_s",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/Oxygen.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            }
+          ]
+        },
+        "equilibrium_energy_residual_j_kg": 0.0,
+        "property_applicability": "eos",
+        "thermodynamic_applicability": "eos",
+        "transport_applicability": "eos",
+        "property_notes": [
+          "EOS denotes the provider's model domain, not independent experimental validation of every state.",
+          "Thermodynamic bounds and transport-correlation bounds are separate; unreported transport limits remain unknown."
+        ],
+        "property_references": [
+          "https://coolprop.org/fluid_properties/fluids/Oxygen.html"
+        ],
+        "property_evidence": [
+          {
+            "property_name": "density_kg_m3",
+            "source": "CoolProp HEOS: Oxygen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "specific_heat_j_kgk",
+            "source": "CoolProp HEOS: Oxygen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "conductivity_w_mk",
+            "source": "CoolProp HEOS: Oxygen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "source": "CoolProp HEOS: Oxygen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "LCH4",
+      "state": {
+        "density_kg_m3": 170.65305155483355,
+        "specific_heat_j_kgk": 4717.270354903774,
+        "conductivity_w_mk": 0.09828215372507541,
+        "viscosity_pa_s": 3.94231125008005e-05,
+        "temperature_k": 165.87258931849033,
+        "pressure_pa": 2000000.0,
+        "enthalpy_j_kg": 245748.22893950983,
+        "phase": "two_phase",
+        "source": "CoolProp HEOS: Methane",
+        "saturation_temperature_k": 165.87258931849033,
+        "saturation_pressure_pa": 1999999.9999999986,
+        "critical_temperature_k": 190.56400265128698,
+        "critical_pressure_pa": 4599200.474282439,
+        "pseudocritical_temperature_k": null,
+        "speed_of_sound_m_s": null,
+        "specific_heat_cv_j_kgk": null,
+        "gas_constant_j_kgk": 518.2705014087317,
+        "issues": [
+          "cpmass unavailable in EOS; screening transport/property used",
+          "cvmass unavailable in EOS; screening transport/property used",
+          "speed_sound unavailable in EOS; screening transport/property used",
+          "two-phase bulk cp/transport are phase-weighted diagnostics; use saturated phase properties"
+        ],
+        "vapor_quality_mass_fraction": 0.1,
+        "saturated_liquid": {
+          "density_kg_m3": 321.8357807358352,
+          "specific_heat_j_kgk": 4805.463313765451,
+          "conductivity_w_mk": 0.1065979154833201,
+          "viscosity_pa_s": 4.303468449075176e-05,
+          "temperature_k": 165.87258931849033,
+          "pressure_pa": 2000000.0,
+          "enthalpy_j_kg": 211392.60532725335,
+          "molar_mass_kg_mol": 0.0160428,
+          "phase": "liquid",
+          "source": "CoolProp HEOS equilibrium phase",
+          "speed_of_sound_m_s": 716.3615120301026,
+          "specific_heat_cv_j_kgk": 1903.6118397797252,
+          "issues": []
+        },
+        "saturated_vapor": {
+          "density_kg_m3": 32.64362540620336,
+          "specific_heat_j_kgk": 3923.5337251486785,
+          "conductivity_w_mk": 0.023440297900873323,
+          "viscosity_pa_s": 6.918964591239157e-06,
+          "temperature_k": 165.87258931849033,
+          "pressure_pa": 2000000.0,
+          "enthalpy_j_kg": 554948.8414498182,
+          "molar_mass_kg_mol": 0.0160428,
+          "phase": "gas",
+          "source": "CoolProp HEOS equilibrium phase",
+          "speed_of_sound_m_s": 279.73020576439984,
+          "specific_heat_cv_j_kgk": 1905.2137391298609,
+          "issues": []
+        },
+        "surface_tension_n_m": 0.0031537871427569308,
+        "thermodynamic_source": "CoolProp HEOS: Methane",
+        "transport_source": "CoolProp HEOS: Methane",
+        "property_limits": {
+          "name": "LCH4",
+          "backend": "HEOS",
+          "minimum_temperature_k": 90.6941,
+          "maximum_temperature_k": 625.0,
+          "maximum_pressure_pa": 1000000000.0,
+          "thermodynamic_source": "CoolProp HEOS: Methane",
+          "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+          "references": [
+            "https://coolprop.org/fluid_properties/fluids/Methane.html"
+          ],
+          "notes": [
+            "EOS limits do not imply validation of viscosity or thermal conductivity."
+          ],
+          "transport_limits": [
+            {
+              "property_name": "conductivity_w_mk",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/Methane.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            },
+            {
+              "property_name": "viscosity_pa_s",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/Methane.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            }
+          ]
+        },
+        "equilibrium_energy_residual_j_kg": 0.0,
+        "property_applicability": "eos",
+        "thermodynamic_applicability": "eos",
+        "transport_applicability": "eos",
+        "property_notes": [
+          "EOS denotes the provider's model domain, not independent experimental validation of every state.",
+          "Thermodynamic bounds and transport-correlation bounds are separate; unreported transport limits remain unknown."
+        ],
+        "property_references": [
+          "https://coolprop.org/fluid_properties/fluids/Methane.html"
+        ],
+        "property_evidence": [
+          {
+            "property_name": "density_kg_m3",
+            "source": "CoolProp HEOS: Methane",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "specific_heat_j_kgk",
+            "source": "CoolProp HEOS: Methane",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "conductivity_w_mk",
+            "source": "CoolProp HEOS: Methane",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "source": "CoolProp HEOS: Methane",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "LH2",
+      "state": {
+        "density_kg_m3": 32.02995331583715,
+        "specific_heat_j_kgk": 16661.569635567575,
+        "conductivity_w_mk": 0.09279696746949367,
+        "viscosity_pa_s": 7.351893919661685e-06,
+        "temperature_k": 27.242765490392205,
+        "pressure_pa": 500000.0,
+        "enthalpy_j_kg": 124944.09393147267,
+        "phase": "two_phase",
+        "source": "CoolProp HEOS: Hydrogen",
+        "saturation_temperature_k": 27.242765490392205,
+        "saturation_pressure_pa": 500000.0000000007,
+        "critical_temperature_k": 33.1443326883113,
+        "critical_pressure_pa": 1296357.6060553084,
+        "pseudocritical_temperature_k": null,
+        "speed_of_sound_m_s": null,
+        "specific_heat_cv_j_kgk": 13442.288814358668,
+        "gas_constant_j_kgk": 4124.487568704487,
+        "issues": [
+          "cpmass unavailable in EOS; screening transport/property used",
+          "speed_sound unavailable in EOS; screening transport/property used",
+          "normal-hydrogen EOS assumed; ortho/para composition and conversion heat not modelled",
+          "two-phase bulk cp/transport are phase-weighted diagnostics; use saturated phase properties"
+        ],
+        "vapor_quality_mass_fraction": 0.1,
+        "saturated_liquid": {
+          "density_kg_m3": 60.84733699544975,
+          "specific_heat_j_kgk": 16415.701116490025,
+          "conductivity_w_mk": 0.09989269656011422,
+          "viscosity_pa_s": 8.008872895367685e-06,
+          "temperature_k": 27.242765490392205,
+          "pressure_pa": 500000.0,
+          "enthalpy_j_kg": 87666.92235903081,
+          "molar_mass_kg_mol": 0.00201588,
+          "phase": "liquid",
+          "source": "CoolProp HEOS equilibrium phase",
+          "speed_of_sound_m_s": 866.898898512419,
+          "specific_heat_cv_j_kgk": 6099.003219802348,
+          "issues": []
+        },
+        "saturated_vapor": {
+          "density_kg_m3": 6.086553075076956,
+          "specific_heat_j_kgk": 18874.38630726554,
+          "conductivity_w_mk": 0.028935405653908765,
+          "viscosity_pa_s": 1.4390831383076775e-06,
+          "temperature_k": 27.242765490392205,
+          "pressure_pa": 500000.0,
+          "enthalpy_j_kg": 460438.63808344945,
+          "molar_mass_kg_mol": 0.00201588,
+          "phase": "gas",
+          "source": "CoolProp HEOS equilibrium phase",
+          "speed_of_sound_m_s": 379.0239252836782,
+          "specific_heat_cv_j_kgk": 7015.543797011298,
+          "issues": []
+        },
+        "surface_tension_n_m": 0.0007612602361123932,
+        "thermodynamic_source": "CoolProp HEOS: Hydrogen",
+        "transport_source": "CoolProp HEOS: Hydrogen",
+        "property_limits": {
+          "name": "LH2",
+          "backend": "HEOS",
+          "minimum_temperature_k": 13.957,
+          "maximum_temperature_k": 1000.0,
+          "maximum_pressure_pa": 2000000000.0,
+          "thermodynamic_source": "CoolProp HEOS: Hydrogen",
+          "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+          "references": [
+            "https://coolprop.org/fluid_properties/fluids/Hydrogen.html"
+          ],
+          "notes": [
+            "EOS limits do not imply validation of viscosity or thermal conductivity."
+          ],
+          "transport_limits": [
+            {
+              "property_name": "conductivity_w_mk",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/Hydrogen.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            },
+            {
+              "property_name": "viscosity_pa_s",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/Hydrogen.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            }
+          ]
+        },
+        "equilibrium_energy_residual_j_kg": -1.4551915228366852e-11,
+        "property_applicability": "eos",
+        "thermodynamic_applicability": "eos",
+        "transport_applicability": "eos",
+        "property_notes": [
+          "EOS denotes the provider's model domain, not independent experimental validation of every state.",
+          "Thermodynamic bounds and transport-correlation bounds are separate; unreported transport limits remain unknown."
+        ],
+        "property_references": [
+          "https://coolprop.org/fluid_properties/fluids/Hydrogen.html"
+        ],
+        "property_evidence": [
+          {
+            "property_name": "density_kg_m3",
+            "source": "CoolProp HEOS: Hydrogen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "specific_heat_j_kgk",
+            "source": "CoolProp HEOS: Hydrogen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "conductivity_w_mk",
+            "source": "CoolProp HEOS: Hydrogen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "source": "CoolProp HEOS: Hydrogen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Propane",
+      "state": {
+        "density_kg_m3": 236.01339789080316,
+        "specific_heat_j_kgk": 3206.6867839835218,
+        "conductivity_w_mk": 0.07418810959665298,
+        "viscosity_pa_s": 6.2124282162455e-05,
+        "temperature_k": 330.41229165076174,
+        "pressure_pa": 2000000.0,
+        "enthalpy_j_kg": 386028.04683817446,
+        "phase": "two_phase",
+        "source": "CoolProp HEOS: Propane",
+        "saturation_temperature_k": 330.41229165076174,
+        "saturation_pressure_pa": 1999999.9999999916,
+        "critical_temperature_k": 369.8900089509634,
+        "critical_pressure_pa": 4251165.328013042,
+        "pseudocritical_temperature_k": null,
+        "speed_of_sound_m_s": null,
+        "specific_heat_cv_j_kgk": 1628.594130430041,
+        "gas_constant_j_kgk": 188.55550732703156,
+        "issues": [
+          "speed_sound unavailable in EOS; screening transport/property used",
+          "two-phase bulk cp/transport are phase-weighted diagnostics; use saturated phase properties"
+        ],
+        "vapor_quality_mass_fraction": 0.1,
+        "saturated_liquid": {
+          "density_kg_m3": 433.97468715762363,
+          "specific_heat_j_kgk": 3259.4007297802855,
+          "conductivity_w_mk": 0.07962632530265372,
+          "viscosity_pa_s": 6.79332527031822e-05,
+          "temperature_k": 330.41229165076174,
+          "pressure_pa": 2000000.0,
+          "enthalpy_j_kg": 359362.72928527143,
+          "molar_mass_kg_mol": 0.04409562,
+          "phase": "liquid",
+          "source": "CoolProp HEOS equilibrium phase",
+          "speed_of_sound_m_s": 494.38773898258324,
+          "specific_heat_cv_j_kgk": 1817.3113197170833,
+          "issues": []
+        },
+        "saturated_vapor": {
+          "density_kg_m3": 46.22794058325933,
+          "specific_heat_j_kgk": 2732.2612718126484,
+          "conductivity_w_mk": 0.025244168242646338,
+          "viscosity_pa_s": 9.843547295910139e-06,
+          "temperature_k": 330.41229165076174,
+          "pressure_pa": 2000000.0,
+          "enthalpy_j_kg": 626015.9048143021,
+          "molar_mass_kg_mol": 0.04409562,
+          "phase": "gas",
+          "source": "CoolProp HEOS equilibrium phase",
+          "speed_of_sound_m_s": 196.47025479121345,
+          "specific_heat_cv_j_kgk": 1812.6227222436992,
+          "issues": []
+        },
+        "surface_tension_n_m": 0.0033640267313069555,
+        "thermodynamic_source": "CoolProp HEOS: Propane",
+        "transport_source": "CoolProp HEOS: Propane",
+        "property_limits": {
+          "name": "Propane",
+          "backend": "HEOS",
+          "minimum_temperature_k": 85.525,
+          "maximum_temperature_k": 650.0,
+          "maximum_pressure_pa": 1000000000.0,
+          "thermodynamic_source": "CoolProp HEOS: Propane",
+          "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+          "references": [
+            "https://coolprop.org/fluid_properties/fluids/Propane.html"
+          ],
+          "notes": [
+            "EOS limits do not imply validation of viscosity or thermal conductivity."
+          ],
+          "transport_limits": [
+            {
+              "property_name": "conductivity_w_mk",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/Propane.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            },
+            {
+              "property_name": "viscosity_pa_s",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/Propane.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            }
+          ]
+        },
+        "equilibrium_energy_residual_j_kg": -5.820766091346741e-11,
+        "property_applicability": "eos",
+        "thermodynamic_applicability": "eos",
+        "transport_applicability": "eos",
+        "property_notes": [
+          "EOS denotes the provider's model domain, not independent experimental validation of every state.",
+          "Thermodynamic bounds and transport-correlation bounds are separate; unreported transport limits remain unknown."
+        ],
+        "property_references": [
+          "https://coolprop.org/fluid_properties/fluids/Propane.html"
+        ],
+        "property_evidence": [
+          {
+            "property_name": "density_kg_m3",
+            "source": "CoolProp HEOS: Propane",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "specific_heat_j_kgk",
+            "source": "CoolProp HEOS: Propane",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "conductivity_w_mk",
+            "source": "CoolProp HEOS: Propane",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "source": "CoolProp HEOS: Propane",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Ethanol (100%)",
+      "state": {
+        "density_kg_m3": 213.25607016488834,
+        "specific_heat_j_kgk": 4143.105804172845,
+        "conductivity_w_mk": 0.12780325977396514,
+        "viscosity_pa_s": 0.00010619434865692822,
+        "temperature_k": 453.6021937422858,
+        "pressure_pa": 2000000.0,
+        "enthalpy_j_kg": 421989.3614868091,
+        "phase": "two_phase",
+        "source": "CoolProp HEOS: Ethanol",
+        "saturation_temperature_k": 453.6021937422858,
+        "saturation_pressure_pa": 1999999.9999999811,
+        "critical_temperature_k": 514.7092848812961,
+        "critical_pressure_pa": 6267914.582702095,
+        "pseudocritical_temperature_k": null,
+        "speed_of_sound_m_s": null,
+        "specific_heat_cv_j_kgk": 4344.037904824995,
+        "gas_constant_j_kgk": 180.48086716198767,
+        "issues": [
+          "cpmass unavailable in EOS; screening transport/property used",
+          "speed_sound unavailable in EOS; screening transport/property used",
+          "two-phase bulk cp/transport are phase-weighted diagnostics; use saturated phase properties"
+        ],
+        "vapor_quality_mass_fraction": 0.1,
+        "saturated_liquid": {
+          "density_kg_m3": 596.7246652992498,
+          "specific_heat_j_kgk": 4255.586632754409,
+          "conductivity_w_mk": 0.13772897903090453,
+          "viscosity_pa_s": 0.00011647496328128888,
+          "temperature_k": 453.6021937422858,
+          "pressure_pa": 2000000.0,
+          "enthalpy_j_kg": 363341.5070659866,
+          "molar_mass_kg_mol": 0.04606844,
+          "phase": "liquid",
+          "source": "CoolProp HEOS equilibrium phase",
+          "speed_of_sound_m_s": 549.7337751033807,
+          "specific_heat_cv_j_kgk": 3005.868939926315,
+          "issues": []
+        },
+        "saturated_vapor": {
+          "density_kg_m3": 31.43700092936448,
+          "specific_heat_j_kgk": 3130.778346938762,
+          "conductivity_w_mk": 0.038471786461510706,
+          "viscosity_pa_s": 1.3668817037682209e-05,
+          "temperature_k": 453.6021937422858,
+          "pressure_pa": 2000000.0,
+          "enthalpy_j_kg": 949820.0512742116,
+          "molar_mass_kg_mol": 0.04606844,
+          "phase": "gas",
+          "source": "CoolProp HEOS equilibrium phase",
+          "speed_of_sound_m_s": 252.59585279206334,
+          "specific_heat_cv_j_kgk": 2242.0662577155367,
+          "issues": []
+        },
+        "surface_tension_n_m": 0.006502204132047772,
+        "thermodynamic_source": "CoolProp HEOS: Ethanol",
+        "transport_source": "CoolProp HEOS: Ethanol",
+        "property_limits": {
+          "name": "Ethanol (100%)",
+          "backend": "HEOS",
+          "minimum_temperature_k": 159.10000000000002,
+          "maximum_temperature_k": 650.0,
+          "maximum_pressure_pa": 280000000.0,
+          "thermodynamic_source": "CoolProp HEOS: Ethanol",
+          "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+          "references": [
+            "https://coolprop.org/fluid_properties/fluids/Ethanol.html"
+          ],
+          "notes": [
+            "EOS limits do not imply validation of viscosity or thermal conductivity.",
+            "Ethanol conductivity correlation: triple point to 600 K, up to 245 MPa."
+          ],
+          "transport_limits": [
+            {
+              "property_name": "conductivity_w_mk",
+              "minimum_temperature_k": 159.1,
+              "maximum_temperature_k": 600.0,
+              "maximum_pressure_pa": 245000000.0,
+              "references": [
+                "https://doi.org/10.1063/1.4797368"
+              ],
+              "notes": [
+                "Reference conductivity correlation; excludes unvalidated extrapolation."
+              ]
+            },
+            {
+              "property_name": "viscosity_pa_s",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/fluids/Ethanol.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            }
+          ]
+        },
+        "equilibrium_energy_residual_j_kg": 0.0,
+        "property_applicability": "eos",
+        "thermodynamic_applicability": "eos",
+        "transport_applicability": "eos",
+        "property_notes": [
+          "EOS denotes the provider's model domain, not independent experimental validation of every state.",
+          "Thermodynamic bounds and transport-correlation bounds are separate; unreported transport limits remain unknown."
+        ],
+        "property_references": [
+          "https://coolprop.org/fluid_properties/fluids/Ethanol.html"
+        ],
+        "property_evidence": [
+          {
+            "property_name": "density_kg_m3",
+            "source": "CoolProp HEOS: Ethanol",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "specific_heat_j_kgk",
+            "source": "CoolProp HEOS: Ethanol",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "conductivity_w_mk",
+            "source": "CoolProp HEOS: Ethanol",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "source": "CoolProp HEOS: Ethanol",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "LNG",
+      "state": {
+        "density_kg_m3": 194.2814736326297,
+        "specific_heat_j_kgk": 4531.21191712521,
+        "conductivity_w_mk": 0.10060401648930703,
+        "viscosity_pa_s": 4.286140396536257e-05,
+        "temperature_k": 174.35976104686372,
+        "pressure_pa": 2500000.0,
+        "enthalpy_j_kg": 246749.8293901288,
+        "phase": "two_phase",
+        "source": "CoolProp HEOS: Methane&Ethane&Propane&n-Butane&Nitrogen",
+        "saturation_temperature_k": 174.02029911615944,
+        "saturation_pressure_pa": null,
+        "critical_temperature_k": 204.7154430914566,
+        "critical_pressure_pa": 5710830.595360006,
+        "pseudocritical_temperature_k": null,
+        "speed_of_sound_m_s": null,
+        "specific_heat_cv_j_kgk": null,
+        "gas_constant_j_kgk": 487.7511280880616,
+        "issues": [
+          "cpmass unavailable in EOS; screening transport/property used",
+          "cvmass unavailable in EOS; screening transport/property used",
+          "speed_sound unavailable in EOS; screening transport/property used",
+          "mixture EOS/transport require composition-specific validation",
+          "mixture bubble-temperature diagnostic uses pressure rounded down by at most 0.1 bar",
+          "two-phase bulk cp/transport are phase-weighted diagnostics; use saturated phase properties",
+          "two-phase surface tension unavailable in EOS"
+        ],
+        "vapor_quality_mass_fraction": 0.09999999999998106,
+        "saturated_liquid": {
+          "density_kg_m3": 332.03990161286475,
+          "specific_heat_j_kgk": 4561.808829471159,
+          "conductivity_w_mk": 0.10891326363009382,
+          "viscosity_pa_s": 4.677873121969915e-05,
+          "temperature_k": 174.35976104686372,
+          "pressure_pa": 2500000.000000033,
+          "enthalpy_j_kg": 212934.2601559962,
+          "molar_mass_kg_mol": 0.01714237353109005,
+          "phase": "liquid",
+          "source": "CoolProp HEOS equilibrium phase",
+          "speed_of_sound_m_s": 701.0262370353054,
+          "specific_heat_cv_j_kgk": 1843.8551395657137,
+          "issues": []
+        },
+        "saturated_vapor": {
+          "density_kg_m3": 41.03989240124289,
+          "specific_heat_j_kgk": 4255.839706011616,
+          "conductivity_w_mk": 0.025820792222210183,
+          "viscosity_pa_s": 7.605458676325948e-06,
+          "temperature_k": 174.35976104686372,
+          "pressure_pa": 2500000.000000033,
+          "enthalpy_j_kg": 551089.9524973838,
+          "molar_mass_kg_mol": 0.01622982537112454,
+          "phase": "gas",
+          "source": "CoolProp HEOS equilibrium phase",
+          "speed_of_sound_m_s": 280.53949591530676,
+          "specific_heat_cv_j_kgk": 1896.6921545276184,
+          "issues": []
+        },
+        "surface_tension_n_m": null,
+        "thermodynamic_source": "CoolProp HEOS: Methane&Ethane&Propane&n-Butane&Nitrogen",
+        "transport_source": "CoolProp HEOS: Methane&Ethane&Propane&n-Butane&Nitrogen",
+        "property_limits": {
+          "name": "LNG",
+          "backend": "HEOS",
+          "minimum_temperature_k": 90.64319300000001,
+          "maximum_temperature_k": 575.0,
+          "maximum_pressure_pa": 12000000.0,
+          "thermodynamic_source": "CoolProp HEOS: Methane&Ethane&Propane&n-Butane&Nitrogen",
+          "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+          "references": [
+            "https://coolprop.org/fluid_properties/Mixtures.html",
+            "https://coolprop.org/coolprop/REFPROP.html",
+            "https://www.nist.gov/publications/eos-lng-fundamental-equation-state-calculation-thermodynamic-properties-liquefied"
+          ],
+          "notes": [
+            "EOS limits do not imply validation of viscosity or thermal conductivity.",
+            "Mixture limits also depend on composition and phase-envelope convergence.",
+            "Upper bounds conservatively include every constituent EOS limit; mixture freezing is not modelled."
+          ],
+          "transport_limits": [
+            {
+              "property_name": "conductivity_w_mk",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/Mixtures.html",
+                "https://coolprop.org/coolprop/REFPROP.html",
+                "https://www.nist.gov/publications/eos-lng-fundamental-equation-state-calculation-thermodynamic-properties-liquefied"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            },
+            {
+              "property_name": "viscosity_pa_s",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/Mixtures.html",
+                "https://coolprop.org/coolprop/REFPROP.html",
+                "https://www.nist.gov/publications/eos-lng-fundamental-equation-state-calculation-thermodynamic-properties-liquefied"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            }
+          ]
+        },
+        "equilibrium_energy_residual_j_kg": 2.6193447411060333e-10,
+        "property_applicability": "eos",
+        "thermodynamic_applicability": "eos",
+        "transport_applicability": "eos",
+        "property_notes": [
+          "EOS denotes the provider's model domain, not independent experimental validation of every state.",
+          "Thermodynamic bounds and transport-correlation bounds are separate; unreported transport limits remain unknown."
+        ],
+        "property_references": [
+          "https://coolprop.org/fluid_properties/Mixtures.html",
+          "https://coolprop.org/coolprop/REFPROP.html",
+          "https://www.nist.gov/publications/eos-lng-fundamental-equation-state-calculation-thermodynamic-properties-liquefied"
+        ],
+        "property_evidence": [
+          {
+            "property_name": "density_kg_m3",
+            "source": "CoolProp HEOS: Methane&Ethane&Propane&n-Butane&Nitrogen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "specific_heat_j_kgk",
+            "source": "CoolProp HEOS: Methane&Ethane&Propane&n-Butane&Nitrogen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "conductivity_w_mk",
+            "source": "CoolProp HEOS: Methane&Ethane&Propane&n-Butane&Nitrogen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "source": "CoolProp HEOS: Methane&Ethane&Propane&n-Butane&Nitrogen",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Ethanol (70%)",
+      "state": {
+        "density_kg_m3": 203.92324302076224,
+        "specific_heat_j_kgk": 4398.3441970928625,
+        "conductivity_w_mk": 0.4464982248554304,
+        "viscosity_pa_s": 0.00013863455019339077,
+        "temperature_k": 466.661589359377,
+        "pressure_pa": 2500000.0,
+        "enthalpy_j_kg": 655433.6857818137,
+        "phase": "two_phase",
+        "source": "CoolProp HEOS: Ethanol&Water",
+        "saturation_temperature_k": 466.4969423185205,
+        "saturation_pressure_pa": null,
+        "critical_temperature_k": 584.9233542890612,
+        "critical_pressure_pa": 16025638.863842312,
+        "pseudocritical_temperature_k": null,
+        "speed_of_sound_m_s": null,
+        "specific_heat_cv_j_kgk": 12639978.592452995,
+        "gas_constant_j_kgk": 264.79339917862535,
+        "issues": [
+          "speed_sound unavailable in EOS; screening transport/property used",
+          "mixture EOS/transport require composition-specific validation",
+          "mixture bubble-temperature diagnostic uses pressure rounded down by at most 0.1 bar",
+          "two-phase bulk cp/transport are phase-weighted diagnostics; use saturated phase properties",
+          "two-phase surface tension unavailable in EOS"
+        ],
+        "vapor_quality_mass_fraction": 0.10000000000000371,
+        "saturated_liquid": {
+          "density_kg_m3": 674.0868479457439,
+          "specific_heat_j_kgk": 4516.572787806275,
+          "conductivity_w_mk": 0.49089721355863414,
+          "viscosity_pa_s": 0.00015242834112394514,
+          "temperature_k": 466.661589359377,
+          "pressure_pa": 2499999.999999767,
+          "enthalpy_j_kg": 578470.5706582438,
+          "molar_mass_kg_mol": 0.031095889005090756,
+          "phase": "liquid",
+          "source": "CoolProp HEOS equilibrium phase",
+          "speed_of_sound_m_s": 607.4727868184982,
+          "specific_heat_cv_j_kgk": 3661.220608771233,
+          "issues": []
+        },
+        "saturated_vapor": {
+          "density_kg_m3": 28.021672539426,
+          "specific_heat_j_kgk": 3334.2868806721967,
+          "conductivity_w_mk": 0.04690732652661345,
+          "viscosity_pa_s": 1.4490431818406726e-05,
+          "temperature_k": 466.661589359377,
+          "pressure_pa": 2499999.999999767,
+          "enthalpy_j_kg": 1348101.7218939112,
+          "molar_mass_kg_mol": 0.03442822984961169,
+          "phase": "gas",
+          "source": "CoolProp HEOS equilibrium phase",
+          "speed_of_sound_m_s": 308.84149220646896,
+          "specific_heat_cv_j_kgk": 2309.652842456525,
+          "issues": []
+        },
+        "surface_tension_n_m": null,
+        "thermodynamic_source": "CoolProp HEOS: Ethanol&Water",
+        "transport_source": "CoolProp HEOS: Ethanol&Water",
+        "property_limits": {
+          "name": "Ethanol (70%)",
+          "backend": "HEOS",
+          "minimum_temperature_k": 218.74045185111328,
+          "maximum_temperature_k": 650.0,
+          "maximum_pressure_pa": 280000000.0,
+          "thermodynamic_source": "CoolProp HEOS: Ethanol&Water",
+          "transport_source": "fluid-specific EOS transport correlations; missing or out-of-range properties are explicit",
+          "references": [
+            "https://coolprop.org/fluid_properties/Mixtures.html",
+            "https://coolprop.org/coolprop/REFPROP.html"
+          ],
+          "notes": [
+            "EOS limits do not imply validation of viscosity or thermal conductivity.",
+            "Mixture limits also depend on composition and phase-envelope convergence.",
+            "Upper bounds conservatively include every constituent EOS limit; mixture freezing is not modelled."
+          ],
+          "transport_limits": [
+            {
+              "property_name": "conductivity_w_mk",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/Mixtures.html",
+                "https://coolprop.org/coolprop/REFPROP.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            },
+            {
+              "property_name": "viscosity_pa_s",
+              "minimum_temperature_k": null,
+              "maximum_temperature_k": null,
+              "maximum_pressure_pa": null,
+              "references": [
+                "https://coolprop.org/fluid_properties/Mixtures.html",
+                "https://coolprop.org/coolprop/REFPROP.html"
+              ],
+              "notes": [
+                "No common validated T/P rectangle is asserted; inspect the individual correlation and phase."
+              ]
+            }
+          ]
+        },
+        "equilibrium_energy_residual_j_kg": 2.3283064365386963e-10,
+        "property_applicability": "eos",
+        "thermodynamic_applicability": "eos",
+        "transport_applicability": "eos",
+        "property_notes": [
+          "EOS denotes the provider's model domain, not independent experimental validation of every state.",
+          "Thermodynamic bounds and transport-correlation bounds are separate; unreported transport limits remain unknown."
+        ],
+        "property_references": [
+          "https://coolprop.org/fluid_properties/Mixtures.html",
+          "https://coolprop.org/coolprop/REFPROP.html"
+        ],
+        "property_evidence": [
+          {
+            "property_name": "density_kg_m3",
+            "source": "CoolProp HEOS: Ethanol&Water",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "specific_heat_j_kgk",
+            "source": "CoolProp HEOS: Ethanol&Water",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "conductivity_w_mk",
+            "source": "CoolProp HEOS: Ethanol&Water",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          },
+          {
+            "property_name": "viscosity_pa_s",
+            "source": "CoolProp HEOS: Ethanol&Water",
+            "applicability": "eos",
+            "temperature_range_k": null,
+            "pressure_range_pa": null,
+            "notes": [
+              "Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback."
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "review_input_sha256": "e42823bc38930bd52397d9a19743697888777928a32f95029f0498537ed038c4",
+  "channel_cases": [
+    {
+      "height_mm": 1.3,
+      "numerically_converged": true,
+      "physical_validity": "unsupported",
+      "solved_wall_station_count": 49,
+      "unsolved_station_count": 251,
+      "wall_solution_complete": false,
+      "segment_completion": {
+        "circuit_1": {
+          "solved_wall_stations": 49,
+          "requested_wall_stations": 300,
+          "wall_march_completed": false,
+          "heated_distance_at_outlet_m": 0.03151081168418057,
+          "thermal_entrance_basis": "new specified channel inlet",
+          "outlet_property_applicability": "unsupported"
+        }
+      },
+      "property_metadata": {
+        "circuit_1": {
+          "thermodynamic_source": "pressure-independent screening Cp/density; no RP-1 EOS",
+          "transport_source": "NISTIR 6646 partial measurements plus explicit screening estimates",
+          "limits": null,
+          "property_applicability": "screening",
+          "thermodynamic_applicability": "screening",
+          "transport_applicability": "screening",
+          "property_notes": [
+            "Partial NIST measurements do not establish a validated four-property or phase model.",
+            "Interpolation hulls are property-specific and do not certify liquid-phase stability.",
+            "The original NIST RP-1 sample was atypical; fuel lot differences remain unresolved."
+          ],
+          "property_references": [
+            "https://nvlpubs.nist.gov/nistpubs/Legacy/IR/nistir6646.pdf"
+          ],
+          "property_evidence": [
+            {
+              "property_name": "kinematic_viscosity_m2_s",
+              "source": "NISTIR 6646 Eq. (1), original sample",
+              "applicability": "screening",
+              "temperature_range_k": [
+                243.29,
+                333.15
+              ],
+              "pressure_range_pa": [
+                83000.0,
+                83000.0
+              ],
+              "notes": [
+                "fit to atmospheric measurements; not a compressed-liquid pressure correlation"
+              ]
+            },
+            {
+              "property_name": "viscosity_pa_s",
+              "source": "NISTIR 6646 atmospheric Eq. (1) times screening density",
+              "applicability": "screening",
+              "temperature_range_k": [
+                243.29,
+                333.15
+              ],
+              "pressure_range_pa": null,
+              "notes": [
+                "atmospheric Eq. (1), multiplied by screening density; pressure independence is a diagnostic assumption only",
+                "density conversion, operating pressure, and actual fuel-lot applicability are not validated"
+              ]
+            },
+            {
+              "property_name": "viscosity_density_product_kg2_m4_s",
+              "source": "NISTIR 6646 Table 12, separate instrument data",
+              "applicability": "unsupported",
+              "value": null,
+              "temperature_range_k": null,
+              "pressure_range_pa": null,
+              "notes": [
+                "not used by the default dynamic-viscosity curve; no automatic join between inconsistent instruments",
+                "log-linear interpolation only inside the original measured (T,P) convex hull",
+                "instrument-resolution limitations; model deviations -3.5 to -11.7 percent in report, p. 65"
+              ]
+            },
+            {
+              "property_name": "conductivity_w_mk",
+              "source": "reference screening estimate",
+              "applicability": "screening",
+              "temperature_range_k": null,
+              "pressure_range_pa": null,
+              "notes": [
+                "valid only inside measured (Te,P) convex hull; bounding rectangle is insufficient",
+                "650 K measurements include reaction/composition/time dependence and approximately 4 percent uncertainty; not clean-fuel validation",
+                "sparse-data interpolation has no separately validated uncertainty and the source lot was atypical"
+              ]
+            },
+            {
+              "property_name": "density_kg_m3",
+              "source": "legacy reference-temperature screening estimate",
+              "applicability": "screening",
+              "temperature_range_k": null,
+              "pressure_range_pa": null,
+              "notes": [
+                "no pressure correction"
+              ]
+            },
+            {
+              "property_name": "specific_heat_j_kgk",
+              "source": "legacy reference-temperature screening estimate",
+              "applicability": "screening",
+              "temperature_range_k": null,
+              "pressure_range_pa": null,
+              "notes": [
+                "enthalpy integrates this Cp exactly; no independent EOS validation"
+              ]
+            }
+          ],
+          "thermal_entrance_basis": "new specified channel inlet",
+          "last_state": {
+            "temperature_k": 334.10756207232896,
+            "pressure_pa": 1995467.6591474146,
+            "phase": "unknown",
+            "property_applicability": "unsupported",
+            "thermodynamic_applicability": "screening",
+            "transport_applicability": "unsupported",
+            "property_evidence": [
+              {
+                "property_name": "kinematic_viscosity_m2_s",
+                "source": "NISTIR 6646 Eq. (1), original sample",
+                "applicability": "unsupported",
+                "temperature_range_k": [
+                  243.29,
+                  333.15
+                ],
+                "pressure_range_pa": [
+                  83000.0,
+                  83000.0
+                ],
+                "notes": [
+                  "fit to atmospheric measurements; not a compressed-liquid pressure correlation"
+                ]
+              },
+              {
+                "property_name": "viscosity_pa_s",
+                "source": "no viscosity data at this pressure/temperature",
+                "applicability": "unsupported",
+                "temperature_range_k": [
+                  243.29,
+                  333.15
+                ],
+                "pressure_range_pa": null,
+                "notes": [
+                  "atmospheric Eq. (1), multiplied by screening density; pressure independence is a diagnostic assumption only",
+                  "density conversion, operating pressure, and actual fuel-lot applicability are not validated"
+                ]
+              },
+              {
+                "property_name": "viscosity_density_product_kg2_m4_s",
+                "source": "NISTIR 6646 Table 12, separate instrument data",
+                "applicability": "measured_interpolation",
+                "value": 0.7202820117206098,
+                "temperature_range_k": null,
+                "pressure_range_pa": null,
+                "notes": [
+                  "not used by the default dynamic-viscosity curve; no automatic join between inconsistent instruments",
+                  "log-linear interpolation only inside the original measured (T,P) convex hull",
+                  "instrument-resolution limitations; model deviations -3.5 to -11.7 percent in report, p. 65"
+                ]
+              },
+              {
+                "property_name": "conductivity_w_mk",
+                "source": "NISTIR 6646 Table 10 lambda_c",
+                "applicability": "measured_interpolation",
+                "temperature_range_k": null,
+                "pressure_range_pa": null,
+                "notes": [
+                  "valid only inside measured (Te,P) convex hull; bounding rectangle is insufficient",
+                  "650 K measurements include reaction/composition/time dependence and approximately 4 percent uncertainty; not clean-fuel validation",
+                  "sparse-data interpolation has no separately validated uncertainty and the source lot was atypical"
+                ]
+              },
+              {
+                "property_name": "density_kg_m3",
+                "source": "legacy reference-temperature screening estimate",
+                "applicability": "screening",
+                "temperature_range_k": null,
+                "pressure_range_pa": null,
+                "notes": [
+                  "no pressure correction"
+                ]
+              },
+              {
+                "property_name": "specific_heat_j_kgk",
+                "source": "legacy reference-temperature screening estimate",
+                "applicability": "screening",
+                "temperature_range_k": null,
+                "pressure_range_pa": null,
+                "notes": [
+                  "enthalpy integrates this Cp exactly; no independent EOS validation"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "diagnostic_peak_Twg_K": 1437.9891309658929,
+      "diagnostic_peak_x_mm": 197.4582711845278,
+      "last_solved_index": 251,
+      "last_available_coolant_temperature_K": {
+        "circuit_1": 334.10756207232896
+      },
+      "pressure_drop_for_solved_path_bar": {
+        "circuit_1": 0.045323408525853884
+      },
+      "energy_balance": {
+        "circuit_1": {
+          "heat_pickup_w": 28320.81448226621,
+          "coolant_enthalpy_rise_w": 28320.814482269623,
+          "two_phase_kinetic_energy_change_w": 0.0,
+          "residual_w": -3.4124241210520267e-09
+        }
+      },
+      "phase_counts": {
+        "None": 250,
+        "unknown": 50
+      },
+      "warnings": [
+        "circuit_1: laminar rectangular Nu uses uniform all-wall heat flux reference; conjugate/one-sided heated boundary requires validation",
+        "circuit_1: Gnielinski (2013) Re=2300..4000 transition interpolation; rectangular/conjugate adaptation is not experimentally validated",
+        "circuit_1: transition Darcy friction uses continuous endpoint interpolation; transition hydraulics require validation",
+        "circuit_1: short-entry laminar endpoint exceeds turbulent endpoint; transition interpolation is non-monotone and requires validation",
+        "circuit_1: developing laminar reference assumes constant section/properties and uniform inlet profiles; local-property channel adaptation requires validation",
+        "circuit_1: laminar Darcy friction uses fully developed duct reference; hydrodynamic entrance pressure loss is not included",
+        "circuit_1: turbulent thermal-entry factor adapted from circular tubes; rectangular/conjugate channel requires validation",
+        "circuit_1: RP-1: no validated pressure/phase equation of state; phase unknown",
+        "circuit_1: RP-1 density and Cp remain pressure-independent screening estimates; no measured validity range claimed",
+        "circuit_1: RP-1 NIST viscosity data describe an atypical high-olefin sample; actual lot may differ",
+        "circuit_1: RP-1 dynamic viscosity is a pressure-independent screening diagnostic from atmospheric NIST kinematic viscosity times screening density; no validated compressed-liquid pressure correction",
+        "circuit_1: RP-1 conductivity outside NIST Table 10 measured convex hull; reference screening estimate used",
+        "circuit_1: coolant phase unverified; single-phase correlation is diagnostic only",
+        "circuit_1: CuCrZr conductivity uses selected source/screening data; actual lot/build and manufacturing-condition validation required",
+        "circuit_1: hydrocarbon cracking/coking and deposit resistance/lifetime require fuel/material-specific validation",
+        "circuit_1: CuCrZr: wall temperature outside conductivity data range [293.15, 973.15] K; out-of-range conductivity queries clamp to endpoints; wall solution is diagnostic only",
+        "circuit_1: NIST Table 12 mu*rho is separate evidence only; instrument-resolution uncertainty prevents splicing it into the atmospheric viscosity curve",
+        "circuit_1: RP-1 default viscosity outside NIST Eq. (1) fit range [243.29, 333.15] K; extrapolation and viscosity floor disabled",
+        "circuit_1: coolant outside supported property data; wall march stopped",
+        "circuit_1: outlet coolant outside supported property data",
+        "circuit_1 outlet: RP-1: no validated pressure/phase equation of state; phase unknown",
+        "circuit_1 outlet: RP-1 density and Cp remain pressure-independent screening estimates; no measured validity range claimed",
+        "circuit_1 outlet: RP-1 NIST viscosity data describe an atypical high-olefin sample; actual lot may differ",
+        "circuit_1 outlet: RP-1 default viscosity outside NIST Eq. (1) fit range [243.29, 333.15] K; extrapolation and viscosity floor disabled",
+        "circuit_1 outlet: NIST Table 12 mu*rho is separate evidence only; instrument-resolution uncertainty prevents splicing it into the atmospheric viscosity curve",
+        "Reaction-efficiency temperature/density closure preserves continuity but retains ideal CEA composition, Cp and transport; the reduced-temperature chemistry/transport is not re-equilibrated. Thermodynamic and heat-transfer states are screening estimates.",
+        "gas radiation uses specified grey emissivity; species/pressure/path-dependent spectral model not validated",
+        "thermal wall boundary unavailable for part of the contour; omitted stations have no predicted temperature"
+      ]
+    },
+    {
+      "height_mm": 1.8,
+      "numerically_converged": true,
+      "physical_validity": "unsupported",
+      "solved_wall_station_count": 51,
+      "unsolved_station_count": 249,
+      "wall_solution_complete": false,
+      "segment_completion": {
+        "circuit_1": {
+          "solved_wall_stations": 51,
+          "requested_wall_stations": 300,
+          "wall_march_completed": false,
+          "heated_distance_at_outlet_m": 0.03345255444170344,
+          "thermal_entrance_basis": "new specified channel inlet",
+          "outlet_property_applicability": "unsupported"
+        }
+      },
+      "property_metadata": {
+        "circuit_1": {
+          "thermodynamic_source": "pressure-independent screening Cp/density; no RP-1 EOS",
+          "transport_source": "NISTIR 6646 partial measurements plus explicit screening estimates",
+          "limits": null,
+          "property_applicability": "screening",
+          "thermodynamic_applicability": "screening",
+          "transport_applicability": "screening",
+          "property_notes": [
+            "Partial NIST measurements do not establish a validated four-property or phase model.",
+            "Interpolation hulls are property-specific and do not certify liquid-phase stability.",
+            "The original NIST RP-1 sample was atypical; fuel lot differences remain unresolved."
+          ],
+          "property_references": [
+            "https://nvlpubs.nist.gov/nistpubs/Legacy/IR/nistir6646.pdf"
+          ],
+          "property_evidence": [
+            {
+              "property_name": "kinematic_viscosity_m2_s",
+              "source": "NISTIR 6646 Eq. (1), original sample",
+              "applicability": "screening",
+              "temperature_range_k": [
+                243.29,
+                333.15
+              ],
+              "pressure_range_pa": [
+                83000.0,
+                83000.0
+              ],
+              "notes": [
+                "fit to atmospheric measurements; not a compressed-liquid pressure correlation"
+              ]
+            },
+            {
+              "property_name": "viscosity_pa_s",
+              "source": "NISTIR 6646 atmospheric Eq. (1) times screening density",
+              "applicability": "screening",
+              "temperature_range_k": [
+                243.29,
+                333.15
+              ],
+              "pressure_range_pa": null,
+              "notes": [
+                "atmospheric Eq. (1), multiplied by screening density; pressure independence is a diagnostic assumption only",
+                "density conversion, operating pressure, and actual fuel-lot applicability are not validated"
+              ]
+            },
+            {
+              "property_name": "viscosity_density_product_kg2_m4_s",
+              "source": "NISTIR 6646 Table 12, separate instrument data",
+              "applicability": "unsupported",
+              "value": null,
+              "temperature_range_k": null,
+              "pressure_range_pa": null,
+              "notes": [
+                "not used by the default dynamic-viscosity curve; no automatic join between inconsistent instruments",
+                "log-linear interpolation only inside the original measured (T,P) convex hull",
+                "instrument-resolution limitations; model deviations -3.5 to -11.7 percent in report, p. 65"
+              ]
+            },
+            {
+              "property_name": "conductivity_w_mk",
+              "source": "reference screening estimate",
+              "applicability": "screening",
+              "temperature_range_k": null,
+              "pressure_range_pa": null,
+              "notes": [
+                "valid only inside measured (Te,P) convex hull; bounding rectangle is insufficient",
+                "650 K measurements include reaction/composition/time dependence and approximately 4 percent uncertainty; not clean-fuel validation",
+                "sparse-data interpolation has no separately validated uncertainty and the source lot was atypical"
+              ]
+            },
+            {
+              "property_name": "density_kg_m3",
+              "source": "legacy reference-temperature screening estimate",
+              "applicability": "screening",
+              "temperature_range_k": null,
+              "pressure_range_pa": null,
+              "notes": [
+                "no pressure correction"
+              ]
+            },
+            {
+              "property_name": "specific_heat_j_kgk",
+              "source": "legacy reference-temperature screening estimate",
+              "applicability": "screening",
+              "temperature_range_k": null,
+              "pressure_range_pa": null,
+              "notes": [
+                "enthalpy integrates this Cp exactly; no independent EOS validation"
+              ]
+            }
+          ],
+          "thermal_entrance_basis": "new specified channel inlet",
+          "last_state": {
+            "temperature_k": 333.7844484309941,
+            "pressure_pa": 1998129.2489555636,
+            "phase": "unknown",
+            "property_applicability": "unsupported",
+            "thermodynamic_applicability": "screening",
+            "transport_applicability": "unsupported",
+            "property_evidence": [
+              {
+                "property_name": "kinematic_viscosity_m2_s",
+                "source": "NISTIR 6646 Eq. (1), original sample",
+                "applicability": "unsupported",
+                "temperature_range_k": [
+                  243.29,
+                  333.15
+                ],
+                "pressure_range_pa": [
+                  83000.0,
+                  83000.0
+                ],
+                "notes": [
+                  "fit to atmospheric measurements; not a compressed-liquid pressure correlation"
+                ]
+              },
+              {
+                "property_name": "viscosity_pa_s",
+                "source": "no viscosity data at this pressure/temperature",
+                "applicability": "unsupported",
+                "temperature_range_k": [
+                  243.29,
+                  333.15
+                ],
+                "pressure_range_pa": null,
+                "notes": [
+                  "atmospheric Eq. (1), multiplied by screening density; pressure independence is a diagnostic assumption only",
+                  "density conversion, operating pressure, and actual fuel-lot applicability are not validated"
+                ]
+              },
+              {
+                "property_name": "viscosity_density_product_kg2_m4_s",
+                "source": "NISTIR 6646 Table 12, separate instrument data",
+                "applicability": "measured_interpolation",
+                "value": 0.7232857497436262,
+                "temperature_range_k": null,
+                "pressure_range_pa": null,
+                "notes": [
+                  "not used by the default dynamic-viscosity curve; no automatic join between inconsistent instruments",
+                  "log-linear interpolation only inside the original measured (T,P) convex hull",
+                  "instrument-resolution limitations; model deviations -3.5 to -11.7 percent in report, p. 65"
+                ]
+              },
+              {
+                "property_name": "conductivity_w_mk",
+                "source": "NISTIR 6646 Table 10 lambda_c",
+                "applicability": "measured_interpolation",
+                "temperature_range_k": null,
+                "pressure_range_pa": null,
+                "notes": [
+                  "valid only inside measured (Te,P) convex hull; bounding rectangle is insufficient",
+                  "650 K measurements include reaction/composition/time dependence and approximately 4 percent uncertainty; not clean-fuel validation",
+                  "sparse-data interpolation has no separately validated uncertainty and the source lot was atypical"
+                ]
+              },
+              {
+                "property_name": "density_kg_m3",
+                "source": "legacy reference-temperature screening estimate",
+                "applicability": "screening",
+                "temperature_range_k": null,
+                "pressure_range_pa": null,
+                "notes": [
+                  "no pressure correction"
+                ]
+              },
+              {
+                "property_name": "specific_heat_j_kgk",
+                "source": "legacy reference-temperature screening estimate",
+                "applicability": "screening",
+                "temperature_range_k": null,
+                "pressure_range_pa": null,
+                "notes": [
+                  "enthalpy integrates this Cp exactly; no independent EOS validation"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "diagnostic_peak_Twg_K": 1558.7357756803422,
+      "diagnostic_peak_x_mm": 195.00131475870197,
+      "last_solved_index": 249,
+      "last_available_coolant_temperature_K": {
+        "circuit_1": 333.7844484309941
+      },
+      "pressure_drop_for_solved_path_bar": {
+        "circuit_1": 0.01870751044436358
+      },
+      "energy_balance": {
+        "circuit_1": {
+          "heat_pickup_w": 28097.30302714045,
+          "coolant_enthalpy_rise_w": 28097.303027143516,
+          "two_phase_kinetic_energy_change_w": 0.0,
+          "residual_w": -3.066816134378314e-09
+        }
+      },
+      "phase_counts": {
+        "None": 248,
+        "unknown": 52
+      },
+      "warnings": [
+        "circuit_1: laminar rectangular Nu uses uniform all-wall heat flux reference; conjugate/one-sided heated boundary requires validation",
+        "circuit_1: developing laminar reference assumes constant section/properties and uniform inlet profiles; local-property channel adaptation requires validation",
+        "circuit_1: laminar Darcy friction uses fully developed duct reference; hydrodynamic entrance pressure loss is not included",
+        "circuit_1: RP-1: no validated pressure/phase equation of state; phase unknown",
+        "circuit_1: RP-1 density and Cp remain pressure-independent screening estimates; no measured validity range claimed",
+        "circuit_1: RP-1 NIST viscosity data describe an atypical high-olefin sample; actual lot may differ",
+        "circuit_1: RP-1 dynamic viscosity is a pressure-independent screening diagnostic from atmospheric NIST kinematic viscosity times screening density; no validated compressed-liquid pressure correction",
+        "circuit_1: RP-1 conductivity outside NIST Table 10 measured convex hull; reference screening estimate used",
+        "circuit_1: coolant phase unverified; single-phase correlation is diagnostic only",
+        "circuit_1: CuCrZr conductivity uses selected source/screening data; actual lot/build and manufacturing-condition validation required",
+        "circuit_1: hydrocarbon cracking/coking and deposit resistance/lifetime require fuel/material-specific validation",
+        "circuit_1: CuCrZr: wall temperature outside conductivity data range [293.15, 973.15] K; out-of-range conductivity queries clamp to endpoints; wall solution is diagnostic only",
+        "circuit_1: NIST Table 12 mu*rho is separate evidence only; instrument-resolution uncertainty prevents splicing it into the atmospheric viscosity curve",
+        "circuit_1: Gnielinski (2013) Re=2300..4000 transition interpolation; rectangular/conjugate adaptation is not experimentally validated",
+        "circuit_1: transition Darcy friction uses continuous endpoint interpolation; transition hydraulics require validation",
+        "circuit_1: turbulent thermal-entry factor adapted from circular tubes; rectangular/conjugate channel requires validation",
+        "circuit_1: RP-1 default viscosity outside NIST Eq. (1) fit range [243.29, 333.15] K; extrapolation and viscosity floor disabled",
+        "circuit_1: coolant outside supported property data; wall march stopped",
+        "circuit_1: outlet coolant outside supported property data",
+        "circuit_1 outlet: RP-1: no validated pressure/phase equation of state; phase unknown",
+        "circuit_1 outlet: RP-1 density and Cp remain pressure-independent screening estimates; no measured validity range claimed",
+        "circuit_1 outlet: RP-1 NIST viscosity data describe an atypical high-olefin sample; actual lot may differ",
+        "circuit_1 outlet: RP-1 default viscosity outside NIST Eq. (1) fit range [243.29, 333.15] K; extrapolation and viscosity floor disabled",
+        "circuit_1 outlet: NIST Table 12 mu*rho is separate evidence only; instrument-resolution uncertainty prevents splicing it into the atmospheric viscosity curve",
+        "Reaction-efficiency temperature/density closure preserves continuity but retains ideal CEA composition, Cp and transport; the reduced-temperature chemistry/transport is not re-equilibrated. Thermodynamic and heat-transfer states are screening estimates.",
+        "gas radiation uses specified grey emissivity; species/pressure/path-dependent spectral model not validated",
+        "thermal wall boundary unavailable for part of the contour; omitted stations have no predicted temperature"
+      ]
+    }
+  ],
+  "input_unchanged": true
+}

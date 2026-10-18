@@ -92,6 +92,12 @@ class CoolantState:
     transport_source: str = "screening"
     property_limits: CoolantPropertyLimits | None = None
     equilibrium_energy_residual_j_kg: float = nan
+    property_applicability: str = "screening"
+    thermodynamic_applicability: str = "screening"
+    transport_applicability: str = "screening"
+    property_notes: tuple[str, ...] = ()
+    property_references: tuple[str, ...] = ()
+    property_evidence: tuple[dict[str, object], ...] = ()
 
     @property
     def prandtl(self) -> float:
@@ -116,11 +122,19 @@ class CoolantPropertyModel:
         temperature_k = float(temperature_k)
         if not isfinite(temperature_k) or temperature_k <= 0:
             raise ValueError("coolant temperature must be finite and positive")
+        if self is COOLANT_MODELS.get("RP-1"):
+            return _rp1_state(temperature_k, 83000.0)
         delta = temperature_k - self.reference_temperature_k
         density_factor = max(0.20, 1.0 - self.volumetric_expansion_per_k * delta)
         cp_factor = max(0.50, 1.0 + self.cp_slope_per_k * delta)
         conductivity_factor = max(0.35, 1.0 + self.conductivity_slope_per_k * delta)
-        viscosity_factor = min(8.0, max(0.08, exp(-self.viscosity_decay_per_k * delta)))
+        # Bound the exponent before evaluation as well as the legacy estimate.
+        # These are screening safeguards, never validated fluid-domain limits.
+        viscosity_raw = exp(max(-700.0, min(700.0, -self.viscosity_decay_per_k * delta)))
+        viscosity_factor = min(8.0, max(0.08, viscosity_raw))
+        issues = ["pressure-independent screening coolant properties"]
+        if density_factor == .2 or cp_factor == .5 or conductivity_factor == .35 or viscosity_factor != viscosity_raw:
+            issues.append("legacy screening property clamp active; no validated thermophysical range is established")
         return CoolantState(
             density_kg_m3=self.density_kg_m3 * density_factor,
             specific_heat_j_kgk=self.specific_heat_j_kgk * cp_factor,
@@ -128,7 +142,8 @@ class CoolantPropertyModel:
             viscosity_pa_s=self.viscosity_pa_s * viscosity_factor,
             temperature_k=temperature_k,
             enthalpy_j_kg=self.screening_enthalpy(temperature_k),
-            issues=("pressure-independent screening coolant properties",),
+            issues=tuple(issues),
+            property_notes=("reference estimates have no independently established pressure, phase, or temperature validity range",),
         )
 
     def screening_enthalpy(self, temperature_k: float) -> float:
@@ -154,6 +169,8 @@ class CoolantPropertyModel:
             state=self.at_temperature(temperature)
             residual=state.enthalpy_j_kg-enthalpy_j_kg
             if abs(residual)<max(1.0,abs(enthalpy_j_kg))*1e-10:
+                if self is COOLANT_MODELS.get("RP-1"):
+                    return _rp1_state(temperature, pressure_pa)
                 return replace(state,pressure_pa=pressure_pa)
             temperature=max(1.0,temperature-residual/state.specific_heat_j_kgk)
         raise ValueError("custom screening enthalpy inversion failed")
@@ -335,6 +352,23 @@ def get_coolant_model(name: object) -> CoolantPropertyModel:
         options = ", ".join(COOLANT_MODELS)
         raise KeyError(f"unknown coolant {name!r}; choose one of: {options}")
     return COOLANT_MODELS[key]
+
+
+def _rp1_state(temperature_k: float, pressure_pa: float) -> CoolantState:
+    from .rp1_properties import NIST_RP1_REFERENCE, rp1_estimate
+    values = rp1_estimate(temperature_k, pressure_pa)
+    return CoolantState(
+        temperature_k=temperature_k, pressure_pa=pressure_pa,
+        thermodynamic_source="pressure-independent screening Cp/density; no RP-1 EOS",
+        thermodynamic_applicability="screening",
+        transport_applicability=values["property_applicability"],
+        property_notes=(
+            "Partial NIST measurements do not establish a validated four-property or phase model.",
+            "Interpolation hulls are property-specific and do not certify liquid-phase stability.",
+            "The original NIST RP-1 sample was atypical; fuel lot differences remain unresolved.",
+        ),
+        property_references=(NIST_RP1_REFERENCE,), **values,
+    )
 
 
 _EOS_FLUIDS = {
@@ -663,6 +697,7 @@ def _extract_eos_state(name: str, state: object, pressure_pa: float, *, backend:
         CP.iphase_supercritical_gas: "supercritical_gas", CP.iphase_critical_point: "critical_point",
     }
     phase = phase_names.get(state.phase(), "unknown")
+    unavailable: set[str] = set()
     def property_value(method: str, default: float) -> float:
         try:
             value = float(getattr(state, method)())
@@ -674,6 +709,7 @@ def _extract_eos_state(name: str, state: object, pressure_pa: float, *, backend:
                 raise ValueError("outside ethanol conductivity correlation bounds")
             return value
         except ValueError:
+            unavailable.add(method)
             issues.append(f"{method} unavailable in EOS; screening transport/property used")
             return default
     density = property_value("rhomass", fallback.density_kg_m3)
@@ -726,10 +762,35 @@ def _extract_eos_state(name: str, state: object, pressure_pa: float, *, backend:
             surface_tension = float(state.surface_tension())
         except ValueError:
             issues.append("two-phase surface tension unavailable in EOS")
+    # The bulk Cp and transport of a two-phase equilibrium are diagnostics;
+    # their native unavailability must not hide valid phase-resolved values.
+    if phase == "two_phase":
+        unavailable = {
+            method for method, label in (("rhomass", "density"), ("cpmass", "cp"),
+                                        ("conductivity", "conductivity"), ("viscosity", "viscosity"))
+            if any(f" {label} unavailable" in issue for phase_state in (liquid, vapor)
+                   if phase_state is not None for issue in phase_state.issues)
+        }
+        thermo_fallback = any(
+            any(f" {label} unavailable" in issue for label in ("density", "cp", "enthalpy", "molar mass"))
+            for phase_state in (liquid, vapor) if phase_state is not None for issue in phase_state.issues
+        )
+        transport_fallback = any(
+            any(f" {label} unavailable" in issue for label in ("conductivity", "viscosity"))
+            for phase_state in (liquid, vapor) if phase_state is not None for issue in phase_state.issues
+        )
+    else:
+        thermo_fallback = bool(unavailable & {"rhomass", "cpmass"})
+        transport_fallback = bool(unavailable & {"conductivity", "viscosity"})
+    thermo_health = "screening" if thermo_fallback or phase == "unknown" else "eos"
+    transport_health = "screening" if transport_fallback else "eos"
+    # Finite fallback numbers remain useful diagnostics, but cannot authorize
+    # a heat-transfer calculation without the required native properties.
+    health = "eos" if thermo_health == transport_health == "eos" else "unsupported"
     thermo_source = f"CoolProp {backend}: {definition[0]}"
     transport_source = (
         f"{thermo_source}; screening fallback present"
-        if any("screening" in issue for issue in issues) else thermo_source
+        if transport_fallback else thermo_source
     )
     return CoolantState(
         density, cp, conductivity, viscosity, temperature_k=temperature, pressure_pa=pressure_pa,
@@ -744,6 +805,21 @@ def _extract_eos_state(name: str, state: object, pressure_pa: float, *, backend:
         surface_tension_n_m=surface_tension, thermodynamic_source=thermo_source,
         transport_source=transport_source, property_limits=limits,
         equilibrium_energy_residual_j_kg=equilibrium_residual,
+        property_applicability=health, thermodynamic_applicability=thermo_health,
+        transport_applicability=transport_health,
+        property_notes=(
+            "EOS denotes the provider's model domain, not independent experimental validation of every state.",
+            "Thermodynamic bounds and transport-correlation bounds are separate; unreported transport limits remain unknown.",
+        ),
+        property_references=limits.references,
+        property_evidence=tuple(
+            dict(property_name=label, source="reference screening fallback" if method in unavailable else thermo_source,
+                 applicability="screening" if method in unavailable else "eos",
+                 temperature_range_k=None, pressure_range_pa=None,
+                 notes=("Use property_limits for EOS and separately known transport bounds; inspect issues for property-specific fallback.",))
+            for label, method in (("density_kg_m3", "rhomass"), ("specific_heat_j_kgk", "cpmass"),
+                                  ("conductivity_w_mk", "conductivity"), ("viscosity_pa_s", "viscosity"))
+        ),
     )
 
 
@@ -754,6 +830,8 @@ def _failed_eos_state(model: CoolantPropertyModel, temperature_k: float, pressur
         state, pressure_pa=pressure_pa,
         enthalpy_j_kg=state.enthalpy_j_kg if enthalpy_j_kg is None else enthalpy_j_kg,
         phase="unknown", issues=(f"{model.name}: EOS state unavailable ({error}); physical state unsupported",),
+        property_applicability="unsupported", thermodynamic_applicability="unsupported",
+        transport_applicability="screening",
     )
 
 
@@ -764,10 +842,20 @@ def coolant_state(name: object, temperature_k: float, pressure_pa: float, *, bac
     temperature_k, pressure_pa = float(temperature_k), float(pressure_pa)
     if not isfinite(pressure_pa) or pressure_pa <= 0:
         raise ValueError("coolant pressure must be finite and positive")
+    if model is COOLANT_MODELS["RP-1"]:
+        if not isfinite(temperature_k) or temperature_k <= 0:
+            raise ValueError("coolant temperature must be finite and positive")
+        return _rp1_state(temperature_k, pressure_pa)
     fallback = model.at_temperature(temperature_k)
     if _eos_definition(model.name) is None:
-        return replace(fallback, pressure_pa=pressure_pa, issues=(
-            f"{model.name}: no validated pressure/phase equation of state; screening only",
+        return replace(fallback, pressure_pa=pressure_pa, issues=fallback.issues + (
+            f"{model.name}: no validated pressure/phase equation of state; native provider unsupported; screening diagnostics only",
+        ), property_applicability="unsupported", thermodynamic_applicability="unsupported",
+           transport_applicability="screening", property_evidence=tuple(
+            dict(property_name=label, source="reference-temperature screening estimate",
+                 applicability="screening", temperature_range_k=None, pressure_range_pa=None,
+                 notes=(model.notes, "No independently established pressure, phase, or temperature range."))
+            for label in ("density_kg_m3", "specific_heat_j_kgk", "conductivity_w_mk", "viscosity_pa_s")
         ))
     try:
         _validate_eos_range(model.name, temperature_k, pressure_pa, backend)
@@ -879,7 +967,7 @@ def coolant_state_from_enthalpy(
         state = model.at_temperature(temperature)
         residual = state.enthalpy_j_kg-enthalpy_j_kg
         if abs(residual) < max(1.0, abs(enthalpy_j_kg))*1e-10:
-            return replace(state, pressure_pa=pressure_pa)
+            return coolant_state(model.name, temperature, pressure_pa, backend=backend)
         temperature = max(1.0, temperature-residual/state.specific_heat_j_kgk)
     raise ValueError("screening coolant enthalpy inversion did not converge")
 

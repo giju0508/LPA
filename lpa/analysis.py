@@ -711,6 +711,7 @@ def _film_orifice_results(
     x_values = list(thermal_result.x_m)
     coolant_values = list(thermal_result.Tc_K)
     active = list(thermal_result.active_segment_id)
+    completion_by_segment = (getattr(thermal_result, "metadata", {}) or {}).get("regen_segment_completion", {})
     rows: list[dict[str, Any]] = []
     warnings: list[str] = []
     for film in segments:
@@ -722,6 +723,12 @@ def _film_orifice_results(
         root = _root_regen(source_id, regen_by_id)
         if source is None or root is None:
             warnings.append(f"Film '{name}' orifice sizing skipped: Regen source is unavailable.")
+            continue
+        if completion_by_segment.get(source_id, {}).get("wall_march_completed") is False:
+            warnings.append(
+                f"Film '{name}' orifice sizing skipped: linked Regen source '{source_id}' "
+                "did not complete its coolant march; a partial state is not a usable outlet."
+            )
             continue
         if film.get("position_mode") == "Injector Face":
             injection_x = core_result.contour.x_m[0]

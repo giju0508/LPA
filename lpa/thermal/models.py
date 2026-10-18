@@ -131,6 +131,10 @@ class ThermalAnalysisResult:
     coolant_flow_regime: tuple[str | None, ...] = ()
     coolant_outlet_phase: dict[str, str] = field(default_factory=dict)
     coolant_outlet_enthalpy_j_kg: dict[str, float] = field(default_factory=dict)
+    coolant_reynolds: tuple[float, ...] = ()
+    coolant_nusselt: tuple[float, ...] = ()
+    coolant_raw_coefficient_w_m2k: tuple[float, ...] = ()
+    station_applicability: tuple[str | None, ...] = ()
 
     def __post_init__(self) -> None:
         station_count = self.section_count
@@ -140,6 +144,11 @@ class ThermalAnalysisResult:
             self.coolant_vapor_quality = (float("nan"),) * station_count
         if not self.coolant_flow_regime:
             self.coolant_flow_regime = (None,) * station_count
+        for name in ("coolant_reynolds", "coolant_nusselt", "coolant_raw_coefficient_w_m2k"):
+            if not getattr(self, name):
+                setattr(self, name, (float("nan"),) * station_count)
+        if not self.station_applicability:
+            self.station_applicability = (None,) * station_count
         if self.physical_validity not in {"valid", "screening", "invalid", "unsupported"}:
             raise ValueError("unknown physical validity")
         arrays = {
@@ -160,6 +169,10 @@ class ThermalAnalysisResult:
             "coolant_phase": self.coolant_phase,
             "coolant_vapor_quality": self.coolant_vapor_quality,
             "coolant_flow_regime": self.coolant_flow_regime,
+            "coolant_reynolds": self.coolant_reynolds,
+            "coolant_nusselt": self.coolant_nusselt,
+            "coolant_raw_coefficient_w_m2k": self.coolant_raw_coefficient_w_m2k,
+            "station_applicability": self.station_applicability,
         }
         wrong = [name for name, values in arrays.items() if len(values) != station_count]
         if wrong:

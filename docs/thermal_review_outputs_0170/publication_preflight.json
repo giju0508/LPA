@@ -1,0 +1,9 @@
+{
+  "commits_scanned": 5,
+  "text_blob_occurrences_scanned": 644,
+  "credential_signature_matches": 0,
+  "findings": [],
+  "scope": "Git history credential signature scan; not proof of absence of all secrets; no credentials printed",
+  "current_working_tree_text_files_scanned": 176,
+  "current_credential_signature_matches": 0
+}

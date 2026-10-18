@@ -78,6 +78,32 @@ def test_orifice_uses_outlet_loss_and_matches_independent_liquid_equation():
     assert row["physical_validity"] == "valid"
 
 
+@pytest.mark.parametrize("outlet_available", [True, False])
+def test_film_orifice_rejects_incomplete_regen_before_outlet_or_nearest_fallback(outlet_available):
+    project, core, thermal = _orifice_fixture()
+    thermal.metadata = {"regen_segment_completion": {"regen": {
+        "solved_wall_stations": 1, "requested_wall_stations": 2, "wall_march_completed": False}}}
+    thermal.coolant_pressure_bar = (30., 30.)
+    if not outlet_available:
+        thermal.coolant_outlet_temperature_k = {}
+        thermal.coolant_outlet_pressure_bar = {}
+    rows, warnings = _film_orifice_results(project, core, thermal)
+    assert rows == []
+    assert len(warnings) == 1
+    assert "did not complete its coolant march" in warnings[0]
+    assert "partial state" in warnings[0]
+
+
+@pytest.mark.parametrize("completion", [{}, {"other": {"wall_march_completed": False}},
+                                         {"regen": {"wall_march_completed": True}}])
+def test_film_orifice_preserves_legacy_or_completed_source(completion):
+    project, core, thermal = _orifice_fixture()
+    thermal.metadata = {"regen_segment_completion": completion}
+    rows, warnings = _film_orifice_results(project, core, thermal)
+    assert len(rows) == 1
+    assert warnings == []
+
+
 def test_orifice_blocks_reverse_pressure_and_flashing():
     for fixture in (_orifice_fixture(supply_p=15), _orifice_fixture(supply_p=30, gas_p=1, temperature=450)):
         rows, warnings = _film_orifice_results(*fixture)

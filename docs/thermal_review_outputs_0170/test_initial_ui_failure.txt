@@ -1,0 +1,137 @@
+........................................................................ [ 10%]
+........................................................................ [ 21%]
+........................................................................ [ 32%]
+........................................................................ [ 43%]
+........................................................................ [ 53%]
+........................................................................ [ 64%]
+........................................................................ [ 75%]
+........................................................................ [ 86%]
+.................................................F...F.................. [ 97%]
+...................                                                      [100%]
+================================== FAILURES ===================================
+_______ test_default_thermal_off_analysis_and_every_result_page_render ________
+
+app = <lpa.app.LPAApplication object .>
+
+    def test_default_thermal_off_analysis_and_every_result_page_render(app: LPAApplication) -> None:
+        project = app.collect_project()
+        assert validate_project(project) == []
+        assert project["thermal"]["thermal_enabled"] is False
+    
+        result = AnalysisService().analyze(project)
+        assert result["thermal_enabled"] is False
+        assert result["thermal"] == {"resolution": "Medium", "section_count": 0}
+        assert len(result["contour"]["x_mm"]) == 300
+        assert len(result["contour"]["radius_mm"]) == 300
+        assert set(result["thermodynamics"]["stations"]) == {
+            "injector",
+            "nozzle_inlet",
+            "nozzle_throat",
+            "nozzle_exit",
+        }
+        assert math.isfinite(result["performance"]["with_film"]["vacuum_isp_s"])
+    
+        for key in (
+            "size_result",
+            "thermal_result",
+            "thermo_result",
+            "throttle_result",
+            "ambient_result",
+        ):
+            app.pages[key].set_result(result)
+            app.show_page(key)
+            app.update_idletasks()
+            assert app.pages[key].data is result
+    
+        size_page = app.pages["size_result"]
+        frame_texts = _labelframe_texts(size_page)
+        assert any("Performance" in text for text in frame_texts)
+        assert any("Rao contour geometry reference" in text for text in frame_texts)
+        assert size_page.film_blc_var.get() is False
+        assert size_page.rao_reference_image is not None
+        assert not any("including film cooling" in text for text in frame_texts)
+        assert not any("ignoring film cooling" in text for text in frame_texts)
+    
+        size_cards = [
+            child
+            for child in _walk(size_page)
+            if isinstance(child, ttk.LabelFrame)
+        ]
+        performance_card = next(
+            child for child in size_cards if "Performance" in str(child.cget("text"))
+        )
+        mass_flow_card = next(
+            child for child in size_cards if "Mass flow rates" in str(child.cget("text"))
+        )
+        geometry_card = next(
+            child for child in size_cards if "Chamber & Rao geometry" in str(child.cget("text"))
+        )
+        assert performance_card.master is mass_flow_card.master
+        assert performance_card.winfo_manager() == "grid"
+        assert mass_flow_card.winfo_manager() == "grid"
+>       assert performance_card.grid_info()["row"] == mass_flow_card.grid_info()["row"]
+E       assert 0 == 1
+
+tests\test_ui_smoke.py:643: AssertionError
+____________ test_thermal_regen_summary_includes_pressure_columns _____________
+
+app = <lpa.app.LPAApplication object .>
+
+    def test_thermal_regen_summary_includes_pressure_columns(app: LPAApplication) -> None:
+        page = app.pages["thermal_result"]
+        count = 35
+        page.set_result(
+            {
+                "thermal_enabled": True,
+                "thermal": {
+                    "resolution": "Low",
+                    "section_count": count,
+                    "iterations": 2,
+                    "converged": True,
+                    "x_mm": [float(index) for index in range(count)],
+                    "twg_k": [700.0 + index for index in range(count)],
+                    "twi_k": [680.0 + index for index in range(count)],
+                    "twc_k": [500.0 + index for index in range(count)],
+                    "tc_k": [290.0 + index for index in range(count)],
+                    "heat_flux_w_m2": [1.0e6 + 1000.0 * index for index in range(count)],
+                    "coolant_pressure_bar": [30.0 - 0.01 * index for index in range(count)],
+                    "coolant_velocity_m_s": [4.0 + 0.1 * index for index in range(count)],
+                    "coolant_density_kg_m3": [800.0 - index for index in range(count)],
+                    "active_segment_id": ["regen-1"] * count,
+                    "segment_types": {"regen-1": "Regen"},
+                    "segment_names": {"regen-1": "Regen 1"},
+                    "segment_coolants": {"regen-1": "LOX"},
+                    "coolant_inlet_temperature_k": {"regen-1": 290.0},
+                    "coolant_outlet_temperature_k": {"regen-1": 340.0},
+                    "coolant_inlet_pressure_bar": {"regen-1": 30.0},
+                    "coolant_outlet_pressure_bar": {"regen-1": 28.75},
+                    "coolant_pressure_drop_bar": {"regen-1": 1.25},
+                    "metadata": {
+                        "angle_channel_geometry_by_segment": {
+                            "regen-1": {
+                                "channel_width_mm": (1.2, 0.8, 1.5),
+                                "rib_width_mm": (0.7, 0.5, 0.9),
+                            }
+                        }
+                    },
+                },
+            }
+        )
+        app.update_idletasks()
+    
+        assert page.circuit_tree is not None
+>       assert sum(
+            int(page.circuit_tree.column(column, "width"))
+            for column in page.circuit_tree.cget("columns")
+        ) <= page.circuit_tree.winfo_width()
+E       assert 935 <= 731
+E        +  where 935 = sum(<generator object test_thermal_regen_summary_includes_pressure_columns.<locals>.<genexpr> at 0x0000023702930A40>)
+E        +  and   731 = winfo_width()
+E        +    where winfo_width = <tkinter.ttk.Treeview object .!frame3.!thermalresultspage.!scrollableframe.!canvas.!frame.!labelframe2.!treeview>.winfo_width
+E        +      where <tkinter.ttk.Treeview object .!frame3.!thermalresultspage.!scrollableframe.!canvas.!frame.!labelframe2.!treeview> = <lpa.ui.result_views.ThermalResultsPage object .!frame3.!thermalresultspage>.circuit_tree
+
+tests\test_ui_smoke.py:878: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_ui_smoke.py::test_default_thermal_off_analysis_and_every_result_page_render
+FAILED tests/test_ui_smoke.py::test_thermal_regen_summary_includes_pressure_columns
+2 failed, 665 passed in 79.98s (0:01:19)

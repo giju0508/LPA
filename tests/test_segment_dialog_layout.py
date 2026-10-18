@@ -95,12 +95,20 @@ def test_regen_optional_detail_fields_are_hidden_until_enabled(root: tk.Tk) -> N
         dialog._refresh()
         assert dialog.rough_frame.winfo_manager() == "pack"
         assert dialog.tbc_frame.winfo_manager() == "pack"
+        assert dialog.roughness_height_entry.instate(["!disabled"])
+        assert dialog.roughness_step_entry.instate(["disabled"])
+        assert _label(dialog, "Spacing not used by this model").winfo_exists()
+        assert _label(dialog, "Equivalent sand-grain height").winfo_exists()
 
         dialog.vars["roughness_enabled"].set(False)
         dialog.vars["tbc_enabled"].set(False)
         dialog._refresh()
         assert dialog.rough_frame.winfo_manager() == ""
         assert dialog.tbc_frame.winfo_manager() == ""
+        dialog.vars["roughness_enabled"].set(True)
+        dialog._refresh()
+        assert dialog.roughness_step_entry.instate(["disabled"])
+        assert dialog.vars["roughness_step_mm"].get() == "0.10"
     finally:
         if dialog.winfo_exists():
             dialog.destroy()

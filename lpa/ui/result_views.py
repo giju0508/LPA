@@ -85,6 +85,25 @@ def _thermal_station_completion(thermal: Any) -> tuple[int, int]:
     return int(np.count_nonzero(np.isfinite(hot_wall[:total]))), total
 
 
+def _thermal_completion_details(thermal: Any) -> dict[str, Any]:
+    """Keep available wall solutions separate from a completed coolant march."""
+
+    solved, total = _thermal_station_completion(thermal)
+    metadata = _mapping(_get(thermal, "metadata", default={}))
+    segments = _mapping(metadata.get("regen_segment_completion"))
+    applicability = _get(thermal, "station_applicability", default=[]) or []
+    unsupported = (sum(value == "unsupported" for value in applicability) if applicability
+                   else metadata.get("unsupported_station_count"))
+    return {
+        "solved_wall_station_count": solved,
+        "requested_wall_station_count": total,
+        "wall_solution_complete": bool(total and solved == total and metadata.get("wall_solution_complete", True)),
+        "unsupported_station_count": unsupported,
+        "incomplete_regen_segment_ids": [str(key) for key, value in segments.items()
+                                         if _mapping(value).get("wall_march_completed") is False],
+    }
+
+
 def _thermal_two_phase_regions(thermal: Any, x: np.ndarray) -> list[tuple[float, float, str | None]]:
     """Return contiguous phase cells, including a diagnosed unsolved cell."""
 
@@ -117,6 +136,17 @@ def _coolant_quality_array(thermal: Any) -> np.ndarray:
 
     quality = _array(thermal, "coolant_vapor_quality")
     return np.where((quality >= 0.0) & (quality <= 1.0), quality, np.nan)
+
+
+def _coolant_phase_counts(thermal: Any) -> dict[str, int]:
+    """Property phase is independent of the selected convection correlation."""
+
+    counts: dict[str, int] = {}
+    for phase in _get(thermal, "coolant_phase", default=[]) or []:
+        if phase:
+            name = str(phase).replace("-", "_")
+            counts[name] = counts.get(name, 0) + 1
+    return counts
 
 
 def engineering_force(value_n: Any) -> tuple[str, str]:
@@ -215,17 +245,23 @@ class ResultPage(ttk.Frame):
                  f"Physical applicability: {thermal.get('physical_validity', 'Not assessed')}", "", "Warnings:"]
         if thermal:
             solved, total = _thermal_station_completion(thermal)
-            phases = thermal.get("coolant_phase", []) or []
-            two_phase = sum(str(phase).replace("-", "_") == "two_phase" for phase in phases)
+            completion = _thermal_completion_details(thermal)
+            phase_counts = _coolant_phase_counts(thermal)
+            two_phase = phase_counts.get("two_phase", 0)
             quality = _coolant_quality_array(thermal)
             finite_quality = quality[np.isfinite(quality)]
             regimes = thermal.get("coolant_flow_regime", []) or []
             counts = {str(regime): regimes.count(regime) for regime in dict.fromkeys(regimes) if regime}
             lines[3:3] = [f"Solved wall stations: {solved}/{total}; unsolved: {total - solved}",
+                          f"Wall solution complete: {completion['wall_solution_complete']}",
+                          "Incomplete regenerative marches: " + (", ".join(completion["incomplete_regen_segment_ids"]) or "none reported"),
+                          "Unsupported stations: " + str(completion["unsupported_station_count"]
+                                                         if completion["unsupported_station_count"] is not None else "not reported"),
+                          "Coolant property phase: " + (json.dumps(phase_counts, ensure_ascii=False) if phase_counts else "not reported"),
                           f"Two-phase coolant stations: {two_phase}",
                           "Vapor mass quality (0–1): " + (f"{min(finite_quality):.5f} to {max(finite_quality):.5f}"
                                                          if len(finite_quality) else "not reported"),
-                          "Coolant flow / boiling status: " + (json.dumps(counts, ensure_ascii=False) if counts else "not reported")]
+                          "Coolant heat-transfer correlation / regime: " + (json.dumps(counts, ensure_ascii=False) if counts else "not reported")]
         lines.extend(f"{index}. {warning}" for index, warning in enumerate(self.report_warnings, 1))
         if not self.report_warnings:
             lines.append("No reported warnings.")
@@ -622,26 +658,53 @@ class ThermalResultsPage(ResultPage):
         summary.pack(fill="x", pady=(0, 9))
         converged = bool(_get(thermal, "converged", default=True))
         iterations = int(_number(_get(thermal, "iterations", default=0), 0))
+        solved, total = _thermal_station_completion(thermal)
+        numerical_text = ("No wall iterations performed" if not solved and not iterations
+                          else "Numerically converged" if converged else "Numerical iteration did not converge")
         numerical_label = ttk.Label(
             summary,
-            text=("Numerically converged" if converged else "Iteration limit reached") + f" · {iterations} max station iterations",
+            text=numerical_text + f" · {iterations} max station iterations",
             style="Badge.TLabel" if converged else "Warning.TLabel",
         )
         numerical_label.pack(side="left", fill="x", expand=True)
         summary.bind("<Configure>", lambda event: numerical_label.configure(
             wraplength=max(140, (event.width - 20) // 2)), add="+")
-        solved, total = _thermal_station_completion(thermal)
         completion = ttk.Label(self.shell,
                                text=f"Solved wall stations {solved}/{total} · Unsolved {total - solved}",
                                style="Badge.TLabel" if solved == total and total else "Warning.TLabel")
         completion.pack(fill="x", pady=(0, 9))
+        completion_details = _thermal_completion_details(thermal)
+        march_text = "Wall solution complete" if completion_details["wall_solution_complete"] else "Wall solution incomplete"
+        if completion_details["unsupported_station_count"] is not None:
+            march_text += f" · Unsupported stations {completion_details['unsupported_station_count']}"
+        incomplete_marches = completion_details["incomplete_regen_segment_ids"]
+        if incomplete_marches:
+            march_text += " · Regen march incomplete: " + ", ".join(incomplete_marches)
+        march_label = ttk.Label(self.shell, text=march_text, wraplength=700,
+                               style="Warning.TLabel" if incomplete_marches or not completion_details["wall_solution_complete"]
+                               else "Badge.TLabel")
+        march_label.pack(fill="x", pady=(0, 9))
+        march_label.bind("<Configure>", lambda event: march_label.configure(
+            wraplength=max(120, event.width - 12)), add="+")
+        phase_counts = _coolant_phase_counts(thermal)
+        if phase_counts.get("unknown"):
+            phase_note = ttk.Label(self.shell,
+                                  text=f"Coolant property phase unknown at {phase_counts['unknown']} stations; "
+                                       "a convection correlation does not verify the physical phase.",
+                                  style="Warning.TLabel", wraplength=700)
+            phase_note.pack(fill="x", pady=(0, 9))
+            phase_note.bind("<Configure>", lambda event: phase_note.configure(
+                wraplength=max(120, event.width - 12)), add="+")
         hot_wall = _array(thermal, "twg_k", "Twg_K", "Twg")
         finite_hot_wall = hot_wall[np.isfinite(hot_wall)]
         if len(finite_hot_wall):
+            diagnostic_wall = (_get(thermal, "physical_validity", default="") in {"unsupported", "invalid"}
+                               or bool(phase_counts.get("unknown")))
+            maximum_title = "Diagnostic maximum wall Twg" if diagnostic_wall else "Maximum inner wall Twg"
             maximum_label = ttk.Label(
                 summary,
-                text=f"Maximum inner wall Twg  {float(np.max(finite_hot_wall)):.2f} K",
-                style="Badge.TLabel",
+                text=f"{maximum_title}  {float(np.max(finite_hot_wall)):.2f} K",
+                style="Warning.TLabel" if diagnostic_wall else "Badge.TLabel",
             )
             maximum_label.pack(side="right", fill="x", expand=True)
             summary.bind("<Configure>", lambda event: maximum_label.configure(
@@ -837,6 +900,9 @@ class ThermalResultsPage(ResultPage):
                   "coolant_pressure_bar": ("coolant_pressure_bar",),
                   "coolant_velocity_m_s": ("coolant_velocity_m_s",),
                   "coolant_density_kg_m3": ("coolant_density_kg_m3",),
+                  "coolant_reynolds": ("coolant_reynolds",),
+                  "coolant_nusselt": ("coolant_nusselt",),
+                  "coolant_raw_coefficient_w_m2k": ("coolant_raw_coefficient_w_m2k",),
                   "coolant_vapor_quality": ("coolant_vapor_quality",),
                   "gas_coefficient_w_m2k": ("gas_coefficient_w_m2k",),
                   "coolant_coefficient_w_m2k": ("coolant_coefficient_w_m2k",),
@@ -845,27 +911,40 @@ class ThermalResultsPage(ResultPage):
         arrays["coolant_vapor_quality"] = _coolant_quality_array(thermal)
         phases = thermal.get("coolant_phase", [])
         regimes = thermal.get("coolant_flow_regime", [])
+        applicability = thermal.get("station_applicability", [])
         active = thermal.get("active_segment_id", [])
         warnings = " | ".join(self.report_warnings)
         metadata = _mapping(thermal.get("metadata"))
-        source_keys = ("model_capabilities", "coolant_property_sources", "material_references", "gas_state_source",
+        source_keys = ("model_capabilities", "coolant_property_sources", "coolant_property_metadata", "material_references", "gas_state_source",
                        "gas_side_model", "coolant_side_model", "wall_model", "radiation_model", "film_model",
-                       "two_phase_model", "two_phase_model_by_segment")
+                       "two_phase_model", "two_phase_model_by_segment", "regen_segment_completion")
         sources = json.dumps({key: metadata[key] for key in source_keys if key in metadata},
                              ensure_ascii=False, default=str)
         hot_wall = _array(thermal, "twg_k", "Twg_K", "Twg")
+        completion = _thermal_completion_details(thermal)
+        segment_completion = _mapping(metadata.get("regen_segment_completion"))
         keys = ["station_index", "x_mm", *fields, "active_segment_id", "coolant_phase", "coolant_flow_regime",
-                "wall_solution_available",
+                "station_applicability", "wall_solution_available", "wall_solution_complete",
+                "solved_wall_station_count", "requested_wall_station_count", "unsupported_station_count",
+                "segment_solved_wall_stations", "segment_requested_wall_stations", "segment_wall_march_completed",
                 "numerically_converged", "physical_validity", "warnings", "model_and_property_sources"]
         with Path(path).open("w", newline="", encoding="utf-8-sig") as stream:
             writer = csv.DictWriter(stream, fieldnames=keys)
             writer.writeheader()
             for index, position in enumerate(x):
+                identifier = active[index] if len(active) == len(x) else ""
+                segment = _mapping(segment_completion.get(identifier))
                 row = {"station_index": index, "x_mm": float(position),
-                       "active_segment_id": active[index] if len(active) == len(x) else "",
+                       "active_segment_id": identifier,
                        "coolant_phase": phases[index] if len(phases) == len(x) else "",
                        "coolant_flow_regime": regimes[index] if len(regimes) == len(x) else "",
+                       "station_applicability": applicability[index] if len(applicability) == len(x) else "",
                        "wall_solution_available": len(hot_wall) == len(x) and math.isfinite(float(hot_wall[index])),
+                       **{key: completion[key] for key in ("wall_solution_complete", "solved_wall_station_count",
+                                                          "requested_wall_station_count", "unsupported_station_count")},
+                       "segment_solved_wall_stations": segment.get("solved_wall_stations", ""),
+                       "segment_requested_wall_stations": segment.get("requested_wall_stations", ""),
+                       "segment_wall_march_completed": segment.get("wall_march_completed", ""),
                        "numerically_converged": thermal.get("converged", ""),
                        "physical_validity": thermal.get("physical_validity", "not_assessed"), "warnings": warnings,
                        "model_and_property_sources": sources}
@@ -894,7 +973,8 @@ class ThermalResultsPage(ResultPage):
             padding=(9, 7),
         )
         table_box.pack(fill="x", pady=(10, 0))
-        columns = ("x", "q", "Twg", "Twi", "Twc", "Tc", "pc", "wc", "rho", "quality", "regime")
+        columns = ("x", "q", "Twg", "Twi", "Twc", "Tc", "pc", "wc", "rho", "Re", "Nu", "hc_raw",
+                   "applicability", "phase", "quality", "regime")
         headings = {
             "x": "Axial x (mm)",
             "q": "Heat flux (MW/m²)",
@@ -905,8 +985,13 @@ class ThermalResultsPage(ResultPage):
             "pc": "pc (bar)",
             "wc": "wc (m/s)",
             "rho": "rho (kg/m³)",
+            "Re": "Coolant Re",
+            "Nu": "Coolant Nu",
+            "hc_raw": "Raw hc (W/m²K)",
+            "applicability": "Station applicability",
+            "phase": "Property phase",
             "quality": "Vapor x (0–1)",
-            "regime": "Flow / boiling status",
+            "regime": "HT correlation / regime",
         }
         tree = ttk.Treeview(
             table_box,
@@ -916,9 +1001,15 @@ class ThermalResultsPage(ResultPage):
         )
         self.axial_tree = tree
         tree.pack(fill="x")
-        for column, width in zip(columns, (82, 112, 70, 70, 70, 70, 75, 75, 92, 82, 135)):
+        horizontal = ttk.Scrollbar(table_box, orient="horizontal", command=tree.xview)
+        horizontal.pack(fill="x")
+        tree.configure(xscrollcommand=horizontal.set)
+        scale = float(tree.tk.call("tk", "scaling")) / (96.0 / 72.0)
+        for column, base_width in zip(columns, (82, 124, 76, 76, 76, 76, 85, 85, 96, 100, 100, 130, 155, 116, 100, 210)):
+            width = max(1, round(base_width * scale))
             tree.heading(column, text=headings[column])
-            tree.column(column, width=width, anchor="e")
+            tree.column(column, width=width, minwidth=width, stretch=False,
+                        anchor="w" if column in {"phase", "regime", "applicability"} else "e")
 
         arrays = {
             "q": _array(thermal, "heat_flux_w_m2"),
@@ -929,9 +1020,14 @@ class ThermalResultsPage(ResultPage):
             "pc": _array(thermal, "coolant_pressure_bar"),
             "wc": _array(thermal, "coolant_velocity_m_s"),
             "rho": _array(thermal, "coolant_density_kg_m3"),
+            "Re": _array(thermal, "coolant_reynolds"),
+            "Nu": _array(thermal, "coolant_nusselt"),
+            "hc_raw": _array(thermal, "coolant_raw_coefficient_w_m2k"),
             "quality": _coolant_quality_array(thermal),
         }
         regimes = _get(thermal, "coolant_flow_regime", default=[]) or []
+        phases = _get(thermal, "coolant_phase", default=[]) or []
+        applicability = _get(thermal, "station_applicability", default=[]) or []
 
         def value_at(key: str, index: int) -> float:
             values = arrays[key]
@@ -955,11 +1051,15 @@ class ThermalResultsPage(ResultPage):
                     display(value_at("pc", index), 3),
                     display(value_at("wc", index), 3),
                     display(value_at("rho", index), 2),
+                    display(value_at("Re", index), 1),
+                    display(value_at("Nu", index), 3),
+                    display(value_at("hc_raw", index), 2),
+                    str(applicability[index]) if len(applicability) == len(x) and applicability[index] else "—",
+                    str(phases[index]) if len(phases) == len(x) and phases[index] else "—",
                     display(value_at("quality", index), 4),
                     str(regimes[index]) if len(regimes) == len(x) and regimes[index] else "—",
                 ),
             )
-        fit_tree_columns(tree)
 
     def _smooth_values(self, values: np.ndarray) -> np.ndarray:
         if not self.smooth.get() or len(values) < 7:

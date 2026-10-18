@@ -29,7 +29,8 @@ def test_chen_bennett_matches_published_example_with_rectangular_mass_flux():
 
 
 def test_water_channel_continues_through_boiling_and_conserves_energy():
-    segment=regen();segment["coolant"]["mass_flow_kg_s"]=.025
+    # Keep the complete boiling path below x=0.7 with entry development enabled.
+    segment=regen();segment["coolant"]["mass_flow_kg_s"]=.05
     result=analyze_thermal(cylinder(),gas(3400.),[segment],settings())
     assert all(isfinite(v) for v in result.Twg)
     assert result.coolant_phase.count("two_phase")>5
@@ -41,7 +42,7 @@ def test_water_channel_continues_through_boiling_and_conserves_energy():
     balance=result.metadata["energy_balance_by_segment"]["water"]
     h_in=PropsSI("Hmass","T",290.,"P",40e5,"Water")
     h_out=result.coolant_outlet_enthalpy_j_kg["water"]
-    assert .025*(h_out-h_in)+balance["two_phase_kinetic_energy_change_w"]==pytest.approx(balance["heat_pickup_w"],abs=1e-3)
+    assert .05*(h_out-h_in)+balance["two_phase_kinetic_energy_change_w"]==pytest.approx(balance["heat_pickup_w"],abs=1e-3)
     assert abs(balance["residual_w"])<1e-3
 
 

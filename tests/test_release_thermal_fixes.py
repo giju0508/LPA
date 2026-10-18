@@ -227,6 +227,7 @@ def test_material_and_unsupported_nozzle_diagnostics_are_exported():
 
 def test_alsi_selected_build_warning_is_present_inside_the_data_range():
     segment=regen();segment.pop("wall_conductivity_w_mk");segment["material"]="AlSi10Mg"
+    segment["coolant"]["inlet_temperature_k"]=370.
     result=analyze_thermal(cylinder(),gas(),[segment],settings())
     assert all(373.15<=t<=673.15 for t in (*result.Twc,*result.Twi))
     assert any("AlSi10Mg" in issue and "manufacturing-condition" in issue for issue in result.physical_issues)

@@ -459,7 +459,7 @@ def test_auto_of_exit_mode_and_explicit_supply_state_pass_through_to_optimizer(a
 
 def test_auto_of_help_and_supply_pressure_hint_describe_actual_model(app, monkeypatch):
     engine = app.pages["engine"]
-    assert "maximum theoretical vacuum Isp" in " ".join(engine.automatic_mixture_ratio_checkbox.cget("text").split())
+    assert engine.automatic_mixture_ratio_checkbox.cget("text") == "Auto O/F: maximum theoretical vacuum Isp"
     style = ttk.Style(app)
     original_font = style.lookup("TCheckbutton", "font")
     try:

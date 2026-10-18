@@ -8,6 +8,7 @@ Dittus-Boelter and the wider-range Gnielinski correlations.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import lru_cache
 from math import exp, isfinite, log, log10, pi, sqrt, tanh
 
 
@@ -171,11 +172,12 @@ def gnielinski_nusselt(
     *,
     relative_roughness: float = 0.0,
 ) -> float:
-    """Gnielinski turbulent correlation with a transition blend.
+    """Circular fully developed Gnielinski result with 2013 transition limits.
 
-    A fully developed laminar value of 3.66 is used below Re=2300 and blended
-    to the turbulent expression through Re=3000.  This keeps a mesh march
-    numerically continuous when a channel crosses the transition range.
+    Gnielinski (2013), doi:10.1016/j.ijheatmasstransfer.2013.04.015,
+    interpolates between the laminar endpoint at Re=2300 and turbulent
+    endpoint at Re=4000. Rectangular/developing flow is handled separately by
+    ``internal_flow_heat_transfer`` rather than assuming this laminar limit.
     """
 
     reynolds = _positive(reynolds, "Reynolds number")
@@ -185,15 +187,152 @@ def gnielinski_nusselt(
     )
     if reynolds <= 2300.0:
         return 3.66
-    turbulent_reynolds = max(reynolds, 3000.0)
+    turbulent_reynolds = max(reynolds, 4000.0)
     friction = darcy_friction_factor(turbulent_reynolds, relative_roughness)
     numerator = (friction / 8.0) * (turbulent_reynolds - 1000.0) * prandtl
     denominator = 1.0 + 12.7 * sqrt(friction / 8.0) * (prandtl ** (2.0 / 3.0) - 1.0)
     turbulent = max(3.66, numerator / denominator)
-    if reynolds >= 3000.0:
+    if reynolds >= 4000.0:
         return turbulent
-    blend = (reynolds - 2300.0) / 700.0
+    blend = (reynolds - 2300.0) / 1700.0
     return 3.66 + blend * (turbulent - 3.66)
+
+
+# Gauss-Legendre abscissae and weights on [0, 1]. The square-coordinate
+# substitution in the cell integral removes the inlet z**(-1/2) singularity.
+_ENTRY_QUADRATURE = (
+    (0.001368069075259215, 0.003509305004735253),
+    (0.007194244227365809, 0.008137197365452872),
+    (0.017618872206246805, 0.012696032654631012),
+    (0.03254696203113017, 0.017136931456510882),
+    (0.051839422116973954, 0.021417949011113418),
+    (0.07531619313371501, 0.025499029631188046),
+    (0.10275810201602881, 0.029342046739267783),
+    (0.13390894062985514, 0.03291111138818084),
+    (0.16847786653489238, 0.03617289705442417),
+    (0.20614212137961885, 0.039096947893535114),
+    (0.24655004553388532, 0.041655962113473353),
+    (0.28932436193468236, 0.04382604650220189),
+    (0.33406569885893617, 0.04558693934788189),
+    (0.38035631887393145, 0.046922199540402255),
+    (0.42776401920860174, 0.047819360039637354),
+    (0.4758461671561308, 0.04827004425736383),
+    (0.5241538328438692, 0.04827004425736383),
+    (0.5722359807913983, 0.047819360039637354),
+    (0.6196436811260685, 0.046922199540402255),
+    (0.6659343011410639, 0.04558693934788189),
+    (0.7106756380653176, 0.04382604650220189),
+    (0.7534499544661146, 0.041655962113473353),
+    (0.7938578786203812, 0.039096947893535114),
+    (0.8315221334651076, 0.03617289705442417),
+    (0.8660910593701449, 0.03291111138818084),
+    (0.8972418979839711, 0.029342046739267783),
+    (0.924683806866285, 0.025499029631188046),
+    (0.948160577883026, 0.021417949011113418),
+    (0.9674530379688698, 0.017136931456510882),
+    (0.9823811277937532, 0.012696032654631012),
+    (0.9928057557726342, 0.008137197365452872),
+    (0.9986319309247408, 0.003509305004735253),
+)
+
+
+def _rectangular_poiseuille_number(aspect: float) -> float:
+    """Darcy f*Re, Shah-London fully developed rectangular duct."""
+    return 96.0 * (
+        1 - 1.3553*aspect + 1.9467*aspect**2 - 1.7012*aspect**3
+        + 0.9564*aspect**4 - 0.2537*aspect**5
+    )
+
+
+def _rectangular_fully_developed_nusselt(aspect: float) -> float:
+    return 8.235 * (
+        1 - 2.0421*aspect + 3.0853*aspect**2 - 2.4765*aspect**3
+        + 1.0578*aspect**4 - 0.1861*aspect**5
+    )
+
+
+def _turbulent_cell_entry_factor(diameter: float, start: float, length: float) -> float:
+    """Integrate local Nu implied by mean Nu=Nu_fd*(1+(Dh/L)**(2/3)).
+
+    Differencing L*mean_Nu at the cell faces is essential: using the mean
+    inlet-to-position factor independently in every cell double-counts entry
+    enhancement. The algebraic cube difference avoids cancellation far from
+    the inlet and remains finite for the first cell.
+    """
+    end = start+length
+    denominator = end**(2.0/3.0)+(start*end)**(1.0/3.0)+start**(2.0/3.0)
+    return 1.0+diameter**(2.0/3.0)/denominator
+
+
+def _developing_laminar_parameters(
+    prandtl: float, aspect: float | None, uniform_temperature: bool,
+) -> tuple[float, float, float, float, float, float]:
+    """Muzychka-Yovanovich (2004) Eq.21/22/43/46, Table 1.
+
+    The paper's f is Fanning, and its characteristic length is sqrt(A) for
+    ONE duct. Return lambda/Dh, f*Re_lambda, Nu_fd, C3, f(Pr), m.
+    """
+    if aspect is None:  # Circular duct limit, not a fictitious square duct.
+        length_ratio = sqrt(pi)/2.0
+        f_re = 16.0*length_ratio
+        shape = 1.0
+    else:
+        length_ratio = (1.0+aspect)/(2.0*sqrt(aspect))
+        f_re = 12.0/(sqrt(aspect)*(1.0+aspect)*(
+            1.0-192.0*aspect/pi**5*tanh(pi/(2.0*aspect))
+        ))
+        shape = aspect**0.1  # epsilon**gamma OUTSIDE sqrt(pi), Eq.22, gamma=1/10.
+    if uniform_temperature:
+        c1, c3, c0, c_infinity_ratio = 3.24, 0.409, 0.564, 1.664
+    else:
+        c1, c3, c0, c_infinity_ratio = 3.86, 0.501, 0.886, 1.909
+    nu_fd = c1*f_re/(8.0*sqrt(pi)*shape)
+    f_pr = c0/(1.0+(c_infinity_ratio*prandtl**(1.0/6.0))**4.5)**(2.0/9.0)
+    exponent = 2.27+1.65*prandtl**(1.0/3.0)
+    return length_ratio, f_re, nu_fd, c3, f_pr, exponent
+
+
+@lru_cache(maxsize=8192)
+def developing_laminar_cell_nusselt(
+    reynolds: float, prandtl: float, hydraulic_diameter_m: float,
+    distance_from_inlet_m: float, cell_length_m: float,
+    *, channel_aspect_ratio: float | None = None,
+    uniform_wall_temperature: bool = False,
+) -> float:
+    """Cell-average local combined-entry Nu, Muzychka-Yovanovich (2004).
+
+    Eq.45 with Table 1's LOCAL coefficients is integrated over the actual
+    heated cell. doi:10.1115/1.1643752. Constant-property, constant-section,
+    all-perimeter UWF/UWT reference; actual conjugate rocket channels require
+    a boundary-condition adaptation warning. Entry origin is the coolant
+    heated inlet, never the gas injector or total axial segment length.
+    """
+    reynolds = _positive(reynolds, "Reynolds number")
+    prandtl = _positive(prandtl, "Prandtl number")
+    diameter = _positive(hydraulic_diameter_m, "hydraulic diameter")
+    start = _positive(distance_from_inlet_m, "distance from heated inlet", allow_zero=True)
+    length = _positive(cell_length_m, "heated cell length")
+    aspect = channel_aspect_ratio
+    if aspect is not None:
+        aspect = _positive(aspect, "channel aspect ratio")
+        aspect = min(aspect, 1.0/aspect)
+    if prandtl < 0.1 or (aspect is not None and aspect < 0.01):
+        raise ValueError("developing laminar reference requires Pr >= 0.1 and rectangular aspect ratio >= 0.01")
+    ratio, f_re, nu_fd, c3, f_pr, exponent = _developing_laminar_parameters(
+        prandtl, aspect, uniform_wall_temperature,
+    )
+    thermal_length = reynolds*prandtl*diameter*ratio**2
+    total = 0.0
+    for coordinate, weight in _ENTRY_QUADRATURE:
+        z_star = (start+length*coordinate**2)/thermal_length
+        flat_plate = f_pr/sqrt(z_star)
+        leveque = c3*(f_re/z_star)**(1.0/3.0)
+        graetz = (leveque**5+nu_fd**5)**0.2
+        # Scaled power sum avoids overflow at large Pr or small first cells.
+        scale = max(flat_plate, graetz)
+        local_nu = scale*((flat_plate/scale)**exponent+(graetz/scale)**exponent)**(1.0/exponent)
+        total += weight*2.0*coordinate*local_nu
+    return total/ratio
 
 
 @dataclass(frozen=True, slots=True)
@@ -207,6 +346,9 @@ class InternalFlowHeatTransfer:
     flow_area_m2: float
     friction_factor: float
     warnings: tuple[str, ...] = ()
+    applicability: str = "screening"
+    flow_regime: str = ""
+    nusselt_model: str = ""
 
 
 def internal_flow_heat_transfer(
@@ -222,8 +364,17 @@ def internal_flow_heat_transfer(
     correlation: str = "gnielinski",
     channel_aspect_ratio: float | None = None,
     heated_length_m: float | None = None,
+    distance_from_inlet_m: float | None = None,
+    cell_length_m: float | None = None,
+    thermal_boundary_condition: str = "conjugate",
 ) -> InternalFlowHeatTransfer:
-    """Evaluate coolant-side convection for the sum of all parallel channels."""
+    """Coolant convection with local/cell-average entry development.
+
+    Paired distance/cell arguments are actual coolant-path lengths. Missing
+    distances retain fully developed legacy values and explicit warnings.
+    Finite properties are local bulk samples; the entry model does not solve
+    variable-property/history or the actual conjugate wall boundary condition.
+    """
 
     mass_flow_kg_s = _positive(mass_flow_kg_s, "coolant mass flow")
     total_flow_area_m2 = _positive(total_flow_area_m2, "channel flow area")
@@ -232,65 +383,106 @@ def internal_flow_heat_transfer(
     viscosity_pa_s = _positive(viscosity_pa_s, "coolant viscosity")
     conductivity_w_mk = _positive(conductivity_w_mk, "coolant conductivity")
     specific_heat_j_kgk = _positive(specific_heat_j_kgk, "coolant specific heat")
+    relative_roughness = _positive(relative_roughness, "relative roughness", allow_zero=True)
     velocity = mass_flow_kg_s / (density_kg_m3 * total_flow_area_m2)
     reynolds = density_kg_m3 * velocity * hydraulic_diameter_m / viscosity_pa_s
     prandtl = specific_heat_j_kgk * viscosity_pa_s / conductivity_w_mk
     name = str(correlation).strip().casefold().replace("-", "_")
-    warnings: list[str] = []
-    if name in {"dittus", "dittus_boelter", "db"}:
-        if reynolds < 2300.0:
-            nusselt = 3.66
-        else:
-            turbulent = dittus_boelter_nusselt(max(reynolds, 3000.0), prandtl)
-            if reynolds < 3000.0:
-                turbulent = 3.66 + (reynolds - 2300.0) / 700.0 * (turbulent - 3.66)
-            nusselt = turbulent
-    elif name in {"gnielinski", "gn"}:
-        nusselt = gnielinski_nusselt(
-            reynolds, prandtl, relative_roughness=relative_roughness
-        )
-    else:
+    if name not in {"dittus", "dittus_boelter", "db", "gnielinski", "gn"}:
         raise ValueError("correlation must be 'gnielinski' or 'dittus_boelter'")
-    friction = darcy_friction_factor(reynolds, relative_roughness)
-    if reynolds < 3000.0 and channel_aspect_ratio is not None:
+    warnings: list[str] = []
+    applicability = "screening"
+    boundary = str(thermal_boundary_condition).strip().casefold()
+    if boundary not in {"conjugate", "one_sided", "uniform_heat_flux", "uniform_wall_temperature"}:
+        raise ValueError("unknown internal-flow thermal boundary condition")
+    if (distance_from_inlet_m is None) != (cell_length_m is None):
+        raise ValueError("distance_from_inlet_m and cell_length_m must be supplied together")
+    if distance_from_inlet_m is not None:
+        distance_from_inlet_m = _positive(distance_from_inlet_m, "distance from heated inlet", allow_zero=True)
+        cell_length_m = _positive(cell_length_m, "heated cell length")
+    aspect = None
+    if channel_aspect_ratio is not None:
         aspect = _positive(channel_aspect_ratio, "channel aspect ratio")
         aspect = min(aspect, 1.0 / aspect)
-        # Shah & London fully developed rectangular-duct results: Darcy
-        # Poiseuille number and uniform heat flux on all four walls. The
-        # conjugate rocket-channel boundary condition is separately flagged.
-        laminar_friction = 96.0 / reynolds * (
-            1 - 1.3553*aspect + 1.9467*aspect**2 - 1.7012*aspect**3
-            + 0.9564*aspect**4 - 0.2537*aspect**5
-        )
-        laminar_nusselt = 8.235 * (
-            1 - 2.0421*aspect + 3.0853*aspect**2 - 2.4765*aspect**3
-            + 1.0578*aspect**4 - 0.1861*aspect**5
-        )
-        if reynolds < 2300.0:
-            friction, nusselt = laminar_friction, laminar_nusselt
-            warnings.append("laminar rectangular Nu uses uniform all-wall heat flux; conjugate boundary requires validation")
-        else:
-            blend=(reynolds-2300.0)/700.0
-            turbulent_nusselt=(dittus_boelter_nusselt(3000.,prandtl)
-                if name in {"dittus","dittus_boelter","db"}
-                else gnielinski_nusselt(3000.,prandtl,relative_roughness=relative_roughness))
-            nusselt=laminar_nusselt+blend*(turbulent_nusselt-laminar_nusselt)
-            friction=laminar_friction+blend*(darcy_friction_factor(3000.,relative_roughness)-laminar_friction)
-    if 2300.0 <= reynolds < 3000.0:
-        warnings.append("transition heat-transfer blend is not experimentally validated")
-    if name in {"gnielinski", "gn"} and reynolds >= 3000 and (
+    poiseuille = 64.0 if aspect is None else _rectangular_poiseuille_number(aspect)
+    uniform_temperature = boundary == "uniform_wall_temperature"
+    developing = distance_from_inlet_m is not None
+    if reynolds < 4000.0 and boundary in {"conjugate", "one_sided"}:
+        warnings.append("laminar rectangular Nu uses uniform all-wall heat flux reference; conjugate/one-sided heated boundary requires validation")
+    if reynolds < 4000.0 and developing and (prandtl < 0.1 or (aspect is not None and aspect < 0.01)):
+        developing = False
+        applicability = "unsupported"
+        warnings.append("developing laminar correlation outside Pr >= 0.1 / aspect ratio >= 0.01 domain; fully developed diagnostic fallback")
+
+    def laminar_at(value: float) -> float:
+        if developing:
+            return developing_laminar_cell_nusselt(
+                value, prandtl, hydraulic_diameter_m, distance_from_inlet_m, cell_length_m,
+                channel_aspect_ratio=aspect, uniform_wall_temperature=uniform_temperature,
+            )
+        if aspect is None:
+            return 3.66
+        if uniform_temperature:
+            ratio, _f_re, nu_fd, *_rest = _developing_laminar_parameters(prandtl, aspect, True)
+            return nu_fd/ratio
+        return _rectangular_fully_developed_nusselt(aspect)
+
+    def turbulent_at(value: float) -> float:
+        if name in {"dittus", "dittus_boelter", "db"}:
+            return dittus_boelter_nusselt(value, prandtl)
+        value = gnielinski_nusselt(value, prandtl, relative_roughness=relative_roughness)
+        if distance_from_inlet_m is not None:
+            value *= _turbulent_cell_entry_factor(hydraulic_diameter_m, distance_from_inlet_m, cell_length_m)
+        return value
+
+    if reynolds <= 2300.0:
+        nusselt = laminar_at(reynolds)
+        friction = poiseuille/reynolds
+        regime = "laminar"
+    elif reynolds < 4000.0:
+        blend = (reynolds-2300.0)/1700.0
+        lower = laminar_at(2300.0)
+        upper = turbulent_at(4000.0)
+        nusselt = (1.0-blend)*lower+blend*upper
+        friction = (1.0-blend)*poiseuille/2300.0+blend*darcy_friction_factor(4000.0, relative_roughness)
+        regime = "transition"
+        warnings.append("Gnielinski (2013) Re=2300..4000 transition interpolation; rectangular/conjugate adaptation is not experimentally validated")
+        warnings.append("transition Darcy friction uses continuous endpoint interpolation; transition hydraulics require validation")
+        if lower > upper:
+            warnings.append("short-entry laminar endpoint exceeds turbulent endpoint; transition interpolation is non-monotone and requires validation")
+    else:
+        nusselt = turbulent_at(reynolds)
+        friction = darcy_friction_factor(reynolds, relative_roughness)
+        regime = "turbulent"
+    model = "fully developed internal flow"
+    if developing and reynolds < 4000:
+        model = "Muzychka-Yovanovich (2004) cell-average combined-entry " + ("UWT" if uniform_temperature else "UWF")
+    elif distance_from_inlet_m is not None and name in {"gnielinski", "gn"}:
+        model = "Gnielinski cell-average thermal-entry correction"
+    if developing and reynolds < 4000:
+        warnings.append("developing laminar reference assumes constant section/properties and uniform inlet profiles; local-property channel adaptation requires validation")
+        warnings.append("laminar Darcy friction uses fully developed duct reference; hydrodynamic entrance pressure loss is not included")
+    if distance_from_inlet_m is not None and reynolds > 2300 and name in {"gnielinski", "gn"}:
+        warnings.append("turbulent thermal-entry factor adapted from circular tubes; rectangular/conjugate channel requires validation")
+    if name in {"gnielinski", "gn"} and reynolds > 2300 and (
         reynolds > 5e6 or not 0.5 <= prandtl <= 2000
     ):
+        applicability = "unsupported"
         warnings.append("Gnielinski Reynolds/Prandtl applicability range exceeded")
-    if name in {"dittus", "dittus_boelter", "db"} and (
+    if name in {"dittus", "dittus_boelter", "db"} and reynolds > 2300 and (
         reynolds < 10000 or not 0.7 <= prandtl <= 160
     ):
+        applicability = "unsupported"
         warnings.append("Dittus-Boelter Reynolds/Prandtl applicability range exceeded")
-    if heated_length_m is not None and heated_length_m > 0:
-        if reynolds < 2300 and heated_length_m < 0.05 * reynolds * prandtl * hydraulic_diameter_m:
+    if distance_from_inlet_m is None:
+        if reynolds < 4000:
+            warnings.append("heated inlet distance/cell length unavailable; fully developed laminar reference used")
+        if heated_length_m is not None and heated_length_m > 0 and reynolds < 2300 and heated_length_m < 0.05 * reynolds * prandtl * hydraulic_diameter_m:
             warnings.append("thermal entrance region: fully developed laminar correlation not applicable")
-        elif reynolds >= 2300 and heated_length_m < 10 * hydraulic_diameter_m:
-            warnings.append("short heated entrance region: fully developed turbulent correlation unverified")
+    entry_distance = distance_from_inlet_m if distance_from_inlet_m is not None else heated_length_m
+    if reynolds >= 4000 and entry_distance is not None:
+        if entry_distance < 10 * hydraulic_diameter_m:
+            warnings.append("short turbulent entrance: circular-tube correction and inlet-profile assumptions require validation")
     coefficient = nusselt * conductivity_w_mk / hydraulic_diameter_m
     return InternalFlowHeatTransfer(
         coefficient_w_m2k=coefficient,
@@ -302,6 +494,9 @@ def internal_flow_heat_transfer(
         flow_area_m2=total_flow_area_m2,
         friction_factor=friction,
         warnings=tuple(warnings),
+        applicability=applicability,
+        flow_regime=regime,
+        nusselt_model=model,
     )
 
 

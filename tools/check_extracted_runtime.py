@@ -40,7 +40,7 @@ assert Path(ht.__file__).resolve().is_relative_to(bundle)
 assert Path(fluids.__file__).resolve().is_relative_to(bundle)
 lng=get_coolant_model('LNG').at_state(150,25e5)
 assert lng.phase=='liquid' and 380<lng.density_kg_m3<390
-regen['coolant']['mass_flow_kg_s']=.025
+regen['coolant']['mass_flow_kg_s']=.05
 gas['combustion_temperature_k']=3400
 boiling=analyze_thermal(contour,gas,[regen],ThermalSolverSettings(resolution='Low',gas_emissivity=0))
 assert boiling.coolant_phase.count('two_phase')>5
@@ -48,5 +48,11 @@ assert all(__import__('math').isfinite(v) for v in boiling.Twg)
 assert abs(boiling.metadata['energy_balance_by_segment']['water']['residual_w'])<1e-3
 record['beta_boiling']={'two_phase_stations':boiling.coolant_phase.count('two_phase'),'physical_validity':boiling.physical_validity,'energy_balance':boiling.metadata['energy_balance_by_segment']}
 record['LNG_150K_25bar_density']=lng.density_kg_m3
+rp1=get_coolant_model('RP-1').at_state(450.,20e5)
+assert rp1.property_applicability=='unsupported' and __import__('math').isnan(rp1.viscosity_pa_s)
+assert 'NISTIR 6646' in rp1.transport_source
+record['RP1_450K_20bar']={'property_applicability':rp1.property_applicability,
+    'phase':rp1.phase,'viscosity_available':False,'transport_source':rp1.transport_source}
+record['thermal_wall_solution_complete']=thermal.metadata['wall_solution_complete']
 record['automatic_of']={'objective':optimum.objective,'source':optimum.source,'mixture_ratio':optimum.mixture_ratio,'theoretical_vacuum_isp_s':optimum.vacuum_isp_s}
 output.write_text(json.dumps(record,indent=2),encoding='utf-8');print(json.dumps(record,indent=2))
