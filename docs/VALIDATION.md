@@ -308,7 +308,7 @@ RPA 유동 관계식은 같은 Me/K로 평가했을 때의 실측 일치이며, 
 | EXE SHA-256 | `f9eb9b300cf2d09b88263d17e9d6dbc1a2d26dad9a598db5ac299be8a6f8ba98` |
 | Beta ZIP | `LPA-0.16.0b2-Windows-x64-Beta.zip`, **81,212,876 bytes**. EXE·README·third-party notices/licenses 포함, ZIP 무결성 및 EXE/README 원본 일치. `release_manifest.json` |
 | ZIP SHA-256 | `f9be161ddc6c61b3a50f3df09f961a26ed33aece510529c4eb4efb5e15c4d7ea` |
-| 게시 상태 | 이 기록 작성 시점에 **GitHub b2 게시는 아직 수행 전**. 게시 성공·서버 digest 일치는 후속 실제 게시 결과로 별도 기록 |
+| GitHub 게시 확인 | 기존 비공개 **giju0508/LPA** main 및 **v0.16.0b2** tag 업로드, **Beta prerelease 게시 완료**. release ID **416639211**, release code commit **c766e63474d3eaff935995e8924e60a9db85ef8a**. ZIP·RocketCEA 대응 소스·SHA256SUMS **3개 asset uploaded**, 각 GitHub 서버 SHA-256 digest가 로컬 파일과 일치. 공개 범위 유지. `github_publication.json` |
 | 미수행 검증 | **clean PC/VM**, 실제 **VS Code/Code Runner UI 자동조작**, 실제 OS DPI 전환, 코드 서명·보안 스캐너 및 연소/열시험은 수행하지 않음 |
 
 `KeyboardInterrupt` traceback은 중단 신호를 받은 실행 위치를 나타낸다. Matplotlib import 위치에서 중단되었다는 사실과 글로벌 Python에서 두 의존성이 누락되었던 사실은 구분하며, 누락된 의존성을 원래 `KeyboardInterrupt`의 직접 원인으로 확정하지 않는다. 소스 GUI smoke는 명시한 Python의 실행·응답·정상 종료 검증이며 VS Code 확장의 실제 실행 설정이나 Stop 버튼을 자동 조작한 시험이 아니다. b1에 명시한 열전달 Beta의 물리 적용 한계는 그대로 유지한다.
