@@ -1,0 +1,31 @@
+{
+  "checked_utc": "2026-10-18T20:24:41.042997+00:00",
+  "authentication": "none",
+  "repository_public": true,
+  "release_url": "https://github.com/giju0508/LPA/releases/tag/v0.18.0b1",
+  "published": true,
+  "prerelease": true,
+  "most_recent_published_release": "v0.18.0b1",
+  "stable_latest_badge_claimed": false,
+  "tag_code_commit": "18d7bc3e377c58a98cb51422ec69f72e4e3dfe46",
+  "asset_checks": [
+    {
+      "asset": "LPA-0.18.0b1-Windows-x64-Beta.zip",
+      "http_status": 200,
+      "bytes": 81548180,
+      "digest": "sha256:b0e2838a66f10e561aab27d1d7d28f954dee57151934823d3fff17cf3f304889"
+    },
+    {
+      "asset": "rocketcea-1.2.3.tar.gz",
+      "http_status": 200,
+      "bytes": 69126862,
+      "digest": "sha256:66f306407f11ba36186342dc2716417d3a5c9d94c95b0c5663380091bb11caa9"
+    },
+    {
+      "asset": "SHA256SUMS.txt",
+      "http_status": 200,
+      "bytes": 266,
+      "digest": "sha256:2769e5fa8e5da1ef12e41005486414e6e8517505a34c088f7c49f3e0c51d19ec"
+    }
+  ]
+}
