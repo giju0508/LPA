@@ -1,0 +1,4 @@
+LPA-0.18.1b1-Windows-x64-Beta.zip 200 81691502
+rocketcea-1.2.3.tar.gz 200 69126862
+SHA256SUMS.txt 200 266
+Anonymous publication verification PASS
