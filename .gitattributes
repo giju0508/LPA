@@ -11,3 +11,4 @@
 
 # Preserve original release tool output bytes, including Windows line endings.
 docs/coolant_review_outputs_0180/*.txt -text
+docs/thermal_review_outputs_0181/*.txt -text

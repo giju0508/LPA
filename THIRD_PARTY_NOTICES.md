@@ -1,4 +1,4 @@
-# Third-party components in LPA 0.18.0b1 Beta
+# Third-party components in LPA 0.18.1b1 Beta
 
 The application uses the pinned packages in requirements.txt. Their original
 copyright and license terms apply to those components. The Windows release ZIP

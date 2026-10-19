@@ -27,6 +27,8 @@ for document in (ROOT/'docs').glob('*.md'):
     members['docs/'+document.name]=document
 for screenshot in (ROOT/'docs/ui_layout_outputs_0180').glob('*.png'):
     members['docs/ui_layout_outputs_0180/'+screenshot.name]=screenshot
+for screenshot in (ROOT/'docs/thermal_review_outputs_0181').glob('*.png'):
+    members['docs/thermal_review_outputs_0181/'+screenshot.name]=screenshot
 pending=['numpy','scipy','matplotlib','CoolProp','rocketcea','ht','fluids']
 seen=set()
 while pending:

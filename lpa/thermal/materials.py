@@ -36,6 +36,8 @@ class ThermalMaterial:
     conductivity_w_mk: tuple[float, ...]
     reference: MaterialReference
     manufacturing_condition: str
+    melting_temperature_k: float | None = None
+    melting_reference: MaterialReference | None = None
 
     def __post_init__(self) -> None:
         if len(self.temperatures_k) != len(self.conductivity_w_mk):
@@ -46,6 +48,12 @@ class ThermalMaterial:
             raise ValueError("material temperatures must be strictly increasing")
         if any(value <= 0 or not isfinite(value) for value in self.conductivity_w_mk):
             raise ValueError("thermal conductivity values must be finite and positive")
+        if (self.melting_temperature_k is None) != (self.melting_reference is None):
+            raise ValueError("a melting temperature requires its own source reference")
+        if self.melting_temperature_k is not None and (
+            not isfinite(self.melting_temperature_k) or self.melting_temperature_k <= 0
+        ):
+            raise ValueError("melting temperature must be finite and positive")
 
     @property
     def valid_temperature_range_k(self) -> tuple[float, float]:
@@ -101,6 +109,26 @@ _CUCRZR_REFERENCE = MaterialReference(
         "embedded elevated-temperature curve is a rounded screening curve "
         "consistent with the reported LPBF electrical/thermal trend; verify "
         "the actual build and heat lot for detailed design."
+    ),
+)
+
+_CUCRZR_MELTING_REFERENCE = MaterialReference(
+    title="CuCrZr PNA 372 material datasheet, Physical properties, page 1",
+    authors_or_organization="Aurubis Stolberg",
+    year=2026,
+    identifier="PNA 372, UNS C18150, EN_2026_01",
+    url=(
+        "https://www.aurubis.com/dam/"
+        "jcr%3Ad6d50d64-69d6-4742-821d-8fb8b48c9044/"
+        "PNA%20372_CuCrZr_C18150-En.pdf"
+    ),
+    notes=(
+        "Supplier nominal melting point 1081 C (1354.15 K), not a measured "
+        "solidus/liquidus interval or allowable service temperature. This "
+        "wrought-alloy reference is a solid-wall consistency diagnostic; "
+        "it does not qualify the LPBF alloy, actual composition, build or "
+        "heat lot used by the separate conductivity curve. Strength loss, "
+        "softening and structural failure can occur below this temperature."
     ),
 )
 
@@ -178,6 +206,8 @@ MATERIALS: dict[str, ThermalMaterial] = {
         conductivity_w_mk=(314.3, 318.0, 323.0, 328.0, 333.0, 337.0, 341.0, 344.0),
         reference=_CUCRZR_REFERENCE,
         manufacturing_condition="LPBF, direct aged at 450 C",
+        melting_temperature_k=1081.0 + 273.15,
+        melting_reference=_CUCRZR_MELTING_REFERENCE,
     ),
     "IN625": ThermalMaterial(
         name="IN625",
@@ -253,6 +283,30 @@ def thermal_conductivity(name: object, temperature_k: float) -> float:
     return get_material(name).conductivity(temperature_k)
 
 
+def material_phase_limit_issue(name: object, temperature_k: float) -> str | None:
+    """Flag a base-wall temperature incompatible with a sourced solid wall.
+
+    This is a consistency check, not a failure/life calculation. A missing
+    melting reference or a lower predicted temperature does not establish
+    safe service, and conductivity-table bounds remain independent.
+    """
+
+    material = get_material(name)
+    temperature_k = float(temperature_k)
+    if not isfinite(temperature_k) or temperature_k <= 0:
+        raise ValueError("temperature must be finite and positive")
+    limit = material.melting_temperature_k
+    if limit is None or temperature_k < limit:
+        return None
+    return (
+        f"{material.name}: base-wall temperature {temperature_k:.2f} K reaches/exceeds "
+        f"supplier reference melting point {limit:.2f} K; solid-wall assumption "
+        "invalid and structural integrity cannot be inferred. Melting, ablation "
+        "and structural failure are not modelled; the supplier wrought-alloy "
+        "reference does not qualify the actual LPBF build/composition/heat lot."
+    )
+
+
 def material_reference_metadata() -> dict[str, dict[str, object]]:
     """Return serialisable property provenance for reports/project exports."""
 
@@ -271,6 +325,18 @@ def material_reference_metadata() -> dict[str, dict[str, object]]:
                 if name in {"CuCrZr","C103"} else
                 "digitized selected LPBF experimental series" if name=="AlSi10Mg" else
                 "published supplier/NASA tabulation"
+            ),
+            "melting_temperature_k": material.melting_temperature_k,
+            "melting_reference": (
+                {
+                    "title": material.melting_reference.title,
+                    "authors_or_organization": material.melting_reference.authors_or_organization,
+                    "year": material.melting_reference.year,
+                    "identifier": material.melting_reference.identifier,
+                    "url": material.melting_reference.url,
+                    "notes": material.melting_reference.notes,
+                }
+                if material.melting_reference is not None else None
             ),
         }
         for name, material in MATERIALS.items()

@@ -104,6 +104,65 @@ def _thermal_completion_details(thermal: Any) -> dict[str, Any]:
     }
 
 
+def _thermal_wall_sampling_note(thermal: Any) -> str:
+    """Explain finite-cell wall values only for results that report this basis."""
+
+    sampling = _mapping(_get(thermal, "metadata.wall_sampling", default={}))
+    if not sampling:
+        return ""
+    text = "Single-phase Regen wall temperatures are finite-cell averages plotted at station locations."
+    if sampling.get("inlet_endpoint_is_point_temperature") is False:
+        text += " Inlet-edge values depend on cell length; the inlet dip is not an exact boundary-point temperature."
+    validity = _get(thermal, "physical_validity", default="")
+    if validity == "invalid":
+        text += " Physical applicability is invalid; these temperatures do not establish a valid solid-wall or coolant state."
+    elif (validity == "unsupported"
+            or _thermal_completion_details(thermal)["unsupported_station_count"]):
+        text += " Unsupported results remain diagnostic; numerical completion does not validate the channel."
+    return text
+
+
+def _coolant_inlet_markers(thermal: Any) -> list[tuple[float, str, str]]:
+    """Use explicitly reported inlet coordinates, never infer them from Tc."""
+
+    entries = _mapping(_get(thermal, "metadata.coolant_entrance_diagnostics_by_segment", default={}))
+    names = _mapping(_get(thermal, "segment_names", default={}))
+    grouped: dict[float, tuple[list[str], str]] = {}
+    for identifier, raw in entries.items():
+        entry = _mapping(raw)
+        inlet_m = _number(entry.get("inlet_x_m"))
+        if not math.isfinite(inlet_m):
+            continue
+        position = inlet_m * 1000.0
+        name = str(names.get(identifier, "Regen"))
+        direction = str(entry.get("flow_direction", ""))
+        if position not in grouped:
+            grouped[position] = ([], direction)
+        grouped[position][0].append(name)
+    return [(position, "Coolant inlet · " + ", ".join(names), direction)
+            for position, (names, direction) in grouped.items()]
+
+
+def _reference_melting_lines(thermal: Any) -> list[tuple[float, str]]:
+    """Show an exceeded material reference only when an active circuit reports it."""
+
+    if _get(thermal, "physical_validity", default="") != "invalid":
+        return []
+    active = {str(identifier) for identifier in _get(thermal, "active_segment_id", default=[]) or [] if identifier}
+    properties = _mapping(_get(thermal, "metadata.coolant_property_metadata", default={}))
+    references: dict[tuple[str, float], None] = {}
+    for identifier, raw in properties.items():
+        if str(identifier) not in active:
+            continue
+        assessment = _mapping(_mapping(raw).get("wall_material_assessment"))
+        count = _number(assessment.get("cells_above_reference_melting_point"), 0.)
+        temperature = _number(assessment.get("reference_melting_temperature_k"))
+        material = str(assessment.get("material") or "").strip()
+        if material and math.isfinite(count) and count > 0 and math.isfinite(temperature) and temperature > 0:
+            references[(material, temperature)] = None
+    return [(temperature, material + " reference melting") for material, temperature in references]
+
+
 def _thermal_two_phase_regions(thermal: Any, x: np.ndarray) -> list[tuple[float, float, str | None]]:
     """Return contiguous phase cells, including a diagnosed unsolved cell."""
 
@@ -291,6 +350,9 @@ class ResultPage(ttk.Frame):
                                                          if len(finite_quality) else "not reported"),
                           "Coolant heat-transfer correlation / regime: " + (json.dumps(counts, ensure_ascii=False) if counts else "not reported")]
             lines[3:3] = _mixture_boiling_diagnostics(thermal)
+            sampling_note = _thermal_wall_sampling_note(thermal)
+            if sampling_note:
+                lines[3:3] = [sampling_note]
         lines.extend(f"{index}. {warning}" for index, warning in enumerate(self.report_warnings, 1))
         if not self.report_warnings:
             lines.append("No reported warnings.")
@@ -642,6 +704,7 @@ class ThermalResultsPage(ResultPage):
         self.axis = self.figure.add_subplot(111)
         self.contour_axis = None
         self.panel: FigurePanel | None = None
+        self.wall_sampling_note: ttk.Label | None = None
         self.circuit_tree: ttk.Treeview | None = None
         self.channel_geometry_tree: ttk.Treeview | None = None
         self.axial_tree: ttk.Treeview | None = None
@@ -658,6 +721,7 @@ class ThermalResultsPage(ResultPage):
         self.channel_geometry_tree = None
         self.axial_tree = None
         self.panel = None
+        self.wall_sampling_note = None
         self.scroll.pack(fill="both", expand=True)
         self.scroll.scroll_to_top()
         thermal = _get(data, "thermal", default={})
@@ -918,6 +982,13 @@ class ThermalResultsPage(ResultPage):
                 style="Muted.TLabel", wraplength=700)
             note.pack(fill="x", pady=(2, 0))
             note.bind("<Configure>", lambda event: note.configure(wraplength=max(120, event.width - 8)), add="+")
+        sampling_text = _thermal_wall_sampling_note(thermal)
+        if sampling_text:
+            self.wall_sampling_note = ttk.Label(self.shell, text=sampling_text,
+                style="Muted.TLabel", wraplength=700)
+            self.wall_sampling_note.pack(fill="x", pady=(0, 7))
+            self.wall_sampling_note.bind("<Configure>", lambda event, item=self.wall_sampling_note:
+                item.configure(wraplength=max(120, event.width-8)), add="+")
         self.panel = FigurePanel(self.shell, self.figure)
         self.panel.pack(fill="x")
         self.panel.canvas.mpl_connect("resize_event", self._on_figure_resize)
@@ -954,6 +1025,8 @@ class ThermalResultsPage(ResultPage):
                   "coolant_temperature_glide_k": ("coolant_temperature_glide_k",),
                   "coolant_boiling_mass_transfer_factor": ("coolant_boiling_mass_transfer_factor",),
                   "coolant_boiling_convective_factor": ("coolant_boiling_convective_factor",),
+                  "sampled_cell_twg_min_k": ("wall_temperature_min_k",),
+                  "sampled_cell_twg_max_k": ("wall_temperature_max_k",),
                   "gas_coefficient_w_m2k": ("gas_coefficient_w_m2k",),
                   "coolant_coefficient_w_m2k": ("coolant_coefficient_w_m2k",),
                   "film_effectiveness": ("film_effectiveness",)}
@@ -969,7 +1042,8 @@ class ThermalResultsPage(ResultPage):
         source_keys = ("model_capabilities", "coolant_property_sources", "coolant_property_metadata", "material_references", "gas_state_source",
                        "gas_side_model", "coolant_side_model", "wall_model", "radiation_model", "film_model",
                        "two_phase_model", "two_phase_model_by_segment", "mixture_boiling_model",
-                       "coolant_outlet_phase", "coolant_outlet_enthalpy_j_kg", "regen_segment_completion")
+                       "coolant_outlet_phase", "coolant_outlet_enthalpy_j_kg", "regen_segment_completion",
+                       "wall_sampling", "coolant_entrance_diagnostics_by_segment")
         sources = json.dumps({key: metadata[key] for key in source_keys if key in metadata},
                              ensure_ascii=False, default=str)
         hot_wall = _array(thermal, "twg_k", "Twg_K", "Twg")
@@ -1259,6 +1333,25 @@ class ThermalResultsPage(ResultPage):
             if value is not None:
                 self.axis.axvline(float(value), color=COLORS["success"], linewidth=0.8, linestyle="--")
                 self.axis.text(float(value), 0.5, text, color=COLORS["success"], rotation=90, transform=self.axis.get_xaxis_transform(), va="center", fontsize=8)
+        for position, label, direction in _coolant_inlet_markers(thermal):
+            if not len(x) or not np.isfinite(x).any() or not np.nanmin(x) <= position <= np.nanmax(x):
+                continue
+            # A short tick leaves the temperature curves and contour visible;
+            # inlet text is an annotation, not another legend category.
+            self.contour_axis.plot([position, position], [0.018, 0.06],
+                           transform=self.contour_axis.get_xaxis_transform(),
+                           color=COLORS["plot_cool"], linewidth=1.1, label="_coolant_inlet", zorder=4)
+            offset = -5 if direction == "counterflow" else 5
+            self.contour_axis.annotate(label, xy=(position, 0.065), xycoords=("data", "axes fraction"),
+                               xytext=(offset, 0), textcoords="offset points", rotation=90,
+                               ha="right" if offset < 0 else "left", va="bottom",
+                               fontsize=7, color=COLORS["plot_cool"], zorder=5,
+                               bbox={"facecolor": COLORS["surface"], "edgecolor": "none", "alpha": 0.82, "pad": 1})
+        for temperature, label in _reference_melting_lines(thermal):
+            # The material reference is not a temperature sample. Keep the
+            # y limits based solely on calculated temperature arrays below.
+            self.axis.axhline(temperature, color=COLORS["danger"], linestyle=":",
+                             linewidth=1.1, label=label)
         lines, labels = self.axis.get_legend_handles_labels()
         phase_handles, phase_labels = self.contour_axis.get_legend_handles_labels()
         lines.extend(phase_handles)

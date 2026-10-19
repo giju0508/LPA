@@ -139,6 +139,8 @@ class ThermalAnalysisResult:
     coolant_boiling_mass_transfer_factor: tuple[float, ...] = ()
     coolant_boiling_convective_factor: tuple[float, ...] = ()
     coolant_wet_wall_assumed: tuple[bool | None, ...] = ()
+    wall_temperature_min_k: tuple[float, ...] = ()
+    wall_temperature_max_k: tuple[float, ...] = ()
 
     def __post_init__(self) -> None:
         station_count = self.section_count
@@ -150,7 +152,7 @@ class ThermalAnalysisResult:
             self.coolant_flow_regime = (None,) * station_count
         for name in ("coolant_reynolds", "coolant_nusselt", "coolant_raw_coefficient_w_m2k",
                      "coolant_temperature_glide_k", "coolant_boiling_mass_transfer_factor",
-                     "coolant_boiling_convective_factor"):
+                     "coolant_boiling_convective_factor","wall_temperature_min_k","wall_temperature_max_k"):
             if not getattr(self, name):
                 setattr(self, name, (float("nan"),) * station_count)
         if not self.station_applicability:
@@ -185,6 +187,8 @@ class ThermalAnalysisResult:
             "coolant_boiling_mass_transfer_factor": self.coolant_boiling_mass_transfer_factor,
             "coolant_boiling_convective_factor": self.coolant_boiling_convective_factor,
             "coolant_wet_wall_assumed": self.coolant_wet_wall_assumed,
+            "wall_temperature_min_k":self.wall_temperature_min_k,
+            "wall_temperature_max_k":self.wall_temperature_max_k,
         }
         wrong = [name for name, values in arrays.items() if len(values) != station_count]
         if wrong:

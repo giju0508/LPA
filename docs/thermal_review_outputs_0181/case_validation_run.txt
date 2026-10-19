@@ -1,0 +1,91 @@
+USER_HOME_DIR=C:\Users\LGJ
+INFO:lpa.thermal.solver:regen start id=circuit_1 coolant=RP-1 T_K=293 p_bar=20 mdot_kg_s=0.333804 source=LPA fitted trans-decalin/n-dodecane engineering surrogate; public NIST constituent EOS phase=liquid
+INFO:lpa.thermal.solver:regen model id=circuit_1 transport=Ely-Hanley NBS TN 1039 (1981) TRAPP; supplied phase density + RP-1 residual correction; NIST corrected-conductivity fit property_applicability=correlated pure_boiling=auto mixture_boiling=shah_gungor_winterton beta_m_s=0.0003 wet_wall_only=True CHF_predicted=False dryout_predicted=False
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: laminar rectangular Nu uses uniform all-wall heat flux reference; conjugate/one-sided heated boundary requires validation
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: developing laminar reference assumes constant section/properties and uniform inlet profiles; local-property channel adaptation requires validation
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: laminar Darcy friction uses fully developed duct reference; hydrodynamic entrance pressure loss is not included
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: RP-1 uses a newly fitted two-component engineering surrogate, not the published NIST four-component RP-1 model
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: RP-1 surrogate density calibration and independent Cp/transport checks do not validate an individual fuel lot or its vapor-liquid envelope
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: RP-1 high-temperature transport remains predictive; thermal decomposition/coking and deposit resistance are not modelled
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: RP-1 viscosity uses a low-temperature empirical residual correction to TRAPP; conductivity is a separate radiation-corrected NIST-data fit
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: TRAPP nonpolar one-fluid transport is predictive; composition-specific experimental validation required
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: Supplied phase density replaces the original TRAPP pVT calculation; reported historical errors are not a validation of this adaptation
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: Critical thermal-conductivity enhancement and mixture diffusion/critical anomalies are not represented
+WARNING:lpa.thermal.solver:thermal applicability=unsupported: circuit_1: coolant-side wall exceeds saturation/bubble temperature; subcooled boiling/CHF/dryout unsupported
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: CuCrZr conductivity uses selected source/screening data; actual lot/build and manufacturing-condition validation required
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: hydrocarbon cracking/coking and deposit resistance/lifetime require fuel/material-specific validation
+WARNING:lpa.thermal.solver:thermal applicability=unsupported: circuit_1: CuCrZr: wall temperature outside conductivity data range [293.15, 973.15] K; out-of-range conductivity queries clamp to endpoints; wall solution is diagnostic only
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: Gnielinski (2013) Re=2300..4000 transition interpolation; rectangular/conjugate adaptation is not experimentally validated
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: transition Darcy friction uses continuous endpoint interpolation; transition hydraulics require validation
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: turbulent thermal-entry factor adapted from circular tubes; rectangular/conjugate channel requires validation
+WARNING:lpa.thermal.solver:thermal applicability=invalid: circuit_1: CuCrZr: base-wall temperature 1511.74 K reaches/exceeds supplier reference melting point 1354.15 K; solid-wall assumption invalid and structural integrity cannot be inferred. Melting, ablation and structural failure are not modelled; the supplier wrought-alloy reference does not qualify the actual LPBF build/composition/heat lot. (14 wall cells)
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: RP-1 uses a newly fitted two-component engineering surrogate, not the published NIST four-component RP-1 model
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: RP-1 surrogate density calibration and independent Cp/transport checks do not validate an individual fuel lot or its vapor-liquid envelope
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: RP-1 high-temperature transport remains predictive; thermal decomposition/coking and deposit resistance are not modelled
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: RP-1 viscosity uses a low-temperature empirical residual correction to TRAPP; conductivity is a separate radiation-corrected NIST-data fit
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: TRAPP nonpolar one-fluid transport is predictive; composition-specific experimental validation required
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: Supplied phase density replaces the original TRAPP pVT calculation; reported historical errors are not a validation of this adaptation
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: Critical thermal-conductivity enhancement and mixture diffusion/critical anomalies are not represented
+INFO:lpa.thermal.solver:regen outlet id=circuit_1 T_K=612.155 p_bar=19.6779 h_J_kg=504439 phase=liquid x_mass=nan solved=120/120
+INFO:lpa.thermal.solver:regen entrance id=circuit_1 inlet_x_m=0.231278 Re=2224.63 regime=laminar first_cell_m=0.000558019 first_cell_Twg_K=725.136 peak_Twg_K=1500.09 cell_average_not_boundary_point=True
+Low: 120 solved, peak 1500.088413 K, inlet cell 725.135847 K, invalid
+INFO:lpa.thermal.solver:regen start id=circuit_1 coolant=RP-1 T_K=293 p_bar=20 mdot_kg_s=0.333804 source=LPA fitted trans-decalin/n-dodecane engineering surrogate; public NIST constituent EOS phase=liquid
+INFO:lpa.thermal.solver:regen model id=circuit_1 transport=Ely-Hanley NBS TN 1039 (1981) TRAPP; supplied phase density + RP-1 residual correction; NIST corrected-conductivity fit property_applicability=correlated pure_boiling=auto mixture_boiling=shah_gungor_winterton beta_m_s=0.0003 wet_wall_only=True CHF_predicted=False dryout_predicted=False
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: laminar rectangular Nu uses uniform all-wall heat flux reference; conjugate/one-sided heated boundary requires validation
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: developing laminar reference assumes constant section/properties and uniform inlet profiles; local-property channel adaptation requires validation
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: laminar Darcy friction uses fully developed duct reference; hydrodynamic entrance pressure loss is not included
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: RP-1 uses a newly fitted two-component engineering surrogate, not the published NIST four-component RP-1 model
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: RP-1 surrogate density calibration and independent Cp/transport checks do not validate an individual fuel lot or its vapor-liquid envelope
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: RP-1 high-temperature transport remains predictive; thermal decomposition/coking and deposit resistance are not modelled
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: RP-1 viscosity uses a low-temperature empirical residual correction to TRAPP; conductivity is a separate radiation-corrected NIST-data fit
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: TRAPP nonpolar one-fluid transport is predictive; composition-specific experimental validation required
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: Supplied phase density replaces the original TRAPP pVT calculation; reported historical errors are not a validation of this adaptation
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: Critical thermal-conductivity enhancement and mixture diffusion/critical anomalies are not represented
+WARNING:lpa.thermal.solver:thermal applicability=unsupported: circuit_1: coolant-side wall exceeds saturation/bubble temperature; subcooled boiling/CHF/dryout unsupported
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: CuCrZr conductivity uses selected source/screening data; actual lot/build and manufacturing-condition validation required
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: hydrocarbon cracking/coking and deposit resistance/lifetime require fuel/material-specific validation
+WARNING:lpa.thermal.solver:thermal applicability=unsupported: circuit_1: CuCrZr: wall temperature outside conductivity data range [293.15, 973.15] K; out-of-range conductivity queries clamp to endpoints; wall solution is diagnostic only
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: Gnielinski (2013) Re=2300..4000 transition interpolation; rectangular/conjugate adaptation is not experimentally validated
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: transition Darcy friction uses continuous endpoint interpolation; transition hydraulics require validation
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: turbulent thermal-entry factor adapted from circular tubes; rectangular/conjugate channel requires validation
+WARNING:lpa.thermal.solver:thermal applicability=invalid: circuit_1: CuCrZr: base-wall temperature 1496.97 K reaches/exceeds supplier reference melting point 1354.15 K; solid-wall assumption invalid and structural integrity cannot be inferred. Melting, ablation and structural failure are not modelled; the supplier wrought-alloy reference does not qualify the actual LPBF build/composition/heat lot. (34 wall cells)
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: RP-1 uses a newly fitted two-component engineering surrogate, not the published NIST four-component RP-1 model
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: RP-1 surrogate density calibration and independent Cp/transport checks do not validate an individual fuel lot or its vapor-liquid envelope
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: RP-1 high-temperature transport remains predictive; thermal decomposition/coking and deposit resistance are not modelled
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: RP-1 viscosity uses a low-temperature empirical residual correction to TRAPP; conductivity is a separate radiation-corrected NIST-data fit
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: TRAPP nonpolar one-fluid transport is predictive; composition-specific experimental validation required
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: Supplied phase density replaces the original TRAPP pVT calculation; reported historical errors are not a validation of this adaptation
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: Critical thermal-conductivity enhancement and mixture diffusion/critical anomalies are not represented
+INFO:lpa.thermal.solver:regen outlet id=circuit_1 T_K=612.667 p_bar=19.6772 h_J_kg=506127 phase=liquid x_mass=nan solved=300/300
+INFO:lpa.thermal.solver:regen entrance id=circuit_1 inlet_x_m=0.231278 Re=2224.63 regime=laminar first_cell_m=0.000195902 first_cell_Twg_K=583.612 peak_Twg_K=1493.13 cell_average_not_boundary_point=True
+Medium: 300 solved, peak 1493.126170 K, inlet cell 583.612071 K, invalid
+INFO:lpa.thermal.solver:regen start id=circuit_1 coolant=RP-1 T_K=293 p_bar=20 mdot_kg_s=0.333804 source=LPA fitted trans-decalin/n-dodecane engineering surrogate; public NIST constituent EOS phase=liquid
+INFO:lpa.thermal.solver:regen model id=circuit_1 transport=Ely-Hanley NBS TN 1039 (1981) TRAPP; supplied phase density + RP-1 residual correction; NIST corrected-conductivity fit property_applicability=correlated pure_boiling=auto mixture_boiling=shah_gungor_winterton beta_m_s=0.0003 wet_wall_only=True CHF_predicted=False dryout_predicted=False
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: laminar rectangular Nu uses uniform all-wall heat flux reference; conjugate/one-sided heated boundary requires validation
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: developing laminar reference assumes constant section/properties and uniform inlet profiles; local-property channel adaptation requires validation
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: laminar Darcy friction uses fully developed duct reference; hydrodynamic entrance pressure loss is not included
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: RP-1 uses a newly fitted two-component engineering surrogate, not the published NIST four-component RP-1 model
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: RP-1 surrogate density calibration and independent Cp/transport checks do not validate an individual fuel lot or its vapor-liquid envelope
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: RP-1 high-temperature transport remains predictive; thermal decomposition/coking and deposit resistance are not modelled
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: RP-1 viscosity uses a low-temperature empirical residual correction to TRAPP; conductivity is a separate radiation-corrected NIST-data fit
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: TRAPP nonpolar one-fluid transport is predictive; composition-specific experimental validation required
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: Supplied phase density replaces the original TRAPP pVT calculation; reported historical errors are not a validation of this adaptation
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: Critical thermal-conductivity enhancement and mixture diffusion/critical anomalies are not represented
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: CuCrZr conductivity uses selected source/screening data; actual lot/build and manufacturing-condition validation required
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: hydrocarbon cracking/coking and deposit resistance/lifetime require fuel/material-specific validation
+WARNING:lpa.thermal.solver:thermal applicability=unsupported: circuit_1: coolant-side wall exceeds saturation/bubble temperature; subcooled boiling/CHF/dryout unsupported
+WARNING:lpa.thermal.solver:thermal applicability=unsupported: circuit_1: CuCrZr: wall temperature outside conductivity data range [293.15, 973.15] K; out-of-range conductivity queries clamp to endpoints; wall solution is diagnostic only
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: Gnielinski (2013) Re=2300..4000 transition interpolation; rectangular/conjugate adaptation is not experimentally validated
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: transition Darcy friction uses continuous endpoint interpolation; transition hydraulics require validation
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1: turbulent thermal-entry factor adapted from circular tubes; rectangular/conjugate channel requires validation
+WARNING:lpa.thermal.solver:thermal applicability=invalid: circuit_1: CuCrZr: base-wall temperature 1492.10 K reaches/exceeds supplier reference melting point 1354.15 K; solid-wall assumption invalid and structural integrity cannot be inferred. Melting, ablation and structural failure are not modelled; the supplier wrought-alloy reference does not qualify the actual LPBF build/composition/heat lot. (79 wall cells)
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: RP-1 uses a newly fitted two-component engineering surrogate, not the published NIST four-component RP-1 model
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: RP-1 surrogate density calibration and independent Cp/transport checks do not validate an individual fuel lot or its vapor-liquid envelope
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: RP-1 high-temperature transport remains predictive; thermal decomposition/coking and deposit resistance are not modelled
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: RP-1 viscosity uses a low-temperature empirical residual correction to TRAPP; conductivity is a separate radiation-corrected NIST-data fit
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: TRAPP nonpolar one-fluid transport is predictive; composition-specific experimental validation required
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: Supplied phase density replaces the original TRAPP pVT calculation; reported historical errors are not a validation of this adaptation
+WARNING:lpa.thermal.solver:thermal applicability=screening: circuit_1 outlet: Critical thermal-conductivity enhancement and mixture diffusion/critical anomalies are not represented
+INFO:lpa.thermal.solver:regen outlet id=circuit_1 T_K=612.852 p_bar=19.6769 h_J_kg=506738 phase=liquid x_mass=nan solved=700/700
+INFO:lpa.thermal.solver:regen entrance id=circuit_1 inlet_x_m=0.231278 Re=2224.63 regime=laminar first_cell_m=8.19041e-05 first_cell_Twg_K=498.925 peak_Twg_K=1490.48 cell_average_not_boundary_point=True
+High: 700 solved, peak 1490.480058 K, inlet cell 498.925335 K, invalid

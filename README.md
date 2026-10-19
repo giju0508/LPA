@@ -2,15 +2,17 @@
 
 LPA는 액체로켓 연소기의 성능, 추력실 형상, 열역학 상태와 정상상태 열전달을 예비 설계 단계에서 계산하는 Windows 데스크톱 도구입니다. RPA와 유사한 좌측 입력/결과 탐색 구조를 사용하며, 추진 성능은 RocketCEA, 고온가스측 열전달은 Bartz 상관식을 기본으로 합니다.
 
-현재 버전: **0.18.0b1** · **Beta 사전 배포판** · [변경 이력](CHANGELOG.md) · [검증 기록](docs/VALIDATION.md)
+현재 버전: **0.18.1b1** · **Beta 사전 배포판** · [변경 이력](CHANGELOG.md) · [검증 기록](docs/VALIDATION.md)
 
 이 버전은 RP-1의 고온 물성, LNG·에탄올/물 혼합물의 상별 수송물성과 2상 비등 계산을 보강한 **Beta**입니다. 구현된 상관식, 계산이 완료된 범위와 수치 수렴 여부를 확인할 수 있지만, 전체 엔진이나 실제 채널의 열전달·CHF·dryout·수명 검증이 완료된 버전은 아닙니다. 순수유체의 증기 질량분율 0.7 제한은 계산 보호 경계이며 실제 dryout 발생점을 뜻하지 않습니다. 혼합물은 계속 젖은 벽을 가정하여 x<1까지 공학적으로 계산하며, 실제 dryout 이후의 온도나 안전 여유를 보장하지 않습니다. 물리 적용 상태와 중단 이유를 함께 확인하십시오.
 
-이번 변경의 근거와 결과는 [0.18.0 Beta 검토 기록](docs/THERMAL_REVIEW_0180.md), [RP-1 모델](docs/property_review_0180.md), [혼합물 비등](docs/MIXTURE_FLOW_BOILING_2026-10-19.md), [LNG 수송물성](docs/TRAPP_TRANSPORT_2026-10-19.md), [에탄올/물 실측 비교](docs/ETHANOL_TRANSPORT_2026-10-19.md), [UI 배치 검수](docs/UI_LAYOUT_REVIEW_0180.md)에 있습니다. 이전 [0.17.0 검토](docs/THERMAL_REVIEW_0170.md)는 이력으로 보존합니다.
+이번 수정은 냉각입구의 열전달계수를 먼저 평균해 벽 온도를 구하던 처리를 **국소 벽 열수지를 적분하는 방식**으로 교정합니다. 온도 피크를 임의로 평탄화하지 않으며, inlet 끝점은 유한 셀 평균으로서 격자에 의존한다는 점을 표시합니다. CuCrZr 참고 용융점을 넘는 예측은 고체벽 가정 위반으로 `invalid`를 표시합니다. [0.18.1 검토 기록](docs/THERMAL_REVIEW_0181.md), [결과 표시](docs/THERMAL_INLET_RESULT_UI_0181.md)를 확인하십시오.
 
-배포 태그: [v0.18.0b1](https://github.com/giju0508/LPA/releases/tag/v0.18.0b1). 소스, 실행 파일 및 시험·빌드 결과의 버전이 같은지 확인하십시오. 이번 시작 중단 수정은 [VS Code 확인 기록](docs/STARTUP_VSCODE_2026-10-19.md)에 있습니다. 열전달 변경의 근거·실행 기록은 [열전달 Beta 구현 기록](docs/THERMAL_BETA_2026-10-19.md), [가스측 RPA 비교](docs/THERMAL_GAS_METHOD_2026-10-19.md), [물성 검증](docs/COOLANT_PROPERTIES_2026-10-19.md), [2상 결과 UI 기록](docs/TWO_PHASE_UI_2026-10-19.md)에 있습니다. 이전 [배포 검토](docs/RELEASE_REMEDIATION_2026-10-11.md)와 [자동 O/F 검토](docs/OF_OPTIMIZATION_REVIEW_2026-10-11.md)도 보존합니다.
+0.18.0 변경의 근거와 결과는 [0.18.0 물성 개선 기록](docs/THERMAL_REVIEW_0180.md), [RP-1 모델](docs/property_review_0180.md), [혼합물 비등](docs/MIXTURE_FLOW_BOILING_2026-10-19.md), [LNG 수송물성](docs/TRAPP_TRANSPORT_2026-10-19.md), [에탄올/물 실측 비교](docs/ETHANOL_TRANSPORT_2026-10-19.md), [UI 배치 검수](docs/UI_LAYOUT_REVIEW_0180.md)에 있습니다. 이전 [0.17.0 검토](docs/THERMAL_REVIEW_0170.md)는 이력으로 보존합니다.
 
-기능, 해석 로직 또는 주요 GUI가 변경되는 릴리스마다 `lpa.__version__`을 올리고 같은 버전의 변경 내용과 KST 일시를 `CHANGELOG.md`에 기록합니다. README와 Windows FileVersion/ProductVersion 문자열을 일치시키며, 이 Beta의 Windows 고정 버전은 `0.18.0.1`, prerelease flag는 `0x2`입니다. 빌드·회귀시험 출력은 `tmp/build-<version>.log`, `tmp/test-<version>.log`에 남기고 실행 파일·버전별 ZIP의 SHA-256 및 실제 수행한 검증 결과를 `docs/VALIDATION.md`에 기록합니다.
+배포 태그: [v0.18.1b1](https://github.com/giju0508/LPA/releases/tag/v0.18.1b1). 소스, 실행 파일 및 시험·빌드 결과의 버전이 같은지 확인하십시오. 이전 시작 중단 수정은 [VS Code 확인 기록](docs/STARTUP_VSCODE_2026-10-19.md)에 있습니다. 열전달 변경의 근거·실행 기록은 [열전달 Beta 구현 기록](docs/THERMAL_BETA_2026-10-19.md), [가스측 RPA 비교](docs/THERMAL_GAS_METHOD_2026-10-19.md), [물성 검증](docs/COOLANT_PROPERTIES_2026-10-19.md), [2상 결과 UI 기록](docs/TWO_PHASE_UI_2026-10-19.md)에 있습니다. 이전 [배포 검토](docs/RELEASE_REMEDIATION_2026-10-11.md)와 [자동 O/F 검토](docs/OF_OPTIMIZATION_REVIEW_2026-10-11.md)도 보존합니다.
+
+기능, 해석 로직 또는 주요 GUI가 변경되는 릴리스마다 `lpa.__version__`을 올리고 같은 버전의 변경 내용과 KST 일시를 `CHANGELOG.md`에 기록합니다. README와 Windows FileVersion/ProductVersion 문자열을 일치시키며, 이 Beta의 Windows 고정 버전은 `0.18.1.1`, prerelease flag는 `0x2`입니다. 빌드·회귀시험 출력은 `tmp/build-<version>.log`, `tmp/test-<version>.log`에 남기고 실행 파일·버전별 ZIP의 SHA-256 및 실제 수행한 검증 결과를 `docs/VALIDATION.md`에 기록합니다.
 
 > **중요:** LPA의 결과는 개념/예비 설계 및 비교 검토용입니다. 시험, 상세 CFD/FEA, 구조·피로·수명 해석, 제작 공정 검증, 독립적인 수계산과 전문 엔지니어의 검토를 대체하지 않으며 비행·시험 안전 인증 자료로 사용할 수 없습니다.
 

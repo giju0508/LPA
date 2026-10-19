@@ -1164,6 +1164,53 @@ def _mixture_enthalpy_update(name: str, state: object, enthalpy_j_kg: float,
     raise ValueError("mixture enthalpy is outside a supported monotone phase bracket")
 
 
+def _refine_pure_enthalpy_update(state: object, enthalpy_j_kg: float, pressure_pa: float) -> None:
+    """Refine a native single-phase PH result with EOS-consistent PT updates.
+
+    A native HmassP temperature stopping tolerance can leave sub-millijoule
+    enthalpy errors, visible in tightly checked channel energy balances. Newton
+    correction uses dh/dT|p=Cp and re-evaluates the complete EOS state; it never
+    substitutes the requested enthalpy into an inconsistent returned state.
+    Saturated/two-phase and unidentified states retain their native flash.
+    """
+    import CoolProp.CoolProp as CP
+    phase = state.phase()
+    if phase not in {
+        CP.iphase_liquid, CP.iphase_gas, CP.iphase_supercritical,
+        CP.iphase_supercritical_liquid, CP.iphase_supercritical_gas,
+    }:
+        return
+    tolerance = max(1e-7, abs(enthalpy_j_kg) * 1e-11)
+    best_temperature = float(state.T())
+    best_error = abs(float(state.hmass()) - enthalpy_j_kg)
+    if best_error <= tolerance:
+        return
+    for _ in range(6):
+        residual = float(state.hmass()) - enthalpy_j_kg
+        cp = float(state.cpmass())
+        if not isfinite(cp) or cp <= 0:
+            return
+        temperature = float(state.T()) - residual / cp
+        if not isfinite(temperature) or temperature <= 0 or temperature == float(state.T()):
+            return
+        try:
+            state.update(CP.PT_INPUTS, pressure_pa, temperature)
+            error = abs(float(state.hmass()) - enthalpy_j_kg)
+            if state.phase() != phase or not isfinite(error) or error >= best_error:
+                # Do not turn a saturated boundary into another physical phase
+                # or retain a worse Newton step. Restore the best EOS state.
+                state.update(CP.PT_INPUTS, pressure_pa, best_temperature)
+                return
+        except ValueError:
+            # The native flash remains available at phase/solver boundaries.
+            state.unspecify_phase()
+            state.update(CP.HmassP_INPUTS, enthalpy_j_kg, pressure_pa)
+            return
+        best_temperature, best_error = temperature, error
+        if error <= tolerance:
+            return
+
+
 def coolant_state_from_enthalpy(
     name: object, enthalpy_j_kg: float, pressure_pa: float,
     *, temperature_hint_k: float | None = None, backend: str = "HEOS",
@@ -1199,6 +1246,7 @@ def coolant_state_from_enthalpy(
             else:
                 state.unspecify_phase()
                 state.update(CP.HmassP_INPUTS, enthalpy_j_kg, pressure_pa)
+                _refine_pure_enthalpy_update(state, enthalpy_j_kg, pressure_pa)
             return _extract_eos_state(model.name, state, pressure_pa, backend=backend)
         except (ValueError, ImportError, OSError) as error:
             if temperature_hint_k is not None:

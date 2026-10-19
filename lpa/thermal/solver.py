@@ -21,8 +21,9 @@ from .correlations import (
     rectangular_channel_geometry,
     rectangular_fin_area_ratio,
     cylindrical_conduction_resistance,
+    _ENTRY_QUADRATURE,
 )
-from .materials import get_material, material_reference_metadata
+from .materials import get_material, material_reference_metadata, material_phase_limit_issue
 from .models import (
     MESH_SECTION_COUNTS,
     Resolution,
@@ -999,9 +1000,64 @@ class _StationSolution:
     coolant_boiling_mass_transfer_factor: float = nan
     coolant_boiling_convective_factor: float = nan
     coolant_wet_wall_assumed: bool | None = None
+    wall_temperature_min_k: float = nan
+    wall_temperature_max_k: float = nan
+    solid_temperature_max_k: float = nan
+    coolant_wall_temperature_max_k: float = nan
 
 
 def _solve_regen_station(
+    **kwargs: Any,
+) -> _StationSolution:
+    """Average local conjugate solutions, rather than balancing averaged h.
+
+    The inlet correlation is singular, but local wall heat flux/temperatures
+    have finite resistance-limited limits. A square mapping integrates these
+    bounded solutions over the actual cell; it does not impose a fictitious
+    entrance distance or replace the physical entrance effect with smoothing.
+    Bulk properties and gas states remain the cell's existing march samples.
+    """
+    bulk=kwargs.get("coolant_bulk_state")
+    if bulk is None:
+        bulk=_coolant_state(kwargs["coolant_definition"],kwargs["coolant_temperature_k"],
+            kwargs["settings"],kwargs["identifier"],kwargs["coolant_pressure_pa"])
+        kwargs["coolant_bulk_state"]=bulk
+    if (bulk.phase=="two_phase" or kwargs.get("distance_from_inlet_m") is None
+            or kwargs.get("cell_length_m") is None):
+        return _solve_regen_station_local(**kwargs)
+    samples=[]
+    for coordinate,weight in _ENTRY_QUADRATURE:
+        solution=_solve_regen_station_local(**kwargs,entry_sample_fraction=coordinate**2)
+        samples.append((2.0*coordinate*weight,solution))
+    def mean(name: str) -> float:
+        return sum(weight*getattr(solution,name) for weight,solution in samples)
+    averaged={name:mean(name) for name in (
+        "Twg","Twi","Twc","heat_flux","gas_h","coolant_h","coolant_cp",
+        "coolant_pressure_gradient_pa_m","coolant_velocity_m_s","coolant_density_kg_m3",
+        "effective_cooling_area_ratio","fin_efficiency","coolant_reynolds",
+        "coolant_nusselt","coolant_raw_coefficient_w_m2k")}
+    # Report an effective coolant conductance consistent with average flux
+    # and average wall excess. The separate raw h/Nu remain arithmetic means
+    # of the local correlation, so they are not interchangeable with this h.
+    excess=averaged["Twc"]-bulk.temperature_k
+    if abs(excess)>1e-12:
+        averaged["coolant_h"]=averaged["heat_flux"]/excess
+    recovery=kwargs["effective_recovery_temperature_k"]
+    excess=recovery-averaged["Twg"]
+    if abs(excess)>1e-12:
+        averaged["gas_h"]=sum(w*s.gas_h*(recovery-s.Twg) for w,s in samples)/excess
+    return replace(samples[0][1],**averaged,
+        iterations=max(s.iterations for _,s in samples),
+        converged=all(s.converged for _,s in samples),
+        physical_issues=tuple(dict.fromkeys(issue for _,s in samples for issue in s.physical_issues)),
+        applicability="unsupported" if any(s.applicability=="unsupported" for _,s in samples) else "screening",
+        wall_temperature_min_k=min(s.Twg for _,s in samples),
+        wall_temperature_max_k=max(s.Twg for _,s in samples),
+        solid_temperature_max_k=max(max(s.Twi,s.Twc) for _,s in samples),
+        coolant_wall_temperature_max_k=max(s.Twc for _,s in samples))
+
+
+def _solve_regen_station_local(
     *,
     index: int,
     segment: object,
@@ -1019,6 +1075,7 @@ def _solve_regen_station(
     coolant_bulk_state: CoolantState | None = None,
     distance_from_inlet_m: float | None = None,
     cell_length_m: float | None = None,
+    entry_sample_fraction: float | None = None,
 ) -> _StationSolution:
     start_m, end_m = segment_range
     cold_radius = mesh.radius_m[index] + wall.coating_thickness_m + wall.thickness_m
@@ -1067,6 +1124,7 @@ def _solve_regen_station(
             heated_length_m=end_m-start_m,
             distance_from_inlet_m=distance_from_inlet_m,
             cell_length_m=cell_length_m,
+            entry_sample_fraction=entry_sample_fraction,
         )
         physical_issues.extend(internal.warnings)
         if bulk_state.phase == "two_phase":
@@ -1177,6 +1235,10 @@ def _solve_regen_station(
         coolant_boiling_mass_transfer_factor=boiling.mass_transfer_correction_factor if boiling else nan,
         coolant_boiling_convective_factor=boiling.convective_correction_factor if boiling else nan,
         coolant_wet_wall_assumed=boiling.wet_wall_assumed if boiling else None,
+        wall_temperature_min_k=wall_gas_temperature,
+        wall_temperature_max_k=wall_gas_temperature,
+        solid_temperature_max_k=max(wall_interface_temperature,wall_cold_temperature),
+        coolant_wall_temperature_max_k=wall_cold_temperature,
     )
 
 
@@ -1204,6 +1266,8 @@ class _Arrays:
     coolant_boiling_mass_transfer_factor: list[float]
     coolant_boiling_convective_factor: list[float]
     coolant_wet_wall_assumed: list[bool | None]
+    wall_temperature_min_k: list[float]
+    wall_temperature_max_k: list[float]
 
     @classmethod
     def empty(cls, count: int) -> "_Arrays":
@@ -1230,6 +1294,8 @@ class _Arrays:
             coolant_boiling_mass_transfer_factor=[nan] * count,
             coolant_boiling_convective_factor=[nan] * count,
             coolant_wet_wall_assumed=[None] * count,
+            wall_temperature_min_k=[nan] * count,
+            wall_temperature_max_k=[nan] * count,
         )
 
 
@@ -1574,6 +1640,8 @@ def _solve_regens(
         integrated_heat = 0.0
         kinetic_energy_change_w = 0.0
         pressure_depleted = False
+        peak_solid_temperature=0.0
+        over_melting_count=0
         inlets[identifier] = inlet_temperature
         pressure_inlets[identifier] = inlet_pressure_pa / 100_000.0
         for index in march:
@@ -1637,6 +1705,8 @@ def _solve_regens(
             arrays.coolant_boiling_mass_transfer_factor[index] = solution.coolant_boiling_mass_transfer_factor
             arrays.coolant_boiling_convective_factor[index] = solution.coolant_boiling_convective_factor
             arrays.coolant_wet_wall_assumed[index] = solution.coolant_wet_wall_assumed
+            arrays.wall_temperature_min_k[index]=solution.wall_temperature_min_k
+            arrays.wall_temperature_max_k[index]=solution.wall_temperature_max_k
             arrays.active[index] = identifier
             sources[identifier] = solution.coolant_source
             fin_areas[identifier] = (solution.effective_cooling_area_ratio, solution.fin_efficiency)
@@ -1648,12 +1718,14 @@ def _solve_regens(
                 arrays.station_applicability[index] = "unsupported"
                 issue(f"{identifier}: coolant phase unverified; single-phase correlation is diagnostic only", "unsupported")
             saturation = state.saturation_temperature_k
-            if state.phase == "liquid" and isfinite(saturation) and solution.Twc >= saturation:
+            cold_wall_max=(solution.coolant_wall_temperature_max_k
+                if isfinite(solution.coolant_wall_temperature_max_k) else solution.Twc)
+            if state.phase == "liquid" and isfinite(saturation) and cold_wall_max >= saturation:
                 arrays.station_applicability[index] = "unsupported"
                 issue(f"{identifier}: coolant-side wall exceeds saturation/bubble temperature; subcooled boiling/CHF/dryout unsupported", "unsupported")
             if state.phase in {"supercritical", "supercritical_liquid", "critical_point"}:
                 issue(f"{identifier}: supercritical convection/heat-transfer deterioration requires validated variable-property correlation")
-            if isfinite(state.pseudocritical_temperature_k) and min(current_temperature,solution.Twc) <= state.pseudocritical_temperature_k <= max(current_temperature,solution.Twc):
+            if isfinite(state.pseudocritical_temperature_k) and min(current_temperature,solution.Twc) <= state.pseudocritical_temperature_k <= max(current_temperature,cold_wall_max):
                 arrays.station_applicability[index] = "unsupported"
                 issue(f"{identifier}: wall/bulk temperature straddles pseudocritical cp peak; heat-transfer deterioration correlation unsupported", "unsupported")
             if state.phase in {"gas", "supercritical_gas", "supercritical"} and isfinite(state.speed_of_sound_m_s):
@@ -1665,10 +1737,16 @@ def _solve_regens(
             if liquid_identity and index == march[0] and state.phase in {"gas", "supercritical_gas"}:
                 arrays.station_applicability[index] = "invalid"
                 issue(f"{identifier}: specified liquid coolant inlet is gaseous at its pressure/temperature", "invalid")
-            material_issue = _material_range_issue(wall, solution.Twc, solution.Twi)
+            material_issue = _material_range_issue(wall, solution.Twc, solution.solid_temperature_max_k)
             if material_issue:
                 arrays.station_applicability[index] = "unsupported"
                 issue(f"{identifier}: {material_issue}", "unsupported")
+            phase_issue=(material_phase_limit_issue(wall.material,solution.solid_temperature_max_k)
+                         if wall.material is not None else None)
+            peak_solid_temperature=max(peak_solid_temperature,solution.solid_temperature_max_k)
+            if phase_issue:
+                arrays.station_applicability[index]="invalid"
+                over_melting_count+=1
             if wall.material is not None and get_material(wall.material).name in {"CuCrZr","C103","AlSi10Mg"}:
                 issue(f"{identifier}: {get_material(wall.material).name} conductivity uses selected source/screening data; actual lot/build and manufacturing-condition validation required")
             if model.name.startswith("H2O2") or model.name == "N2O":
@@ -1740,6 +1818,17 @@ def _solve_regens(
                     current_temperature = state.temperature_k
                 else:
                     state=replace(state,enthalpy_j_kg=current_enthalpy,phase="unknown",pressure_pa=0.0)
+        if over_melting_count:
+            phase_issue=material_phase_limit_issue(wall.material,peak_solid_temperature)
+            issue(f"{identifier}: {phase_issue} ({over_melting_count} wall cells)","invalid")
+        property_metadata[identifier]["wall_material_assessment"]={
+            "material":get_material(wall.material).name if wall.material is not None else None,
+            "reference_melting_temperature_k":get_material(wall.material).melting_temperature_k if wall.material is not None else None,
+            "maximum_sampled_base_wall_temperature_k":peak_solid_temperature or nan,
+            "cells_above_reference_melting_point":over_melting_count,
+            "solid_wall_assumption_valid":False if over_melting_count else None,
+            "below_limit_does_not_establish_safe_service":True,
+        }
         # The final HP flash has no following cell to validate it. Classify
         # its phase and EOS issues before exposing this state to linked circuits
         # or an engine-feed feedback calculation.
@@ -2428,6 +2517,38 @@ def analyze_thermal(
          max(0.0,radiative_heat_flux(gas_data.temperature_k[i], max(1.0,arrays.Twg[i]),1.0)))
         if isfinite(arrays.Twg[i]) else (nan,nan) for i in range(len(mesh.x_m))
     )
+    entrance_diagnostics={}
+    for segment in regens:
+        identifier=segment_id(segment)
+        if identifier in inactive:
+            continue
+        bounds=resolve_segment_range(segment,contour)
+        coflow=bool(value_of(segment,"coflow","same_direction",default=False))
+        indices=[i for i in _indices_in_range(mesh,bounds) if arrays.active[i]==identifier]
+        if not indices:
+            continue
+        first=indices[0] if coflow else indices[-1]
+        solved=[i for i in indices if isfinite(arrays.Twg[i])]
+        peak=max(solved,key=lambda i:arrays.Twg[i]) if solved else None
+        entrance_diagnostics[identifier]={
+            "inlet_x_m":bounds[0] if coflow else bounds[1],
+            "outlet_x_m":bounds[1] if coflow else bounds[0],
+            "flow_direction":"coflow" if coflow else "counterflow",
+            "inlet_regime":arrays.coolant_flow_regime[first],
+            "inlet_reynolds":arrays.coolant_reynolds[first],
+            "first_cell_path_length_m":_channel_path_length_in_range(mesh,first,bounds),
+            "first_cell_Twg_K":arrays.Twg[first],
+            "first_cell_sampled_Twg_range_K":(arrays.wall_temperature_min_k[first],arrays.wall_temperature_max_k[first]),
+            "peak_Twg_K":arrays.Twg[peak] if peak is not None else nan,
+            "peak_x_m":mesh.x_m[peak] if peak is not None else nan,
+            "entrance_model":"local Muzychka/Gnielinski entrance correlation; uniform inlet and local-property approximation",
+            "boundary_layer_origin":regen_result.property_metadata.get(identifier,{}).get("thermal_entrance_basis"),
+            "endpoint_is_point_temperature":False,
+        }
+        LOGGER.info("regen entrance id=%s inlet_x_m=%g Re=%g regime=%s first_cell_m=%g first_cell_Twg_K=%g peak_Twg_K=%g cell_average_not_boundary_point=True",
+            identifier,entrance_diagnostics[identifier]["inlet_x_m"],arrays.coolant_reynolds[first],
+            arrays.coolant_flow_regime[first],entrance_diagnostics[identifier]["first_cell_path_length_m"],
+            arrays.Twg[first],entrance_diagnostics[identifier]["peak_Twg_K"])
     metadata = {
         "enabled": True,
         "mesh_level": resolution,
@@ -2440,7 +2561,18 @@ def analyze_thermal(
             "viscosity_pa_s":gas_data.reference_viscosity_pa_s,
             "prandtl":gas_data.reference_prandtl,"gamma":gas_data.reference_gamma,
             "throat_upstream_curvature_radius_m":gas_data.throat_radius_of_curvature_m},
-        "coolant_side_model": solver_settings.internal_flow_correlation+" with developing rectangular laminar flow, Re 2300–4000 transition and rib fin effective area",
+        "coolant_side_model": solver_settings.internal_flow_correlation+" local developing rectangular laminar flow, Re 2300–4000 transition and rib fins; conjugate wall solutions integrated over each single-phase Regen cell",
+        "wall_sampling":{
+            "basis":"cell-average local conjugate wall solutions for single-phase Regen",
+            "quadrature":"32-point Gauss-Legendre with squared inlet coordinate",
+            "inlet_endpoint_is_point_temperature":False,
+            "station_coordinates":"control-volume labels; wall values are cell averages, coolant values are upstream cell-face states",
+            "sampled_temperature_range":"wall_temperature_min_k/max_k bracket sampled hot-face solutions, not rigorous continuous extrema",
+            "coolant_coefficient":"effective mean-flux / mean wall-to-bulk excess; raw h and Nu are arithmetic local-correlation averages",
+            "boiling_and_radiation":"existing station balance; no single-phase entrance quadrature",
+            "axial_solid_conduction":False,
+        },
+        "coolant_entrance_diagnostics_by_segment":entrance_diagnostics,
         "coolant_pressure_model": "Darcy-Weisbach single phase; Lockhart-Martinelli two-phase friction plus homogeneous variable-area acceleration",
         "two_phase_model": "Beta pure-fluid Li-Wu/Chen-Bennett or Shah/GW87 mixture wet-wall boiling; Lockhart-Martinelli friction; homogeneous acceleration",
         "two_phase_model_by_segment": {
@@ -2562,6 +2694,8 @@ def analyze_thermal(
         coolant_boiling_mass_transfer_factor=tuple(arrays.coolant_boiling_mass_transfer_factor),
         coolant_boiling_convective_factor=tuple(arrays.coolant_boiling_convective_factor),
         coolant_wet_wall_assumed=tuple(arrays.coolant_wet_wall_assumed),
+        wall_temperature_min_k=tuple(arrays.wall_temperature_min_k),
+        wall_temperature_max_k=tuple(arrays.wall_temperature_max_k),
     )
 
 

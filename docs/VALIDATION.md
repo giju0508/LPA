@@ -377,3 +377,35 @@ dependencies에서 수행했습니다. [방법·실제 채널 결과](THERMAL_RE
 `coolant_review_outputs_0180/github_publication.json` 및
 `anonymous_publication_check.json`에 실제 응답으로 기록합니다. GitHub의
 prerelease는 정식 안정판 `Latest` 표기와 구분합니다.
+
+## 검증 기록 (0.18.1b1 Beta)
+
+2026-10-19 KST, Windows 11 x64 / CPython 3.14.0 / Tk 8.6에서 수행했습니다.
+[RP-1 노즐 입구 검토](THERMAL_REVIEW_0181.md),
+[결과 표시 검수](THERMAL_INLET_RESULT_UI_0181.md),
+[원본 출력·manifest](thermal_review_outputs_0181/README.md)에 근거를 보존합니다.
+이번 CFG의 Dc는 90 mm로 이전 버전의 검토 입력과 구분합니다.
+
+| 확인 | 실제 결과 |
+|---|---|
+| 버전 | Python/README/CHANGELOG/Windows 문자열 **0.18.1b1 Beta**, 고정 **0.18.1.1**, prerelease flag **0x2** |
+| 전체 회귀 | 최종 **867 passed in 176.43 s**, failure/error/skip 없음. `test_run.txt` |
+| 독립 수식 검증 | 국소 Muzychka Eq.45, 국소→평균 관계, 특이 입구 열저항의 닫힌형 적분·셀 분할 불변성, 실제 상관식+fin+원통벽과 독립 adaptive quadrature 대조. 임의 h 상한이나 입구 길이 하한을 추가하지 않음 |
+| PH 정밀도 교정 | 초기 회귀에서 순수 물의 native PH 상태 엔탈피 오차 **0.000736 J/kg**가 **0.001472 W** 수지 잔차를 만들었음. 단상 순수유체 Cp/PT 정련으로 해당 사례 잔차 **1.4e-7 W 미만**. 기존 수지 허용오차를 완화하지 않음 |
+| 원본 입력 | SHA-256 **b55b923eec14eaaa5778d31d1f6ddbd829221fd6fd2fc9ff53a64ec18c8ada33**. 원본 변경 없음, CFG는 Git/배포 ZIP에 포함하지 않음 |
+| 실제 채널 3격자 | **120/120, 300/300, 700/700** 계산·수치 수렴. 최고 평균 Twg **1500.088/1493.126/1490.480 K**, 냉각제 출구 **612.155/612.667/612.852 K**. 에너지 수지 잔차 **5e-10 W 미만** |
+| 입구 평균 처리 | Medium 입구 첫 셀 평균 Twg **527.58→583.61 K**. 표본 범위 **309.61–696.45 K**. 첫 셀 평균은 정확한 입구 경계점 온도가 아니며, 셀 크기에 따라 나타내는 공간 구간이 달라짐 |
+| 물리 판정 | 모든 격자 **invalid**. CuCrZr 공급사 참고 용융점 **1354.15 K** 초과 셀 **14/34/79개**. 평균값 아래에 숨은 표본 모재 과열·냉각측 벽의 포화 조건 초과도 검사. 실제 lot의 solidus/liquidus나 사용 허용온도 검증은 아님 |
+| UI/CSV | 실제 냉각입구·초과가 진단된 재료 참고 용융점 표시, 셀 평균 안내, 표본 Twg 범위와 진단 metadata 보존. 원시 곡선 평활화 없이 실제 Medium 결과를 렌더링·육안 검수 |
+| 환경·빌드 | compileall / `pip check` 통과. 고정 의존성 유지. PyInstaller **6.21.0**, hooks **2026.6** 단일 EXE 빌드 성공. 최종 빌드 로그 완료 시점 **68.179 s** |
+| 내장 코드 | 최종 **39개 LPA 모듈+main** optimize=1 코드가 최종 소스와 일치. icon/Rao PNG·native 및 dependency 원본 license 확인. `archive_check.json` |
+| 실제 GUI | 소스와 EXE 모두 **LPA 0.18.1b1 Beta**, responding·normal close true, exit **0**. 소스 stdout/stderr **0 bytes** |
+| 추출 native 실행 | host site-packages 없는 **-I -S** CPython에서 추출 EXE 코드/native 실행. 실제 CEA·자동 O/F, 물 비등, LNG/에탄올 transport+혼합물 비등, RP-1 450/600 K 및 PH 역산 통과. clean-PC의 frozen EXE 전체 계산 검증과 구분 |
+| 패키지 | 최종 EXE·최신 README/CHANGELOG·방법 문서·검수 그림과 직접/간접 dependency 원본 license notices. ZIP 무결성/모든 member 원본 일치 및 파일별 크기/SHA-256은 `release_manifest.json`과 배포 `SHA256SUMS.txt`에 기록 |
+| 잔여 한계 | 실제 유입 속도분포/상류 배관, 축방향 고체 전도, subcooled boiling·CHF/dryout·용융/ablation·열분해/coking·구조 수명 및 clean-PC 전체 계산·코드 서명 미검증. 온도 피크의 제거 또는 안전한 운전 온도 확보를 주장하지 않음 |
+
+게시 대상: [v0.18.1b1 Beta](https://github.com/giju0508/LPA/releases/tag/v0.18.1b1).
+실제 게시 완료 여부·tag code commit·서버 asset digest 및 인증 없는 공개
+다운로드 검증은 `thermal_review_outputs_0181/github_publication.json`과
+`anonymous_publication_check.json`에 기록합니다. prerelease를 정식 안정판의
+`Latest` 배지로 주장하지 않습니다.

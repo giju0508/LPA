@@ -292,6 +292,56 @@ def _developing_laminar_parameters(
     return length_ratio, f_re, nu_fd, c3, f_pr, exponent
 
 
+def _developing_laminar_local_value(
+    z_star: float,
+    parameters: tuple[float, float, float, float, float, float],
+) -> float:
+    """Evaluate Eq.45 locally, returning Nu based on hydraulic diameter."""
+    ratio, f_re, nu_fd, c3, f_pr, exponent = parameters
+    flat_plate = f_pr / sqrt(z_star)
+    leveque = c3 * (f_re / z_star) ** (1.0 / 3.0)
+    graetz = (leveque**5 + nu_fd**5) ** 0.2
+    # Scale the generalized mean to avoid overflow at very small entry length.
+    scale = max(flat_plate, graetz)
+    local_nu = scale * (
+        (flat_plate / scale) ** exponent + (graetz / scale) ** exponent
+    ) ** (1.0 / exponent)
+    return local_nu / ratio
+
+
+@lru_cache(maxsize=32768)
+def developing_laminar_local_nusselt(
+    reynolds: float, prandtl: float, hydraulic_diameter_m: float,
+    distance_from_inlet_m: float,
+    *, channel_aspect_ratio: float | None = None,
+    uniform_wall_temperature: bool = False,
+) -> float:
+    """Local Muzychka-Yovanovich Eq.45/Table1 Nu at a positive inlet distance.
+
+    The reference has an integrable inlet singularity and is intentionally
+    undefined at exactly zero. A conjugate finite-cell wall balance can sample
+    this local coefficient at quadrature nodes, solve the local resistance
+    network there, then integrate heat flux and wall temperature separately.
+    Averaging h before that nonlinear balance generally gives a different
+    answer. The same constant-property/section and boundary assumptions as
+    ``developing_laminar_cell_nusselt`` apply.
+    """
+    reynolds = _positive(reynolds, "Reynolds number")
+    prandtl = _positive(prandtl, "Prandtl number")
+    diameter = _positive(hydraulic_diameter_m, "hydraulic diameter")
+    distance = _positive(distance_from_inlet_m, "distance from heated inlet")
+    aspect = channel_aspect_ratio
+    if aspect is not None:
+        aspect = _positive(aspect, "channel aspect ratio")
+        aspect = min(aspect, 1.0 / aspect)
+    if prandtl < 0.1 or (aspect is not None and aspect < 0.01):
+        raise ValueError("developing laminar reference requires Pr >= 0.1 and rectangular aspect ratio >= 0.01")
+    parameters = _developing_laminar_parameters(prandtl, aspect, uniform_wall_temperature)
+    ratio = parameters[0]
+    z_star = distance / (reynolds * prandtl * diameter * ratio**2)
+    return _developing_laminar_local_value(z_star, parameters)
+
+
 @lru_cache(maxsize=8192)
 def developing_laminar_cell_nusselt(
     reynolds: float, prandtl: float, hydraulic_diameter_m: float,
@@ -318,21 +368,17 @@ def developing_laminar_cell_nusselt(
         aspect = min(aspect, 1.0/aspect)
     if prandtl < 0.1 or (aspect is not None and aspect < 0.01):
         raise ValueError("developing laminar reference requires Pr >= 0.1 and rectangular aspect ratio >= 0.01")
-    ratio, f_re, nu_fd, c3, f_pr, exponent = _developing_laminar_parameters(
+    parameters = _developing_laminar_parameters(
         prandtl, aspect, uniform_wall_temperature,
     )
+    ratio = parameters[0]
     thermal_length = reynolds*prandtl*diameter*ratio**2
     total = 0.0
     for coordinate, weight in _ENTRY_QUADRATURE:
         z_star = (start+length*coordinate**2)/thermal_length
-        flat_plate = f_pr/sqrt(z_star)
-        leveque = c3*(f_re/z_star)**(1.0/3.0)
-        graetz = (leveque**5+nu_fd**5)**0.2
-        # Scaled power sum avoids overflow at large Pr or small first cells.
-        scale = max(flat_plate, graetz)
-        local_nu = scale*((flat_plate/scale)**exponent+(graetz/scale)**exponent)**(1.0/exponent)
+        local_nu = _developing_laminar_local_value(z_star, parameters)
         total += weight*2.0*coordinate*local_nu
-    return total/ratio
+    return total
 
 
 @dataclass(frozen=True, slots=True)
@@ -367,6 +413,7 @@ def internal_flow_heat_transfer(
     distance_from_inlet_m: float | None = None,
     cell_length_m: float | None = None,
     thermal_boundary_condition: str = "conjugate",
+    entry_sample_fraction: float | None = None,
 ) -> InternalFlowHeatTransfer:
     """Coolant convection with local/cell-average entry development.
 
@@ -374,6 +421,8 @@ def internal_flow_heat_transfer(
     distances retain fully developed legacy values and explicit warnings.
     Finite properties are local bulk samples; the entry model does not solve
     variable-property/history or the actual conjugate wall boundary condition.
+    ``entry_sample_fraction`` samples a local coefficient inside the cell;
+    callers can integrate the conjugate balance instead of averaging h first.
     """
 
     mass_flow_kg_s = _positive(mass_flow_kg_s, "coolant mass flow")
@@ -400,6 +449,12 @@ def internal_flow_heat_transfer(
     if distance_from_inlet_m is not None:
         distance_from_inlet_m = _positive(distance_from_inlet_m, "distance from heated inlet", allow_zero=True)
         cell_length_m = _positive(cell_length_m, "heated cell length")
+    if entry_sample_fraction is not None:
+        entry_sample_fraction = _positive(entry_sample_fraction, "entry sample fraction")
+        if entry_sample_fraction >= 1.0:
+            raise ValueError("entry sample fraction must be strictly between zero and one")
+        if distance_from_inlet_m is None:
+            raise ValueError("entry sample fraction requires inlet distance and cell length")
     aspect = None
     if channel_aspect_ratio is not None:
         aspect = _positive(channel_aspect_ratio, "channel aspect ratio")
@@ -416,6 +471,12 @@ def internal_flow_heat_transfer(
 
     def laminar_at(value: float) -> float:
         if developing:
+            if entry_sample_fraction is not None:
+                return developing_laminar_local_nusselt(
+                    value, prandtl, hydraulic_diameter_m,
+                    distance_from_inlet_m + entry_sample_fraction * cell_length_m,
+                    channel_aspect_ratio=aspect, uniform_wall_temperature=uniform_temperature,
+                )
             return developing_laminar_cell_nusselt(
                 value, prandtl, hydraulic_diameter_m, distance_from_inlet_m, cell_length_m,
                 channel_aspect_ratio=aspect, uniform_wall_temperature=uniform_temperature,
@@ -432,7 +493,11 @@ def internal_flow_heat_transfer(
             return dittus_boelter_nusselt(value, prandtl)
         value = gnielinski_nusselt(value, prandtl, relative_roughness=relative_roughness)
         if distance_from_inlet_m is not None:
-            value *= _turbulent_cell_entry_factor(hydraulic_diameter_m, distance_from_inlet_m, cell_length_m)
+            if entry_sample_fraction is None:
+                value *= _turbulent_cell_entry_factor(hydraulic_diameter_m, distance_from_inlet_m, cell_length_m)
+            else:
+                distance = distance_from_inlet_m + entry_sample_fraction * cell_length_m
+                value *= 1.0 + (hydraulic_diameter_m / distance) ** (2.0 / 3.0) / 3.0
         return value
 
     if reynolds <= 2300.0:
@@ -456,9 +521,9 @@ def internal_flow_heat_transfer(
         regime = "turbulent"
     model = "fully developed internal flow"
     if developing and reynolds < 4000:
-        model = "Muzychka-Yovanovich (2004) cell-average combined-entry " + ("UWT" if uniform_temperature else "UWF")
+        model = "Muzychka-Yovanovich (2004) " + ("local" if entry_sample_fraction is not None else "cell-average") + " combined-entry " + ("UWT" if uniform_temperature else "UWF")
     elif distance_from_inlet_m is not None and name in {"gnielinski", "gn"}:
-        model = "Gnielinski cell-average thermal-entry correction"
+        model = "Gnielinski " + ("local" if entry_sample_fraction is not None else "cell-average") + " thermal-entry correction"
     if developing and reynolds < 4000:
         warnings.append("developing laminar reference assumes constant section/properties and uniform inlet profiles; local-property channel adaptation requires validation")
         warnings.append("laminar Darcy friction uses fully developed duct reference; hydrodynamic entrance pressure loss is not included")
