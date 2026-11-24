@@ -1,5 +1,7 @@
 # LPA - LGJ Propulsion Analysis · Beta
 
+[버전별 배포 파일 위치와 Git 태그](releases/README.md)
+
 LPA는 액체로켓 연소기의 성능, 추력실 형상, 열역학 상태와 정상상태 열전달을 예비 설계 단계에서 계산하는 Windows 데스크톱 도구입니다. RPA와 유사한 좌측 입력/결과 탐색 구조를 사용하며, 추진 성능은 RocketCEA, 고온가스측 열전달은 Bartz 상관식을 기본으로 합니다.
 
 현재 버전: **0.18.1b1** · **Beta 사전 배포판** · [변경 이력](CHANGELOG.md) · [검증 기록](docs/VALIDATION.md)
