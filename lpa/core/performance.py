@@ -104,13 +104,16 @@ class PerformanceResult:
 
 @dataclass(frozen=True, slots=True)
 class MixtureRatioOptimum:
-    """Maximum-vacuum-Isp O/F result at one reference nozzle condition."""
+    """Maximum ideal-vacuum-Isp O/F result at one nozzle condition."""
 
     mixture_ratio: float
     vacuum_isp_s: float
     expansion_ratio: float
     source: str
     warning: str | None = None
+    stoichiometric_mixture_ratio: float | None = None
+    oxidizer_excess_coefficient: float | None = None
+    objective: str = "ideal vacuum specific impulse"
 
 
 class RocketCEAAdapter:
@@ -169,23 +172,95 @@ class RocketCEAAdapter:
             thermal_cond_units="W/cm-degC",
         )
 
+    @staticmethod
+    def _resolve_expansion_ratio_with_cea(
+        cea: object,
+        engine: EngineDefinition,
+        *,
+        ambient_pressure_atm: float,
+        equilibrium_mode: EquilibriumMode,
+        mixture_ratio: float,
+    ) -> float:
+        if ambient_pressure_atm < 0.0:
+            raise ValueError("ambient pressure must be non-negative")
+        if ambient_pressure_atm == 0.0:
+            # A finite nozzle cannot reach zero exit pressure.  Match LPA's
+            # pressure-to-area solver practical upper bound.
+            return 250.0
+        method = getattr(cea, "get_eps_at_PcOvPe", None)
+        if not callable(method):
+            raise RuntimeError("RocketCEA cannot resolve area ratio from exit pressure")
+        pressure_ratio = (
+            engine.chamber_pressure_bar * BAR_PA
+            / (ambient_pressure_atm * ATM_PA)
+        )
+        frozen = int(equilibrium_mode is not EquilibriumMode.SHIFTING)
+        frozen_at_throat = int(equilibrium_mode is EquilibriumMode.FROZEN_AREA)
+        value = float(
+            method(
+                Pc=engine.chamber_pressure_bar,
+                MR=mixture_ratio,
+                PcOvPe=pressure_ratio,
+                frozen=frozen,
+                frozenAtThroat=frozen_at_throat,
+            )
+        )
+        if not isfinite(value) or value <= 1.0:
+            raise ValueError(f"invalid expansion area ratio {value!r}")
+        return value
+
+    def expansion_ratio_for_exit_pressure(
+        self,
+        engine: EngineDefinition,
+        *,
+        contraction_area_ratio: float,
+        ambient_pressure_atm: float,
+        equilibrium_mode: EquilibriumMode,
+        mixture_ratio: float | None = None,
+    ) -> float:
+        """Resolve ``Ae/At`` from ``Pe`` with the same CEA model used by analysis."""
+
+        cea = self._make_cea(engine, contraction_area_ratio)
+        return self._resolve_expansion_ratio_with_cea(
+            cea,
+            engine,
+            ambient_pressure_atm=ambient_pressure_atm,
+            equilibrium_mode=equilibrium_mode,
+            mixture_ratio=(engine.mixture_ratio if mixture_ratio is None else mixture_ratio),
+        )
+
     def vacuum_isp_evaluator(
         self,
         engine: EngineDefinition,
         *,
         contraction_area_ratio: float,
-        expansion_ratio: float,
+        expansion_ratio: float | None,
+        ambient_pressure_atm: float | None = None,
         equilibrium_mode: EquilibriumMode,
     ) -> Callable[[float], float]:
         """Build one reusable CEA object for a bounded O/F optimization."""
 
         cea = self._make_cea(engine, contraction_area_ratio)
 
+        def resolve_expansion_ratio(mixture_ratio: float) -> float:
+            if expansion_ratio is not None:
+                return float(expansion_ratio)
+            if ambient_pressure_atm is None or ambient_pressure_atm < 0.0:
+                raise ValueError("ambient pressure is required when expansion ratio is omitted")
+            return self._resolve_expansion_ratio_with_cea(
+                cea,
+                engine,
+                ambient_pressure_atm=ambient_pressure_atm,
+                equilibrium_mode=equilibrium_mode,
+                mixture_ratio=mixture_ratio,
+            )
+
         def evaluate(mixture_ratio: float) -> float:
+            candidate_expansion_ratio = resolve_expansion_ratio(mixture_ratio)
             arguments = {
                 "Pc": engine.chamber_pressure_bar,
                 "MR": mixture_ratio,
-                "eps": expansion_ratio,
+                "eps": candidate_expansion_ratio,
             }
             if equilibrium_mode is EquilibriumMode.SHIFTING:
                 value = cea.get_IvacCstrTc(**arguments)[0]  # type: ignore[attr-defined]
@@ -200,6 +275,24 @@ class RocketCEAAdapter:
                     )[0]
             return float(value)
 
+        # RPA defines its search variable as oxidizer excess coefficient,
+        # alpha=(O/F)/(O/F)_stoich.  RocketCEA exposes the same stoichiometric
+        # conversion.  Keep it on the evaluator so one reusable CEA object
+        # serves both the conversion and every objective evaluation.
+        stoichiometric_ratio: float | None = None
+        ratio_method = getattr(cea, "getMRforER", None)
+        if callable(ratio_method):
+            try:
+                candidate = float(ratio_method(ERphi=1.0))
+                if isfinite(candidate) and candidate > 0.0:
+                    stoichiometric_ratio = candidate
+            # Stoichiometric conversion is optional metadata.  A third-party
+            # wrapper error here must not discard an otherwise valid CEA Isp
+            # evaluator and force the entire optimization onto the fallback.
+            except Exception:
+                pass
+        setattr(evaluate, "stoichiometric_mixture_ratio", stoichiometric_ratio)
+        setattr(evaluate, "expansion_ratio_for_mixture_ratio", resolve_expansion_ratio)
         return evaluate
 
     def calculate(
@@ -320,13 +413,17 @@ def optimize_mixture_ratio(
 ) -> MixtureRatioOptimum:
     """Find the O/F that maximizes ideal vacuum specific impulse.
 
-    The nozzle area ratio is held fixed while O/F is varied.  If an ambient
-    pressure is supplied instead of an area ratio, a reference area ratio is
-    first calculated at the fallback chemistry optimum.  A broad bounded scan
-    followed by golden-section refinement avoids depending on a derivative
-    from the Fortran solver.  When RocketCEA is unavailable or cannot evaluate
-    the selected propellants, the same search is performed on LPA's explicitly
-    marked engineering fallback model.
+    RPA documents the optimum mixture as the maximum-specific-impulse point and
+    defines the search composition with oxidizer excess coefficient
+    ``alpha=(O/F)/(O/F)_stoich``.  Comparisons with the installed RPA solver for
+    shifting-equilibrium cases identify configured-exit ideal vacuum specific
+    impulse as the observable objective.  LPA uses that explicit objective and
+    retains the selected shifting/frozen RocketCEA mode; arbitrary RPA freeze
+    locations are not exposed by RocketCEA's public API.  RocketCEA supplies
+    ``(O/F)_stoich`` when available.  Because alpha and O/F are linearly
+    related, the public ``bounds`` remain O/F bounds.  RPA does not publish its
+    numerical search details, so LPA uses a coarse bounded scan followed by
+    golden-section refinement.
     """
 
     lower, upper = (float(bounds[0]), float(bounds[1]))
@@ -339,23 +436,30 @@ def optimize_mixture_ratio(
     else:
         mode = EquilibriumMode(str(equilibrium_mode))
 
-    if expansion_ratio is None:
+    configured_expansion_ratio = expansion_ratio
+    if configured_expansion_ratio is None:
         if ambient_pressure_atm is None or not isfinite(ambient_pressure_atm):
             raise ValueError("ambient pressure is required when expansion ratio is omitted")
         if ambient_pressure_atm < 0:
             raise ValueError("ambient pressure must be non-negative")
-        seed = fallback_chemistry(engine.oxidizer, engine.fuel, engine.mixture_ratio)
-        reference = fallback_chemistry(
-            engine.oxidizer, engine.fuel, seed.optimum_mixture_ratio
-        )
-        expansion_ratio = expansion_ratio_for_pressure(
-            engine.chamber_pressure_bar * BAR_PA,
-            ambient_pressure_atm * ATM_PA,
-            reference.gamma,
-        )
-    expansion_ratio = float(expansion_ratio)
-    if not isfinite(expansion_ratio) or expansion_ratio <= 1.0:
+    else:
+        configured_expansion_ratio = float(configured_expansion_ratio)
+    if configured_expansion_ratio is not None and (
+        not isfinite(configured_expansion_ratio) or configured_expansion_ratio <= 1.0
+    ):
         raise ValueError("expansion ratio must be finite and greater than 1")
+
+    def fallback_expansion_ratio(mixture_ratio: float) -> float:
+        if configured_expansion_ratio is not None:
+            return configured_expansion_ratio
+        chemistry = fallback_chemistry(engine.oxidizer, engine.fuel, mixture_ratio)
+        return expansion_ratio_for_pressure(
+            engine.chamber_pressure_bar * BAR_PA,
+            float(ambient_pressure_atm) * ATM_PA,
+            chemistry.gamma,
+        )
+
+    reference_expansion_ratio = fallback_expansion_ratio(engine.mixture_ratio)
 
     flow = EquilibriumFlow(
         mode=mode,
@@ -366,7 +470,7 @@ def optimize_mixture_ratio(
         contraction_area_ratio=contraction_area_ratio,
         exit_condition=NozzleExitCondition(
             mode=ExitConditionMode.EXPANSION_RATIO,
-            expansion_area_ratio=expansion_ratio,
+            expansion_area_ratio=reference_expansion_ratio,
             ambient_pressure_atm=None,
         ),
         equilibrium=flow,
@@ -374,11 +478,19 @@ def optimize_mixture_ratio(
 
     def fallback_objective(mixture_ratio: float) -> float:
         candidate = replace(engine, mixture_ratio=mixture_ratio)
-        return _fallback_state(candidate, reference_chamber, expansion_ratio).ideal_vacuum_isp_s
+        candidate_expansion_ratio = fallback_expansion_ratio(mixture_ratio)
+        return _fallback_state(
+            candidate,
+            reference_chamber,
+            candidate_expansion_ratio,
+        ).ideal_vacuum_isp_s
 
     errors: list[str] = []
 
-    def maximize(evaluator: Callable[[float], float]) -> tuple[float, float, bool]:
+    def maximize(
+        evaluator: Callable[[float], float],
+        stoichiometric_ratio: float | None = None,
+    ) -> tuple[float, float, bool]:
         cache: dict[float, float] = {}
 
         def safe_value(mixture_ratio: float) -> float:
@@ -396,14 +508,29 @@ def optimize_mixture_ratio(
             cache[key] = value
             return value
 
+        use_alpha = (
+            stoichiometric_ratio is not None
+            and isfinite(stoichiometric_ratio)
+            and stoichiometric_ratio > 0.0
+        )
+        scale = float(stoichiometric_ratio) if use_alpha else 1.0
+        coordinate_lower = lower / scale
+        coordinate_upper = upper / scale
+
+        def mixture_ratio(coordinate: float) -> float:
+            return coordinate * scale
+
         sample_count = 49
-        samples = [lower + (upper - lower) * index / (sample_count - 1) for index in range(sample_count)]
-        values = [safe_value(item) for item in samples]
+        samples = [
+            coordinate_lower
+            + (coordinate_upper - coordinate_lower) * index / (sample_count - 1)
+            for index in range(sample_count)
+        ]
+        values = [safe_value(mixture_ratio(item)) for item in samples]
         valid_indices = [index for index, value in enumerate(values) if isfinite(value)]
         if not valid_indices:
             raise RuntimeError(errors[0] if errors else "specific impulse could not be evaluated")
         best_index = max(valid_indices, key=lambda index: values[index])
-        at_bound = best_index in (0, sample_count - 1)
         left = samples[max(0, best_index - 1)]
         right = samples[min(sample_count - 1, best_index + 1)]
 
@@ -411,19 +538,24 @@ def optimize_mixture_ratio(
         inverse_phi = (sqrt(5.0) - 1.0) / 2.0
         x1 = right - inverse_phi * (right - left)
         x2 = left + inverse_phi * (right - left)
-        f1, f2 = safe_value(x1), safe_value(x2)
+        f1, f2 = safe_value(mixture_ratio(x1)), safe_value(mixture_ratio(x2))
         for _ in range(30):
             if f1 < f2:
                 left, x1, f1 = x1, x2, f2
                 x2 = left + inverse_phi * (right - left)
-                f2 = safe_value(x2)
+                f2 = safe_value(mixture_ratio(x2))
             else:
                 right, x2, f2 = x2, x1, f1
                 x1 = right - inverse_phi * (right - left)
-                f1 = safe_value(x1)
+                f1 = safe_value(mixture_ratio(x1))
 
         candidates = [(ratio, value) for ratio, value in cache.items() if isfinite(value)]
         optimum_ratio, optimum_isp = max(candidates, key=lambda item: item[1])
+        bound_tolerance = max(1.0e-9, (upper - lower) * 1.0e-7)
+        at_bound = (
+            abs(optimum_ratio - lower) <= bound_tolerance
+            or abs(optimum_ratio - upper) <= bound_tolerance
+        )
         return optimum_ratio, optimum_isp, at_bound
 
     adapter = cea_adapter
@@ -431,15 +563,28 @@ def optimize_mixture_ratio(
         adapter = RocketCEAAdapter()
     warning: str | None = None
     source = "ideal-gas-fallback"
+    stoichiometric_ratio: float | None = None
+    expansion_resolver: Callable[[float], float] | None = None
     if prefer_rocketcea and adapter is not None and adapter.available:
         try:
             cea_objective = adapter.vacuum_isp_evaluator(
                 engine,
                 contraction_area_ratio=contraction_area_ratio,
-                expansion_ratio=expansion_ratio,
+                expansion_ratio=configured_expansion_ratio,
+                ambient_pressure_atm=ambient_pressure_atm,
                 equilibrium_mode=mode,
             )
-            ratio, isp, at_bound = maximize(cea_objective)
+            stoichiometric_ratio = getattr(
+                cea_objective,
+                "stoichiometric_mixture_ratio",
+                None,
+            )
+            expansion_resolver = getattr(
+                cea_objective,
+                "expansion_ratio_for_mixture_ratio",
+                None,
+            )
+            ratio, isp, at_bound = maximize(cea_objective, stoichiometric_ratio)
             source = "rocketcea"
         except Exception as error:
             errors.clear()
@@ -453,12 +598,22 @@ def optimize_mixture_ratio(
     if at_bound:
         bound_note = f"optimum reached the configured O/F bound [{lower:g}, {upper:g}]"
         warning = f"{warning}; {bound_note}" if warning else bound_note
+    if source == "rocketcea" and callable(expansion_resolver):
+        optimum_expansion_ratio = float(expansion_resolver(ratio))
+    else:
+        optimum_expansion_ratio = fallback_expansion_ratio(ratio)
     return MixtureRatioOptimum(
         mixture_ratio=ratio,
         vacuum_isp_s=isp,
-        expansion_ratio=expansion_ratio,
+        expansion_ratio=optimum_expansion_ratio,
         source=source,
         warning=warning,
+        stoichiometric_mixture_ratio=stoichiometric_ratio,
+        oxidizer_excess_coefficient=(
+            ratio / stoichiometric_ratio
+            if stoichiometric_ratio is not None and stoichiometric_ratio > 0.0
+            else None
+        ),
     )
 
 
@@ -515,6 +670,62 @@ def _metric_set(
         isp_sea_level_s=isp_sea,
         isp_optimum_s=isp_optimum,
         isp_vacuum_s=isp_vacuum,
+    )
+
+
+def performance_at_ambient_pressure(
+    baseline: PerformanceResult,
+    ambient_pressure_atm: float,
+) -> PerformanceResult:
+    """Re-evaluate fixed hardware at a new back pressure without rerunning CEA."""
+
+    ambient = float(ambient_pressure_atm)
+    if not isfinite(ambient) or ambient < 0.0:
+        raise ValueError("ambient pressure must be finite and non-negative")
+    pc_pa = baseline.chamber_pressure_bar * BAR_PA
+    pe_pa = baseline.exit_pressure_bar * BAR_PA
+    pressure_cf = pe_pa / pc_pa * baseline.expansion_ratio
+    delivered_vacuum_cf = baseline.without_film.thrust_vacuum_n / (
+        pc_pa * baseline.throat_area_m2
+    )
+    delivered_momentum_cf = max(0.0, delivered_vacuum_cf - pressure_cf)
+    ideal_momentum_cf = delivered_momentum_cf / sqrt(baseline.nozzle_efficiency)
+    ideal_vacuum_cf = ideal_momentum_cf + pressure_cf
+    film_multiplier = (
+        baseline.with_film.thrust_vacuum_n / baseline.without_film.thrust_vacuum_n
+        if baseline.without_film.thrust_vacuum_n > 0.0
+        else 1.0
+    )
+    without_film = _metric_set(
+        baseline.throat_area_m2,
+        pc_pa,
+        baseline.hot_gas_mass_flow_kg_s,
+        baseline.hot_gas_mass_flow_kg_s,
+        baseline.expansion_ratio,
+        pe_pa,
+        ideal_vacuum_cf,
+        baseline.delivered_cstar_m_s,
+        baseline.nozzle_efficiency,
+        ambient,
+    )
+    with_film = _metric_set(
+        baseline.throat_area_m2,
+        pc_pa,
+        baseline.hot_gas_mass_flow_kg_s,
+        baseline.total_mass_flow_kg_s,
+        baseline.expansion_ratio,
+        pe_pa,
+        ideal_vacuum_cf,
+        baseline.delivered_cstar_m_s,
+        baseline.nozzle_efficiency,
+        ambient,
+        thrust_multiplier=film_multiplier,
+    )
+    return replace(
+        baseline,
+        design_ambient_pressure_atm=ambient,
+        without_film=without_film,
+        with_film=with_film,
     )
 
 
@@ -657,10 +868,30 @@ def evaluate_performance(
     state: ThermochemicalState
     if prefer_rocketcea and adapter is not None and adapter.available:
         try:
+            resolved_with_cea = False
+            if (
+                fixed_expansion_ratio is None
+                and chamber.exit_condition.mode is ExitConditionMode.AMBIENT_PRESSURE
+            ):
+                try:
+                    expansion_ratio = adapter.expansion_ratio_for_exit_pressure(
+                        engine,
+                        contraction_area_ratio=chamber.contraction_area_ratio,
+                        ambient_pressure_atm=float(
+                            chamber.exit_condition.ambient_pressure_atm
+                        ),
+                        equilibrium_mode=chamber.equilibrium.mode,
+                    )
+                    resolved_with_cea = True
+                except Exception:
+                    # Compatibility path for older/custom CEA wrappers that do
+                    # not expose get_eps_at_PcOvPe: retain the gamma iteration.
+                    pass
             state = adapter.calculate(engine, chamber, expansion_ratio)
             if (
                 fixed_expansion_ratio is None
                 and chamber.exit_condition.mode is ExitConditionMode.AMBIENT_PRESSURE
+                and not resolved_with_cea
             ):
                 refined_ratio = expansion_ratio_for_pressure(
                     engine.chamber_pressure_bar * BAR_PA,
@@ -795,4 +1026,93 @@ def evaluate_performance(
         with_film=with_film,
         film_blc_recovery=film_blc_recovery,
         warnings=state.warnings,
+    )
+
+
+def optimize_mixture_ratio_for_inputs(
+    inputs: AnalysisInput,
+    *,
+    bounds: tuple[float, float] = (0.10, 30.0),
+    prefer_rocketcea: bool = True,
+    cea_adapter: RocketCEAAdapter | None = None,
+) -> MixtureRatioOptimum:
+    """Optimize O/F while resolving a direct-``Dc`` sizing dependency.
+
+    With nominal-thrust sizing, ``Dc`` and ``Ac/At`` are coupled through the
+    throat area.  Repeating the O/F search at the newly resolved ``Ac/At``
+    prevents a hidden, inactive area-ratio field from influencing the result.
+    """
+
+    engine = inputs.engine
+    chamber = inputs.thrust_chamber
+    if chamber.exit_condition.mode is ExitConditionMode.EXPANSION_RATIO:
+        expansion_ratio = chamber.exit_condition.expansion_area_ratio
+        ambient_pressure_atm = None
+    else:
+        expansion_ratio = None
+        ambient_pressure_atm = chamber.exit_condition.ambient_pressure_atm
+
+    coupled_dc_sizing = (
+        chamber.contraction_mode is ContractionDefinitionMode.CHAMBER_DIAMETER
+        and chamber.size.mode is SizeMode.NOMINAL_THRUST
+    )
+    if chamber.contraction_mode is ContractionDefinitionMode.CHAMBER_DIAMETER:
+        if chamber.size.mode is SizeMode.THROAT_DIAMETER:
+            contraction_ratio = chamber.resolved_contraction_area_ratio(
+                float(chamber.size.throat_diameter_mm)
+            )
+        else:
+            contraction_ratio = (
+                float(chamber.contraction_area_ratio)
+                if isfinite(chamber.contraction_area_ratio)
+                and chamber.contraction_area_ratio > 1.0
+                else 4.0
+            )
+    else:
+        contraction_ratio = chamber.contraction_area_ratio
+
+    adapter = cea_adapter
+    if adapter is None and prefer_rocketcea:
+        adapter = RocketCEAAdapter()
+
+    optimum: MixtureRatioOptimum | None = None
+    for _iteration in range(8 if coupled_dc_sizing else 1):
+        optimum = optimize_mixture_ratio(
+            engine,
+            contraction_area_ratio=contraction_ratio,
+            expansion_ratio=expansion_ratio,
+            ambient_pressure_atm=ambient_pressure_atm,
+            equilibrium_mode=chamber.equilibrium.mode,
+            bounds=bounds,
+            prefer_rocketcea=prefer_rocketcea,
+            cea_adapter=adapter,
+        )
+        if not coupled_dc_sizing:
+            return optimum
+
+        candidate_inputs = replace(
+            inputs,
+            engine=replace(engine, mixture_ratio=optimum.mixture_ratio),
+        )
+        sized = evaluate_performance(
+            candidate_inputs,
+            prefer_rocketcea=prefer_rocketcea,
+            cea_adapter=adapter,
+        )
+        resolved_ratio = sized.contraction_area_ratio
+        if abs(resolved_ratio / contraction_ratio - 1.0) <= 1.0e-6:
+            return optimum
+        contraction_ratio = resolved_ratio
+
+    # Re-evaluate once at the latest coupled ratio so the returned objective
+    # never belongs to the preceding iterate.
+    return optimize_mixture_ratio(
+        engine,
+        contraction_area_ratio=contraction_ratio,
+        expansion_ratio=expansion_ratio,
+        ambient_pressure_atm=ambient_pressure_atm,
+        equilibrium_mode=chamber.equilibrium.mode,
+        bounds=bounds,
+        prefer_rocketcea=prefer_rocketcea,
+        cea_adapter=adapter,
     )

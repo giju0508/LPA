@@ -23,6 +23,7 @@ from .project import (
 )
 from .ui.input_views import EngineDefinitionPage, ThermalAnalysisPage, ThrustChamberPage
 from .ui.result_views import (
+    AmbientConditionPerformancePage,
     ChamberResultsPage,
     ThermalResultsPage,
     ThermodynamicsResultsPage,
@@ -158,6 +159,7 @@ class LPAApplication(tk.Tk):
             ("thermal_result", "02  Thermal Analysis"),
             ("thermo_result", "03  Thermodynamics"),
             ("throttle_result", "04  Throttled Performance"),
+            ("ambient_result", "05  Ambient Performance"),
         ))
         spacer = ttk.Frame(nav, style="Nav.TFrame")
         spacer.pack(fill="both", expand=True)
@@ -178,7 +180,7 @@ class LPAApplication(tk.Tk):
         header.grid_columnconfigure(0, weight=1)
         context = ttk.Frame(header, style="Header.TFrame")
         context.grid(row=0, column=0, sticky="ew", padx=(0, 18))
-        self.context_title = ttk.Label(context, text="Engine Definition", style="Section.TLabel")
+        self.context_title = ttk.Label(context, text="Engine Definition", style="PageTitle.TLabel")
         self.context_title.pack(anchor="w")
         self.context_description = ttk.Label(
             context,
@@ -211,6 +213,7 @@ class LPAApplication(tk.Tk):
             "thermal_result": ThermalResultsPage,
             "thermo_result": ThermodynamicsResultsPage,
             "throttle_result": ThrottledPerformancePage,
+            "ambient_result": AmbientConditionPerformancePage,
         }
         for key, page_type in page_types.items():
             page = page_type(self.content)
@@ -284,6 +287,11 @@ class LPAApplication(tk.Tk):
 
         self.context_title.configure(text=title)
         self.context_description.configure(text=description)
+        if description:
+            if not self.context_description.winfo_manager():
+                self.context_description.pack(anchor="w", pady=(2, 0))
+        else:
+            self.context_description.pack_forget()
 
     def collect_project(self) -> dict[str, Any]:
         return make_project(
@@ -427,7 +435,13 @@ class LPAApplication(tk.Tk):
             self._future = None
             return
         self._future = None
-        for key in ("size_result", "thermal_result", "thermo_result", "throttle_result"):
+        for key in (
+            "size_result",
+            "thermal_result",
+            "thermo_result",
+            "throttle_result",
+            "ambient_result",
+        ):
             getattr(self.pages[key], "set_result")(result)
         method = result.get("method", self._analysis_service.backend_description)
         self.backend_text.configure(text=str(method))
@@ -435,7 +449,13 @@ class LPAApplication(tk.Tk):
         self.show_page("size_result")
 
     def clear_results(self) -> None:
-        for key in ("size_result", "thermal_result", "thermo_result", "throttle_result"):
+        for key in (
+            "size_result",
+            "thermal_result",
+            "thermo_result",
+            "throttle_result",
+            "ambient_result",
+        ):
             getattr(self.pages[key], "clear")()
         self.status_text.set("Results cleared")
 

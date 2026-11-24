@@ -9,7 +9,22 @@ import uuid
 from tkinter import messagebox, ttk
 from typing import Any
 
-from ..core import EngineDefinition, EquilibriumMode, MixtureRatioOptimum, optimize_mixture_ratio
+from ..core import (
+    AnalysisInput,
+    ContractionDefinitionMode,
+    EngineDefinition,
+    EquilibriumFlow,
+    EquilibriumMode,
+    MixtureRatioOptimum,
+    NozzleEfficiency,
+    NozzleExitCondition,
+    NozzleGeometry,
+    SizeMode,
+    ThrustChamberInput,
+    ThrustChamberSize,
+    optimize_mixture_ratio,
+    optimize_mixture_ratio_for_inputs,
+)
 from .theme import COLORS, FONT_UI
 from .widgets import Card, FieldGrid, ScrollableFrame, Tooltip, set_children_state
 
@@ -76,7 +91,7 @@ class InputPage(ScrollableFrame):
 
 class EngineDefinitionPage(InputPage):
     page_title = "Engine Definition"
-    page_description = "Define the propellant combination and nominal combustion state. Pressures are absolute."
+    page_description = ""
 
     def __init__(self, master: tk.Misc) -> None:
         super().__init__(master)
@@ -84,7 +99,7 @@ class EngineDefinitionPage(InputPage):
         self._optimum_cache: dict[tuple[Any, ...], MixtureRatioOptimum] = {}
         self._optimization_after_id: str | None = None
         self._chamber_traces_attached = False
-        identity = Card(self.body, "Project identity", "Used in saved analysis files and exported reports.")
+        identity = Card(self.body, "Project identity")
         identity.pack(fill="x", pady=(0, 14))
         grid = FieldGrid(identity.content, columns=2)
         grid.pack(fill="x")
@@ -108,7 +123,7 @@ class EngineDefinitionPage(InputPage):
         self.description = description
         grid.add("Description", description)
 
-        operating = Card(self.body, "Operating point", "CEA equilibrium chemistry is evaluated at this nominal state.")
+        operating = Card(self.body, "Operating point")
         operating.pack(fill="x", pady=(0, 14))
         fields = FieldGrid(operating.content, columns=2)
         fields.pack(fill="x")
@@ -124,7 +139,7 @@ class EngineDefinitionPage(InputPage):
         self.mixture_ratio_auto_var = self.boolean("mixture_ratio_auto", False)
         ttk.Checkbutton(
             ratio_box,
-            text="Automatically optimize for maximum vacuum Isp",
+            text="Automatically optimize O/F (maximum ideal vacuum Isp)",
             variable=self.mixture_ratio_auto_var,
             command=self._on_auto_mixture_ratio,
         ).grid(row=1, column=0, sticky="w", pady=(5, 0))
@@ -135,6 +150,7 @@ class EngineDefinitionPage(InputPage):
             wraplength=360,
         )
         self.mixture_ratio_status.grid(row=2, column=0, sticky="w", pady=(3, 0))
+        self.mixture_ratio_status.grid_remove()
         fields.add("Mixture ratio (O/F)", ratio_box)
 
         self.oxidizer_var = self.string("oxidizer", "LOX")
@@ -160,19 +176,6 @@ class EngineDefinitionPage(InputPage):
         self.fuel_var.trace_add("write", self._on_optimization_variable)
         self._set_mixture_ratio_entry_state()
 
-        note = ttk.Label(
-            self.body,
-            text="RocketCEA is used when the selected propellant pair is supported. A clearly marked ideal-gas fallback keeps projects reviewable if CEA is unavailable.",
-            style="Warning.TLabel",
-            wraplength=940,
-        )
-        note.pack(fill="x")
-        note.bind(
-            "<Configure>",
-            lambda event: note.configure(wraplength=max(280, event.width - 20)),
-            add="+",
-        )
-
     @staticmethod
     def _core_propellant_name(value: str) -> str:
         replacements = {
@@ -193,6 +196,7 @@ class EngineDefinitionPage(InputPage):
         else:
             self.mixture_ratio_entry.state(["!readonly", "!disabled"])
             self.mixture_ratio_status.configure(text="")
+            self.mixture_ratio_status.grid_remove()
 
     def _ensure_chamber_traces(self) -> None:
         if self._chamber_traces_attached:
@@ -211,6 +215,17 @@ class EngineDefinitionPage(InputPage):
             "exit_condition_mode",
             "exit_condition_value",
             "flow_model",
+            "freeze_value",
+            "nominal_thrust",
+            "thrust_unit",
+            "nominal_thrust_ambient_atm",
+            "reaction_efficiency_pct",
+            "nozzle_efficiency_mode",
+            "nozzle_efficiency_pct",
+            "nozzle_type",
+            "nozzle_half_angle_deg",
+            "rao_length_pct",
+            "rn_rt",
         )
         if not all(key in variables for key in keys):
             return
@@ -227,6 +242,7 @@ class EngineDefinitionPage(InputPage):
         expansion_ratio: float | None = 40.0
         ambient_pressure: float | None = None
         equilibrium_mode = EquilibriumMode.SHIFTING
+        coupled_inputs: AnalysisInput | None = None
         pages = getattr(self.winfo_toplevel(), "pages", {})
         chamber_page = pages.get("chamber") if isinstance(pages, dict) else None
         variables = getattr(chamber_page, "variables", {})
@@ -252,6 +268,102 @@ class EngineDefinitionPage(InputPage):
 
         oxidizer = self._core_propellant_name(self.oxidizer_var.get())
         fuel = self._core_propellant_name(self.fuel_var.get())
+        engine = EngineDefinition(
+            name="O/F optimization",
+            chamber_pressure_bar=chamber_pressure,
+            mixture_ratio=1.0,
+            oxidizer=oxidizer,
+            fuel=fuel,
+        )
+        coupled_signature: tuple[Any, ...] = ()
+        if (
+            isinstance(variables, dict)
+            and variables
+            and variables["contraction_mode"].get() == "Chamber diameter (Dc)"
+            and variables["sizing_mode"].get() == "Engine nominal thrust"
+        ):
+            freeze_value = float(variables["freeze_value"].get())
+            equilibrium = EquilibriumFlow(
+                mode=equilibrium_mode,
+                freeze_pressure_ratio=(
+                    freeze_value
+                    if equilibrium_mode is EquilibriumMode.FROZEN_PRESSURE
+                    else None
+                ),
+                freeze_area_ratio=(
+                    freeze_value
+                    if equilibrium_mode is EquilibriumMode.FROZEN_AREA
+                    else None
+                ),
+            )
+            if expansion_ratio is not None:
+                exit_condition = NozzleExitCondition(
+                    mode="expansion_ratio",
+                    expansion_area_ratio=expansion_ratio,
+                    ambient_pressure_atm=None,
+                )
+            else:
+                exit_condition = NozzleExitCondition(
+                    mode="ambient_pressure",
+                    ambient_pressure_atm=ambient_pressure,
+                )
+            thrust_n = float(variables["nominal_thrust"].get())
+            if variables["thrust_unit"].get() == "kN":
+                thrust_n *= 1000.0
+            nozzle_efficiency_mode = str(variables["nozzle_efficiency_mode"].get())
+            nozzle_efficiency = NozzleEfficiency(
+                mode="estimate" if nozzle_efficiency_mode == "Estimate" else "direct",
+                value_percent=(
+                    None
+                    if nozzle_efficiency_mode == "Estimate"
+                    else float(variables["nozzle_efficiency_pct"].get())
+                ),
+            )
+            nozzle_type = str(variables["nozzle_type"].get())
+            chamber = ThrustChamberInput(
+                contraction_mode=ContractionDefinitionMode.CHAMBER_DIAMETER,
+                contraction_area_ratio=contraction_ratio,
+                chamber_diameter_mm=float(variables["chamber_diameter_mm"].get()),
+                exit_condition=exit_condition,
+                equilibrium=equilibrium,
+                reaction_efficiency_percent=float(
+                    variables["reaction_efficiency_pct"].get()
+                ),
+                nozzle_efficiency=nozzle_efficiency,
+                size=ThrustChamberSize(
+                    mode=SizeMode.NOMINAL_THRUST,
+                    nominal_thrust_n=thrust_n,
+                    thrust_ambient_pressure_atm=float(
+                        variables["nominal_thrust_ambient_atm"].get()
+                    ),
+                    throat_diameter_mm=None,
+                ),
+                nozzle=NozzleGeometry(
+                    contour_type=(
+                        "rao_bell"
+                        if nozzle_type == "Parabolic contour (Rao)"
+                        else "conical"
+                    ),
+                    conical_half_angle_deg=float(
+                        variables["nozzle_half_angle_deg"].get()
+                    ),
+                    bell_length_percent=float(variables["rao_length_pct"].get()),
+                    throat_radius_ratio=float(variables["rn_rt"].get()),
+                ),
+            )
+            coupled_inputs = AnalysisInput(engine=engine, thrust_chamber=chamber)
+            coupled_signature = (
+                round(float(variables["chamber_diameter_mm"].get()), 9),
+                round(thrust_n, 9),
+                round(float(variables["nominal_thrust_ambient_atm"].get()), 9),
+                round(float(variables["reaction_efficiency_pct"].get()), 9),
+                nozzle_efficiency_mode,
+                round(float(variables["nozzle_efficiency_pct"].get()), 9),
+                nozzle_type,
+                round(float(variables["nozzle_half_angle_deg"].get()), 9),
+                round(float(variables["rao_length_pct"].get()), 9),
+                round(float(variables["rn_rt"].get()), 9),
+            )
         signature = (
             round(chamber_pressure, 9),
             oxidizer,
@@ -260,20 +372,18 @@ class EngineDefinitionPage(InputPage):
             None if expansion_ratio is None else round(expansion_ratio, 9),
             None if ambient_pressure is None else round(ambient_pressure, 9),
             equilibrium_mode.value,
+            *coupled_signature,
         )
-        return signature, {
-            "engine": EngineDefinition(
-                name="O/F optimization",
-                chamber_pressure_bar=chamber_pressure,
-                mixture_ratio=1.0,
-                oxidizer=oxidizer,
-                fuel=fuel,
-            ),
+        settings = {
+            "engine": engine,
             "contraction_area_ratio": contraction_ratio,
             "expansion_ratio": expansion_ratio,
             "ambient_pressure_atm": ambient_pressure,
             "equilibrium_mode": equilibrium_mode,
         }
+        if coupled_inputs is not None:
+            settings["_coupled_inputs"] = coupled_inputs
+        return signature, settings
 
     def _refresh_automatic_mixture_ratio(self, *, force: bool = False) -> None:
         self._set_mixture_ratio_entry_state()
@@ -287,22 +397,28 @@ class EngineDefinitionPage(InputPage):
                 return
             optimum = self._optimum_cache.get(signature)
             if optimum is None:
-                optimum = optimize_mixture_ratio(**settings)
+                coupled_inputs = settings.pop("_coupled_inputs", None)
+                if coupled_inputs is None:
+                    optimum = optimize_mixture_ratio(**settings)
+                else:
+                    optimum = optimize_mixture_ratio_for_inputs(coupled_inputs)
                 self._optimum_cache[signature] = optimum
             value = f"{optimum.mixture_ratio:.5f}".rstrip("0").rstrip(".")
             self.mixture_ratio_var.set(value)
             self._optimum_signature = signature
-            source = "RocketCEA" if optimum.source == "rocketcea" else "Engineering fallback"
-            status = (
-                f"{source} optimum · Ivac {optimum.vacuum_isp_s:.2f} s "
-                f"at Ae/At {optimum.expansion_ratio:.3f}"
-            )
             if optimum.warning:
-                status += f" · {optimum.warning}"
-            self.mixture_ratio_status.configure(text=status)
+                self.mixture_ratio_status.configure(
+                    text="Automatic O/F used the engineering fallback model.",
+                    style="Warning.TLabel",
+                )
+                self.mixture_ratio_status.grid()
+            else:
+                self.mixture_ratio_status.configure(text="")
+                self.mixture_ratio_status.grid_remove()
         except (KeyError, TypeError, ValueError, RuntimeError) as error:
             self._optimum_signature = None
-            self.mixture_ratio_status.configure(text=str(error))
+            self.mixture_ratio_status.configure(text=str(error), style="Error.TLabel")
+            self.mixture_ratio_status.grid()
 
     def _on_auto_mixture_ratio(self) -> None:
         self._refresh_automatic_mixture_ratio(force=True)
@@ -353,7 +469,7 @@ class EngineDefinitionPage(InputPage):
 
 class ThrustChamberPage(InputPage):
     page_title = "Thrust Chamber"
-    page_description = "Set the chamber sizing basis, flow model, contraction, and nozzle contour."
+    page_description = ""
 
     def __init__(self, master: tk.Misc) -> None:
         super().__init__(master)
@@ -396,12 +512,11 @@ class ThrustChamberPage(InputPage):
             width=10,
         )
         self.contraction_value.grid(row=0, column=1, sticky="ew")
-        self.contraction_unit = ttk.Label(contraction_box, text="Ac/At", style="Muted.TLabel")
+        self.contraction_unit = ttk.Label(contraction_box, text="Ac/At", style="Unit.TLabel")
         self.contraction_unit.grid(row=0, column=2, padx=(7, 0))
         fields.add(
             "Contraction definition",
             contraction_box,
-            hint="Choose Ac/At or specify the cylindrical chamber diameter Dc directly.",
         )
         self.contraction_mode_var.trace_add("write", lambda *_: self._refresh_states())
 
@@ -418,7 +533,7 @@ class ThrustChamberPage(InputPage):
         exit_combo.grid(row=0, column=0, padx=(0, 7), sticky="w")
         self.exit_value = ttk.Entry(exit_box, textvariable=self.string("exit_condition_value", "1.0"), width=10)
         self.exit_value.grid(row=0, column=1, sticky="ew")
-        self.exit_unit = ttk.Label(exit_box, text="atm", style="Muted.TLabel")
+        self.exit_unit = ttk.Label(exit_box, text="atm", style="Unit.TLabel")
         self.exit_unit.grid(row=0, column=2, padx=(7, 0))
         fields.add("Nozzle exit condition", exit_box)
         exit_mode.trace_add("write", lambda *_: self._refresh_states())
@@ -436,9 +551,9 @@ class ThrustChamberPage(InputPage):
         freeze.grid_columnconfigure(0, weight=1)
         self.freeze_value = ttk.Entry(freeze, textvariable=self.string("freeze_value", "10.0"))
         self.freeze_value.grid(row=0, column=0, sticky="ew")
-        self.freeze_unit = ttk.Label(freeze, text="Pc/P", style="Muted.TLabel")
+        self.freeze_unit = ttk.Label(freeze, text="Pc/P", style="Unit.TLabel")
         self.freeze_unit.grid(row=0, column=1, padx=(7, 0))
-        fields.add("Freezing criterion", freeze, hint="Enabled for frozen-flow calculations.")
+        fields.add("Freezing criterion", freeze)
         self.variables["flow_model"].trace_add("write", lambda *_: self._refresh_states())
 
         fields.add(
@@ -462,12 +577,12 @@ class ThrustChamberPage(InputPage):
             width=8,
         )
         self.nozzle_eff_value.grid(row=0, column=1)
-        ttk.Label(nozzle_eff_box, text="%", style="Muted.TLabel").grid(row=0, column=2, padx=(5, 0))
+        ttk.Label(nozzle_eff_box, text="%", style="Unit.TLabel").grid(row=0, column=2, padx=(5, 0))
         fields.add("Nozzle efficiency", nozzle_eff_box)
         self.variables["nozzle_efficiency_mode"].trace_add("write", lambda *_: self._refresh_states())
 
     def _build_sweep_card(self) -> None:
-        card = Card(self.body, "Operating envelopes", "Optional sweeps produce dedicated result tables.")
+        card = Card(self.body, "Operating envelopes")
         card.pack(fill="x", pady=(0, 14))
 
         throttle_header = ttk.Frame(card.content, style="Surface.TFrame")
@@ -533,11 +648,11 @@ class ThrustChamberPage(InputPage):
         box = ttk.Frame(parent, style="Surface.TFrame")
         box.grid(row=0, column=column, padx=(0 if column == 0 else 7, 0), sticky="ew")
         box.grid_columnconfigure(0, weight=1)
-        ttk.Label(box, text=label, style="Muted.TLabel").grid(row=0, column=0, sticky="w")
+        ttk.Label(box, text=label, style="Field.TLabel").grid(row=0, column=0, sticky="w")
         entry = ttk.Entry(box, textvariable=self.string(key, default), width=8)
         entry.grid(row=1, column=0, sticky="ew")
         if unit:
-            ttk.Label(box, text=unit, style="Muted.TLabel").grid(row=1, column=1, padx=(4, 0))
+            ttk.Label(box, text=unit, style="Unit.TLabel").grid(row=1, column=1, padx=(4, 0))
         box.input_entry = entry  # type: ignore[attr-defined]
         return box
 
@@ -598,11 +713,10 @@ class ThrustChamberPage(InputPage):
             "Characteristic length L*",
             self.lstar,
             unit="mm",
-            hint="Volume uses the cylindrical-area basis and excludes the convergent section.",
         )
 
     def _build_geometry_card(self) -> None:
-        card = Card(self.body, "Contour geometry", "Radii are normalized by throat radius Rt.")
+        card = Card(self.body, "Contour geometry")
         card.pack(fill="x", pady=(0, 10))
         fields = FieldGrid(card.content, columns=3)
         fields.pack(fill="x")
@@ -728,14 +842,13 @@ def resolve_effective_regen_coolant(
 
 class ThermalAnalysisPage(InputPage):
     page_title = "Thermal Analysis"
-    page_description = "Build axial cooling segments and solve the hot wall, coolant wall, and coolant temperature distributions."
+    page_description = ""
 
     def __init__(self, master: tk.Misc) -> None:
         super().__init__(master)
         self.segments: list[dict[str, Any]] = []
         self._build_control_card()
         self._build_segment_card()
-        self._build_guidance()
         self._refresh_enabled()
 
     def _build_control_card(self) -> None:
@@ -750,7 +863,6 @@ class ThermalAnalysisPage(InputPage):
             variable=enabled,
             command=self._refresh_enabled,
         ).pack(side="left")
-        ttk.Label(top, text="Bartz hot-gas correlation", style="Badge.TLabel").pack(side="right")
         self.thermal_controls = ttk.Frame(card.content, style="Surface.TFrame")
         self.thermal_controls.pack(fill="x", pady=(10, 0))
         fields = FieldGrid(self.thermal_controls, columns=2)
@@ -763,7 +875,6 @@ class ThermalAnalysisPage(InputPage):
                 values=("Low", "Medium", "High"),
                 state="readonly",
             ),
-            hint="The exact axial section count is reported with every result.",
         )
         fields.add(
             "Maximum solver iterations",
@@ -771,11 +882,7 @@ class ThermalAnalysisPage(InputPage):
         )
 
     def _build_segment_card(self) -> None:
-        card = Card(
-            self.body,
-            "Cooling segments",
-            "Segments are evaluated in physical axial coordinates; Regen and Radiation ranges may not overlap.",
-        )
+        card = Card(self.body, "Cooling segments")
         card.pack(fill="both", expand=True, pady=(0, 14))
         toolbar = ttk.Frame(card.content, style="Surface.TFrame")
         toolbar.pack(fill="x", pady=(0, 8))
@@ -811,19 +918,6 @@ class ThermalAnalysisPage(InputPage):
         self.tree.tag_configure("invalid", foreground=COLORS["danger"])
         self.tree.tag_configure("warning", foreground=COLORS["warning"])
         self.segment_warning = ttk.Label(card.content, text="", style="Error.TLabel", wraplength=900)
-
-    def _build_guidance(self) -> None:
-        text = (
-            "Choose TOP, Conv Boundary, or a numeric location for each Start; choose Conv Boundary, "
-            "BOTTOM, or a numeric location for each End. Coolant normally flows opposite to the gas direction."
-        )
-        guidance = ttk.Label(self.body, text=text, style="Warning.TLabel", wraplength=940)
-        guidance.pack(fill="x")
-        guidance.bind(
-            "<Configure>",
-            lambda event: guidance.configure(wraplength=max(280, event.width - 20)),
-            add="+",
-        )
 
     def _refresh_enabled(self) -> None:
         enabled = bool(self.variables["thermal_enabled"].get())
@@ -1184,11 +1278,6 @@ class SegmentDialog(tk.Toplevel):
         header = ttk.Frame(shell, style="Header.TFrame", padding=(20, 15))
         header.pack(fill="x")
         ttk.Label(header, text=f"{segment['type']} segment", style="Title.TLabel").pack(anchor="w")
-        ttk.Label(
-            header,
-            text="All lengths use millimetres unless another unit is shown.",
-            style="Subtitle.TLabel",
-        ).pack(anchor="w", pady=(2, 0))
         ttk.Separator(shell).pack(fill="x")
         scroll = ScrollableFrame(shell, padding=18)
         scroll.pack(fill="both", expand=True)
@@ -1340,7 +1429,7 @@ class SegmentDialog(tk.Toplevel):
             ).grid(row=0, column=0, padx=(0, 7), sticky="ew")
             self.start_location_entry = ttk.Entry(start_box, textvariable=self.var("start_mm"), width=7)
             self.start_location_entry.grid(row=0, column=1, sticky="ew")
-            ttk.Label(start_box, text="mm", style="Muted.TLabel").grid(row=0, column=2, padx=(6, 0))
+            ttk.Label(start_box, text="mm", style="Unit.TLabel").grid(row=0, column=2, padx=(6, 0))
             fields.add("Start", start_box)
 
             end_box = ttk.Frame(fields, style="Surface.TFrame")
@@ -1355,7 +1444,7 @@ class SegmentDialog(tk.Toplevel):
             ).grid(row=0, column=0, padx=(0, 7), sticky="ew")
             self.end_location_entry = ttk.Entry(end_box, textvariable=self.var("end_mm"), width=7)
             self.end_location_entry.grid(row=0, column=1, sticky="ew")
-            ttk.Label(end_box, text="mm", style="Muted.TLabel").grid(row=0, column=2, padx=(6, 0))
+            ttk.Label(end_box, text="mm", style="Unit.TLabel").grid(row=0, column=2, padx=(6, 0))
             fields.add("End", end_box)
             start_mode.trace_add("write", lambda *_: self._refresh())
             end_mode.trace_add("write", lambda *_: self._refresh())
@@ -1465,7 +1554,7 @@ class SegmentDialog(tk.Toplevel):
 
         self._build_tbc(default_thickness="0.10")
 
-        rough = Card(self.form, "Surface roughness", "Optional repeated rib/step augmentation.")
+        rough = Card(self.form, "Surface roughness")
         rough.pack(fill="x", pady=(0, 12))
         rough_enabled = self.var("roughness_enabled")
         ttk.Checkbutton(
@@ -1533,7 +1622,7 @@ class SegmentDialog(tk.Toplevel):
         temp_mode.trace_add("write", lambda *_: self._refresh())
         self.linked_regen_label.trace_add("write", lambda *_: self._refresh())
 
-        orifice = Card(self.form, "Film orifice sizing", "Available when film temperature is linked to a Regen solution.")
+        orifice = Card(self.form, "Film orifice sizing")
         orifice.pack(fill="x", pady=(0, 12))
         enabled = self.var("orifice_enabled")
         self.orifice_check = ttk.Checkbutton(
@@ -1561,7 +1650,7 @@ class SegmentDialog(tk.Toplevel):
         card.pack(fill="x", pady=(0, 12))
         fields = FieldGrid(card.content, columns=2)
         fields.pack(fill="x")
-        fields.add("Outer-wall emissivity", ttk.Entry(fields, textvariable=self.var("emissivity")), hint="Dimensionless, 0 < ε ≤ 1")
+        fields.add("Outer-wall emissivity", ttk.Entry(fields, textvariable=self.var("emissivity")))
         self._build_tbc(default_thickness="0.01")
         self.after_idle(self._refresh)
 

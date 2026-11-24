@@ -5,6 +5,7 @@ from math import isfinite
 import pytest
 
 from lpa.core.models import Resolution
+import lpa.thermal.solver as thermal_solver
 from lpa.thermal import (
     MATERIALS,
     MESH_SECTION_COUNTS,
@@ -213,6 +214,43 @@ def test_regen_solver_returns_rpa_temperature_arrays_and_coolant_rise(
     assert result.metadata["coolant_pressure_model"].startswith("Darcy-Weisbach")
     assert max(result.gas_coefficient_w_m2k) > 1_000.0
     assert max(result.coolant_coefficient_w_m2k) > 1_000.0
+
+
+def test_regen_heat_pickup_uses_contour_path_length(
+    contour: dict[str, object],
+    gas: dict[str, object],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    observed_path_lengths: list[float] = []
+    original_area = thermal_solver.annular_wall_area
+
+    def capture_area(radius_m: float, path_length_m: float) -> float:
+        observed_path_lengths.append(path_length_m)
+        return original_area(radius_m, path_length_m)
+
+    monkeypatch.setattr(thermal_solver, "annular_wall_area", capture_area)
+    analyze_thermal(
+        contour,
+        gas,
+        [regen(coolant_definition=coolant())],
+        low_settings(),
+    )
+
+    mesh = thermal_solver._build_mesh(contour, MESH_SECTION_COUNTS["low"])
+    bounds = (mesh.x_m[0], mesh.x_m[-1])
+    expected = [
+        thermal_solver._channel_path_length_in_range(mesh, index, bounds)
+        for index in reversed(range(len(mesh.x_m)))
+    ]
+    projected = [
+        thermal_solver._cell_width_in_range(mesh, index, bounds)
+        for index in reversed(range(len(mesh.x_m)))
+    ]
+
+    # The solver makes two counterflow passes when resolving linked-film input;
+    # each pass must use ds, and at least one sloped cell must have ds > dx.
+    assert observed_path_lengths == pytest.approx(expected + expected)
+    assert any(path > axial for path, axial in zip(expected, projected))
 
 
 def test_regen_axial_coolant_state_and_occupied_angle_geometry_are_reported(

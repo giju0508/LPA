@@ -8,7 +8,12 @@ from typing import Any, Mapping
 from .contour import ContourResult, generate_contour
 from .models import AnalysisInput, Resolution, validate_inputs
 from .performance import PerformanceResult, RocketCEAAdapter, evaluate_performance
-from .sweeps import PerformanceSweep, run_ambient_sweep, run_throttle_sweep
+from .sweeps import (
+    PerformanceSweep,
+    run_ambient_sweep,
+    run_standard_atmosphere_sweep,
+    run_throttle_sweep,
+)
 from .thermodynamics import AxialThermodynamics, build_thermodynamics
 from .serialization import analysis_input_from_dict
 
@@ -21,6 +26,7 @@ class AnalysisResult:
     thermodynamics: AxialThermodynamics
     throttle_sweep: PerformanceSweep
     ambient_sweep: PerformanceSweep
+    altitude_sweep: PerformanceSweep
     warnings: tuple[str, ...]
 
     @property
@@ -65,6 +71,12 @@ def analyze_engine(
         prefer_rocketcea=prefer_rocketcea,
         cea_adapter=cea_adapter,
     )
+    altitude_sweep = run_standard_atmosphere_sweep(
+        inputs,
+        performance,
+        prefer_rocketcea=prefer_rocketcea,
+        cea_adapter=cea_adapter,
+    )
     warnings = list(validate_inputs(inputs))
     warnings.extend(performance.warnings)
     if inputs.thermal.enabled:
@@ -81,5 +93,6 @@ def analyze_engine(
         thermodynamics=thermodynamics,
         throttle_sweep=throttle_sweep,
         ambient_sweep=ambient_sweep,
+        altitude_sweep=altitude_sweep,
         warnings=tuple(dict.fromkeys(warnings)),
     )

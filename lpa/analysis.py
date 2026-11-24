@@ -8,7 +8,7 @@ from dataclasses import asdict, fields, is_dataclass
 from enum import Enum
 from typing import Any
 
-from .core import analyze_engine
+from .core import ATM_PA, altitude_for_pressure, analyze_engine, standard_atmosphere
 
 
 def _float(value: Any, default: float = 0.0) -> float:
@@ -386,7 +386,56 @@ def _delivered(value: Any) -> dict[str, float]:
     }
 
 
-def _performance(value: Any) -> dict[str, Any]:
+def _external_regen_coolant_flows(
+    project: dict[str, Any], total_engine_mass_flow_kg_s: float
+) -> list[dict[str, Any]]:
+    """Return independently supplied Regen coolant streams.
+
+    A linked Regen segment is another section of its source circuit and must
+    not be counted twice.  Engine oxidizer and fuel sources are already shown
+    in the propellant mass-flow totals, so only root ``Custom coolant``
+    circuits are reported here.
+    """
+
+    thermal = project.get("thermal", {})
+    if not thermal.get("thermal_enabled"):
+        return []
+    flows: list[dict[str, Any]] = []
+    for segment in thermal.get("segments", []):
+        if str(segment.get("type", "")).casefold() != "regen":
+            continue
+        source_mode = str(
+            segment.get(
+                "coolant_source_mode",
+                "Receive from Regen segment"
+                if segment.get("coolant_definition_mode")
+                == "Receive from Regen segment"
+                else "Custom coolant",
+            )
+        )
+        if source_mode != "Custom coolant":
+            continue
+        percent = _float(segment.get("relative_mass_flow_pct"))
+        if percent <= 0:
+            continue
+        identifier = str(
+            segment.get("id", segment.get("segment_id", segment.get("name", "Regen")))
+        ).strip()
+        flows.append(
+            {
+                "segment_id": identifier,
+                "segment_name": str(segment.get("name", identifier or "Regen")),
+                "coolant": str(segment.get("coolant", "Coolant")),
+                "relative_mass_flow_percent": percent,
+                "kg_s": total_engine_mass_flow_kg_s * percent / 100.0,
+            }
+        )
+    return flows
+
+
+def _performance(
+    value: Any, external_regen_coolants: list[dict[str, Any]] | None = None
+) -> dict[str, Any]:
     raw = _jsonable(value)
     result = dict(raw)
     result["without_film"] = _delivered(value.without_film)
@@ -396,6 +445,7 @@ def _performance(value: Any) -> dict[str, Any]:
         "oxidizer_kg_s": value.oxidizer_mass_flow_kg_s,
         "fuel_kg_s": value.fuel_mass_flow_kg_s,
         "film_kg_s": value.film_mass_flow_kg_s,
+        "external_regen_coolants": list(external_regen_coolants or []),
     }
     return result
 
@@ -443,14 +493,7 @@ def _geometry(core_result: Any) -> dict[str, Any]:
     for index in range(contour.throat_index):
         dx = contour.x_m[index + 1] - contour.x_m[index]
         residence_s += 2.0 * dx / (velocities[index] + velocities[index + 1])
-    characteristic_length_mm = core_result.inputs.thrust_chamber.length.characteristic_length_mm
-    if characteristic_length_mm is None:
-        # LPA's chamber-volume convention excludes the convergent section, so
-        # Vc = Ac * Lcyl and L* = Vc / At = (Ac/At) * Lcyl.
-        characteristic_length_mm = (
-            performance.contraction_area_ratio
-            * _float(metadata.get("cylindrical_length_mm"))
-        )
+    characteristic_length_mm = _float(metadata.get("characteristic_length_mm"))
     return {
         **metadata,
         "throat_diameter_mm": performance.throat_diameter_mm,
@@ -468,7 +511,7 @@ def _geometry(core_result: Any) -> dict[str, Any]:
     }
 
 
-def _sweep_rows(core_result: Any) -> list[dict[str, Any]]:
+def _throttle_sweep_rows(core_result: Any) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for point in core_result.throttle_sweep.points:
         result = point.result
@@ -480,22 +523,77 @@ def _sweep_rows(core_result: Any) -> list[dict[str, Any]]:
                 "thrust_n": result.with_film.thrust_design_n,
                 "isp_s": result.with_film.isp_design_s,
                 "mass_flow_kg_s": result.total_mass_flow_kg_s,
-                "thrust_coefficient": result.with_film.thrust_design_n / (result.chamber_pressure_bar * 100_000.0 * result.throat_area_m2),
+                "thrust_coefficient": result.with_film.thrust_design_n
+                / (
+                    result.chamber_pressure_bar
+                    * 100_000.0
+                    * result.throat_area_m2
+                ),
                 "status": result.source,
             }
         )
+    return rows
+
+
+def _ambient_pressure_rows(core_result: Any) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
     for point in core_result.ambient_sweep.points:
         result = point.result
+        atmosphere = altitude_for_pressure(point.value * ATM_PA)
         rows.append(
             {
-                "throttle_pct": 100.0,
-                "ambient_atm": point.value,
+                "ambient_pressure_atm": point.value,
+                "ambient_pressure_bar": point.value * ATM_PA / 100_000.0,
+                "standard_altitude_km": (
+                    atmosphere.geometric_altitude_m / 1000.0
+                    if atmosphere is not None
+                    else None
+                ),
+                "standard_temperature_k": (
+                    atmosphere.temperature_k if atmosphere is not None else None
+                ),
+                "standard_density_kg_m3": (
+                    atmosphere.density_kg_m3 if atmosphere is not None else None
+                ),
                 "chamber_pressure_bar": result.chamber_pressure_bar,
                 "thrust_n": result.with_film.thrust_design_n,
                 "isp_s": result.with_film.isp_design_s,
                 "mass_flow_kg_s": result.total_mass_flow_kg_s,
-                "thrust_coefficient": result.with_film.thrust_design_n / (result.chamber_pressure_bar * 100_000.0 * result.throat_area_m2),
-                "status": f"ambient sweep · {result.source}",
+                "thrust_coefficient": result.with_film.thrust_design_n
+                / (
+                    result.chamber_pressure_bar
+                    * 100_000.0
+                    * result.throat_area_m2
+                ),
+                "status": result.source,
+            }
+        )
+    return rows
+
+
+def _altitude_sweep_rows(core_result: Any) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for point in core_result.altitude_sweep.points:
+        result = point.result
+        atmosphere = standard_atmosphere(point.value * 1000.0)
+        rows.append(
+            {
+                "standard_altitude_km": point.value,
+                "ambient_pressure_atm": atmosphere.pressure_pa / ATM_PA,
+                "ambient_pressure_bar": atmosphere.pressure_pa / 100_000.0,
+                "standard_temperature_k": atmosphere.temperature_k,
+                "standard_density_kg_m3": atmosphere.density_kg_m3,
+                "chamber_pressure_bar": result.chamber_pressure_bar,
+                "thrust_n": result.with_film.thrust_design_n,
+                "isp_s": result.with_film.isp_design_s,
+                "mass_flow_kg_s": result.total_mass_flow_kg_s,
+                "thrust_coefficient": result.with_film.thrust_design_n
+                / (
+                    result.chamber_pressure_bar
+                    * 100_000.0
+                    * result.throat_area_m2
+                ),
+                "status": result.source,
             }
         )
     return rows
@@ -637,9 +735,14 @@ class AnalysisService:
         core_project = _core_project(project)
         core_result = analyze_engine(core_project, prefer_rocketcea=True)
         contour = core_result.contour
+        external_regen_coolants = _external_regen_coolant_flows(
+            project, core_result.performance.total_mass_flow_kg_s
+        )
         result: dict[str, Any] = {
             "method": f"{core_result.performance.source} + Bartz",
-            "performance": _performance(core_result.performance),
+            "performance": _performance(
+                core_result.performance, external_regen_coolants
+            ),
             "contour": {
                 "x_mm": list(contour.x_mm),
                 "radius_mm": list(contour.radius_mm),
@@ -650,8 +753,14 @@ class AnalysisService:
             },
             "geometry": _geometry(core_result),
             "thermodynamics": _thermodynamics(core_result.thermodynamics),
-            "throttle": _sweep_rows(core_result),
+            "throttle": _throttle_sweep_rows(core_result),
+            "ambient": {
+                "model": "U.S. Standard Atmosphere 1976",
+                "pressure_rows": _ambient_pressure_rows(core_result),
+                "altitude_rows": _altitude_sweep_rows(core_result),
+            },
             "ambient_sweep": _jsonable(core_result.ambient_sweep),
+            "altitude_sweep": _jsonable(core_result.altitude_sweep),
             "warnings": list(core_result.warnings),
             "thermal_enabled": bool(project["thermal"].get("thermal_enabled")),
         }

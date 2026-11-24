@@ -496,8 +496,8 @@ class CoolantDefinition:
         self.coolant = _enum(self.coolant, Coolant, "coolant")
         _positive(self.inlet_pressure_bar, "coolant inlet pressure")
         _positive(self.inlet_temperature_k, "coolant inlet temperature")
-        if not 0 < self.relative_mass_flow_percent <= 100:
-            raise ValueError("coolant relative mass flow must be in (0, 100]")
+        if not self.relative_mass_flow_percent > 0:
+            raise ValueError("coolant relative mass flow must be positive")
 
 
 @dataclass(slots=True)

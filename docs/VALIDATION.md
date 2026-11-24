@@ -22,10 +22,10 @@ py -3.14 -m venv .venv-build
 - [ ] 모든 명령의 exit code가 0이다.
 - [ ] `python main.py` 실행 후 창이 잘리지 않고 1080 x 700 최소 크기에서 각 입력 페이지를 끝까지 스크롤할 수 있다.
 - [ ] DPI 100%, 125%, 150%에서 텍스트, combobox, 표 헤더와 Matplotlib toolbar가 겹치거나 잘리지 않는다.
-- [ ] 메인 창 제목은 프로젝트 저장·수정 상태와 관계없이 `LPA 0.7.0`만 표시되고, 탭 제목·설명은 Save/Run 옆 상단 영역에 한 번만 표시된다.
+- [ ] 메인 창 제목은 프로젝트 저장·수정 상태와 관계없이 `LPA 0.10.0`만 표시되고, 탭 제목은 Save/Run 옆 상단 영역에 한 번만 표시된다. Input 탭에는 정적 부연 설명이 없고 Results 설명은 필요한 경우에만 표시된다.
 - [ ] VS Code Code Runner Stop 또는 터미널 `Ctrl+C`로 중단해도 `KeyboardInterrupt` traceback 없이 executor와 Tk 창이 정리된다.
 - [ ] 좌측 INPUT/RESULTS 항목의 숫자 접두어가 선택·비선택 상태 및 DPI 100~150%에서 깨지지 않는다.
-- [ ] 자동 O/F를 선택하면 입력란이 잠기고 현재 추진제·압력·노즐 조건에 대한 최대 진공 비추력 O/F와 계산 출처가 표시되며, 해제하면 다시 직접 입력할 수 있다.
+- [ ] 자동 O/F를 선택하면 입력란이 잠기고 현재 추진제·압력·노즐 조건에 대한 최대 ideal vacuum Isp O/F가 적용되며, 해제하면 다시 직접 입력할 수 있다. RocketCEA 사용 시 화학양론 O/F와 산화제 과잉계수 관계, 외압 출구 후보·최종 해석의 동일 `Ae/At` 해법, 직접 Dc+명목추력의 결합 수렴을 확인한다.
 
 ## 2. 기준 수치 확인
 
@@ -38,6 +38,8 @@ py -3.14 -m venv .venv-build
 - [ ] 0.3.x 이하 프로젝트를 연 뒤 수축부 정의가 기존 Ac/At 방식으로 복원되고 저장·재열기 후 선택 방식과 값이 유지된다.
 - [ ] Film 0%일 때 with/without-film 결과가 같고, Film 사용 시 질량 보존(`total = oxidizer + fuel + film`)이 허용오차 안에서 성립한다.
 - [ ] throttle/ambient range의 행 수가 입력 points와 같고 양 끝값이 정확히 포함된다.
+- [ ] Ambient Condition Performance의 외압 표와 표준대기 고도 표가 Throttled Performance와 분리되고, 고도 표는 U.S. Standard Atmosphere 1976의 -5~약 86 km 범위에서 압력·온도·밀도를 일관되게 표시한다.
+- [ ] Thermodynamics Station properties의 13개 행이 모두 보이고 표 내부에 불필요한 세로 스크롤바가 없으며, 최소 창 높이에서는 전체 페이지를 스크롤해 400 px 그래프에 접근할 수 있다.
 
 권장 회귀 허용오차는 동일 환경/의존성에서 scalar `1e-8` 상대오차, 배열 `1e-7` 상대오차입니다. 외부 RocketCEA 또는 수치 라이브러리 버전을 바꾸면 기존 허용오차를 자동 승인하지 말고 원인을 검토합니다.
 
@@ -64,7 +66,7 @@ py -3.14 -m venv .venv-build
 - [ ] Thermal Analysis의 온도 y축은 정확히 0 K에서 시작하며, contour는 온도 곡선과 픽셀 단위로 동일한 x축을 사용하고 중심선 위 상반부의 x/y가 같은 축척이다.
 - [ ] Thrust Chamber Size 하단에 Rao 형상 참고 이미지가 표시되고 Film BLC 체크의 초기 상태는 해제다.
 - [ ] Thrust Chamber Size의 Performance와 Mass Flow Rates가 같은 행에 배치되고 residence time·chamber pressure·exit pressure가 Performance에 표시되며 모든 metric 크기가 일관된다.
-- [ ] Chamber & Rao geometry가 `Rc/Rt/Re`, `Lcyl/Lc/Le`, `R1/R2/Rn`, `b/Tn/Te`, `Ac/At/Ae/At/L*`의 3열 × 5행으로 표시되며 직접 길이 모드에서도 L*가 유한하다.
+- [ ] Chamber & Rao geometry가 `Rc/Rt/Re`, `Lcyl/Lc/Le`, `R1/R2/Rn`, `b/Tn/Te`, `Ac/At/Ae/At/L*`의 3열 × 5행으로 표시되며, 입력 및 직접 길이 모드의 L*가 모두 `(원통부 체적 + 수축부 체적) / At`와 일치한다.
 - [ ] Bell contour metadata에 `rao_angle_method=lpa_empirical_approximation_not_rpa`가 기록되고, RPA 4.0.13 자동 Tn/Te와 동일하다고 오인하지 않는다.
 - [ ] Medium과 High의 peak `Twg` 및 총 열부하 차이를 기록하여 격자 수렴성을 확인한다. 유의미한 차이가 남으면 High만으로 상세 설계 결론을 내리지 않는다.
 - [ ] 재료 표 범위 밖 온도에서 conductivity가 끝값으로 clamp된다는 정책을 결과 검토자가 알고 있다.
@@ -100,15 +102,15 @@ Get-FileHash .\dist\LPA.exe -Algorithm SHA256
 
 | 항목 | 값 |
 |---|---|
-| LPA version / commit | 0.7.0 / local workspace (Git metadata 없음) |
-| 검증 일시 / 담당자 | 2026-07-14 07:29:14 KST / Codex |
+| LPA version / commit | 0.10.0 / local workspace |
+| 검증 일시 / 담당자 | 2026-07-21 19:50 KST / Codex (116 tests + packaged smoke) |
 | Windows version / architecture | Windows 11 10.0.22631 / AMD64 |
 | Python / Tk version | Python 3.14.0 / Tk 8.6 |
 | NumPy / SciPy / Matplotlib / RocketCEA | 2.4.2 / 1.17.0 / 3.10.8 / 1.2.3 |
 | PyInstaller / hooks version | 6.21.0 / 2026.6 |
-| `LPA.exe` 크기 / 서명 | 41,183,600 bytes / Authenticode 미서명 |
-| `LPA.exe` SHA-256 | `E8F8671492A84D2EAE7860638776AF7178277D31A02FD65CB4C2844C5BA32B15` |
-| 단일 EXE 격리 smoke | `PATH=C:\Windows\System32`, 별도 실행 폴더, 한글·공백 profile에서 `rocketcea + Bartz` 분석 완료 |
+| `LPA.exe` 크기 / 서명 | 41,200,773 bytes (39.29 MiB) / NotSigned |
+| `LPA.exe` SHA-256 | `303F701F079E25FF80BDF578C6887A9E6A2C613CBADC9821C81654EBDE4566F2` |
+| 단일 EXE 격리 smoke | PASS — one-file EXE의 GUI 응답 및 창 제목 `LPA 0.10.0` 확인 (build host) |
 | 기준 project 파일 | 기본 LOX/RP-1 smoke project |
 | Medium vs High peak `Twg` 차이 | |
 | 미해결 warning / 승인자 | 미서명 배포본의 SmartScreen 가능성; 물리적 clean target PC/VM 최종 승인은 별도 수행 |

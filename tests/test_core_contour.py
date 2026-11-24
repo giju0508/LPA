@@ -31,7 +31,7 @@ def test_conical_contour_has_exact_count_and_area_ratios():
     assert all(right > left for left, right in zip(contour.x_m, contour.x_m[1:]))
 
 
-def test_lstar_uses_cylindrical_area_excluding_contraction():
+def test_lstar_includes_cylinder_and_converging_section_volume():
     chamber = ThrustChamberInput(
         contraction_area_ratio=4.0,
         length=ChamberLength(
@@ -40,10 +40,32 @@ def test_lstar_uses_cylindrical_area_excluding_contraction():
         ),
     )
     contour = generate_contour(chamber, 30.0, 8.0, "low")
-    assert contour.metadata["cylindrical_length_mm"] == pytest.approx(300.0)
-    assert contour.metadata["characteristic_volume_convention"] == (
-        "cylindrical_area_excluding_contraction"
+    throat_area = pi * 0.015**2
+    assert contour.metadata["cylindrical_length_mm"] < 300.0
+    assert contour.metadata["convergent_volume_m3"] > 0.0
+    assert contour.metadata["chamber_volume_m3"] == pytest.approx(
+        contour.metadata["cylindrical_volume_m3"]
+        + contour.metadata["convergent_volume_m3"]
     )
+    assert contour.metadata["chamber_volume_m3"] / throat_area * 1000.0 == pytest.approx(
+        1200.0
+    )
+    assert contour.metadata["characteristic_length_mm"] == pytest.approx(1200.0)
+    assert contour.metadata["characteristic_volume_convention"] == (
+        "cylinder_plus_converging_section"
+    )
+
+
+def test_lstar_rejects_volume_smaller_than_the_converging_section():
+    chamber = ThrustChamberInput(
+        contraction_area_ratio=4.0,
+        length=ChamberLength(
+            mode=LengthMode.CHARACTERISTIC_LENGTH,
+            characteristic_length_mm=1.0,
+        ),
+    )
+    with pytest.raises(ValueError, match="must exceed .* converging geometry"):
+        generate_contour(chamber, 30.0, 8.0, "low")
 
 
 def test_direct_chamber_lengths_are_honored():
@@ -57,6 +79,7 @@ def test_direct_chamber_lengths_are_honored():
     contour = generate_contour(chamber, 20.0, 5.0, 120)
     assert contour.throat_x_m == pytest.approx(0.410)
     assert contour.x_m[contour.chamber_end_index] == pytest.approx(0.250)
+    assert contour.metadata["characteristic_length_mm"] > 4.0 * 250.0
 
 
 @pytest.mark.parametrize("expansion_ratio", [2.0, 10.0, 40.0, 100.0])

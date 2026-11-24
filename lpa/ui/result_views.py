@@ -301,12 +301,23 @@ class ChamberResultsPage(ResultPage):
         oxidizer = _get(source, "mass_flow.oxidizer_kg_s", "oxidizer_mass_flow_kg_s", default=0)
         fuel = _get(source, "mass_flow.fuel_kg_s", "fuel_mass_flow_kg_s", default=0)
         film = _get(source, "mass_flow.film_kg_s", "film_mass_flow_kg_s", default=0)
+        external_coolants = _get(
+            source, "mass_flow.external_regen_coolants", default=[]
+        )
         metrics = []
         use_grams = abs(_number(total, 0.0)) < 1.0
         unit = "g/s" if use_grams else "kg/s"
         scale = 1000.0 if use_grams else 1.0
         for label, value in (("Total", total), ("Oxidizer", oxidizer), ("Fuel", fuel), ("Film", film)):
             formatted = f"{_number(value, 0.0) * scale:.2f}" if use_grams else f"{_number(value, 0.0):.4f}"
+            metrics.append((label, formatted, unit, ""))
+        for coolant_flow in external_coolants if isinstance(external_coolants, (list, tuple)) else ():
+            item = _mapping(coolant_flow)
+            coolant = str(item.get("coolant", "Coolant"))
+            segment_name = str(item.get("segment_name", "Regen"))
+            label = f"{coolant} coolant ({segment_name})"
+            value = _number(item.get("kg_s"), 0.0)
+            formatted = f"{value * scale:.2f}" if use_grams else f"{value:.4f}"
             metrics.append((label, formatted, unit, ""))
         self._metric_grid(card, metrics, columns=2)
         return card
@@ -316,8 +327,11 @@ class ChamberResultsPage(ResultPage):
         card = ttk.LabelFrame(self.scroll.body, text="  Chamber & Rao geometry  ", padding=11)
         card.pack(fill="x", pady=(0, 12))
         # Keep related dimensions together in three-column rows:
-        # radii, axial lengths, blend radii, angles, and area/volume ratios.
+        # diameters, radii, axial lengths, blend radii, angles, and ratios.
         definitions = (
+            ("Chamber diameter Dc", ("chamber_diameter_mm", "dc_mm"), "mm"),
+            ("Throat diameter Dt", ("throat_diameter_mm", "dt_mm"), "mm"),
+            ("Exit diameter De", ("exit_diameter_mm", "de_mm"), "mm"),
             ("Chamber radius Rc", ("chamber_radius_mm", "rc_mm"), "mm"),
             ("Throat radius Rt", ("throat_radius_mm", "rt_mm"), "mm"),
             ("Exit radius Re", ("exit_radius_mm", "re_mm"), "mm"),
@@ -886,7 +900,11 @@ class ThermodynamicsResultsPage(ResultPage):
 
     def __init__(self, master: tk.Misc) -> None:
         super().__init__(master)
-        self.shell = ttk.Frame(self, style="Surface.TFrame", padding=18)
+        # Keep the 13-row station table free of an unnecessary internal
+        # scrollbar, while allowing the complete table + plot report to remain
+        # usable at LPA's minimum window height.
+        self.scroll = ScrollableFrame(self, padding=18)
+        self.shell = self.scroll.body
         self.property_var = tk.StringVar(self, value="Temperature")
 
     def set_result(self, data: dict[str, Any]) -> None:
@@ -894,7 +912,8 @@ class ThermodynamicsResultsPage(ResultPage):
         self.empty.pack_forget()
         for child in self.shell.winfo_children():
             child.destroy()
-        self.shell.pack(fill="both", expand=True)
+        self.scroll.pack(fill="both", expand=True)
+        self.scroll.scroll_to_top()
         header = self._header(
             self.shell,
             self.title,
@@ -939,15 +958,12 @@ class ThermodynamicsResultsPage(ResultPage):
         frame = ttk.LabelFrame(self.shell, text="  Station properties  ", padding=8)
         frame.pack(fill="x")
         tree = ttk.Treeview(frame, columns=columns, show="headings", height=len(THERMO_PROPERTIES))
-        tree.pack(side="left", fill="both", expand=True)
-        scrollbar = ttk.Scrollbar(frame, orient="vertical", command=tree.yview)
-        scrollbar.pack(side="right", fill="y")
-        tree.configure(yscrollcommand=scrollbar.set)
+        tree.pack(fill="both", expand=True)
         for column in columns:
             tree.heading(column, text=column)
-            tree.column(column, anchor="e" if column not in ("Property", "Unit") else "w", width=145, minwidth=75)
-        tree.column("Property", width=170)
-        tree.column("Unit", width=95)
+            tree.column(column, anchor="e" if column not in ("Property", "Unit") else "w", width=130, minwidth=70)
+        tree.column("Property", width=155)
+        tree.column("Unit", width=85)
         for key, label, unit in THERMO_PROPERTIES:
             values: list[str] = []
             for _, aliases in canonical:
@@ -977,9 +993,167 @@ class ThermodynamicsResultsPage(ResultPage):
         FigurePanel(self.plot_frame, figure).pack(fill="both", expand=True)
 
 
+class AmbientConditionPerformancePage(ResultPage):
+    title = "Ambient Condition Performance"
+    page_description = (
+        "Fixed-hardware performance by ambient pressure and U.S. Standard Atmosphere 1976 "
+        "altitude (-5 to approximately 86 km)."
+    )
+
+    def __init__(self, master: tk.Misc) -> None:
+        super().__init__(master)
+        self.shell = ttk.Frame(self, style="Surface.TFrame", padding=18)
+
+    @staticmethod
+    def _display(value: Any, digits: int) -> str:
+        number = _number(value)
+        return "—" if not math.isfinite(number) else f"{number:.{digits}f}"
+
+    def set_result(self, data: dict[str, Any]) -> None:
+        super().set_result(data)
+        self.empty.pack_forget()
+        for child in self.shell.winfo_children():
+            child.destroy()
+        self.shell.pack(fill="both", expand=True)
+        self._update_page_context(self.title, self.page_description)
+        pressure_rows = _get(data, "ambient.pressure_rows", default=[])
+        altitude_rows = _get(data, "ambient.altitude_rows", default=[])
+        pressure_rows = pressure_rows if isinstance(pressure_rows, list) else []
+        altitude_rows = altitude_rows if isinstance(altitude_rows, list) else []
+        if not pressure_rows and not altitude_rows:
+            ttk.Label(
+                self.shell,
+                text="Ambient-condition analysis was not selected. Enable it under Input → Thrust Chamber.",
+                style="Warning.TLabel",
+            ).pack(fill="x")
+            return
+
+        notebook = ttk.Notebook(self.shell)
+        notebook.pack(fill="both", expand=True)
+        pressure_tab = ttk.Frame(notebook, style="Surface.TFrame", padding=8)
+        altitude_tab = ttk.Frame(notebook, style="Surface.TFrame", padding=8)
+        notebook.add(pressure_tab, text="Ambient pressure")
+        notebook.add(altitude_tab, text="Standard altitude")
+        self._build_pressure_table(pressure_tab, pressure_rows)
+        self._build_altitude_table(altitude_tab, altitude_rows)
+
+    def _build_pressure_table(self, parent: ttk.Frame, rows: list[Any]) -> None:
+        if not rows:
+            ttk.Label(parent, text="No ambient-pressure points are available.", style="Muted.TLabel").pack(pady=30)
+            return
+        columns = (
+            "Ambient atm",
+            "Ambient bar",
+            "ISA altitude km",
+            "Thrust N",
+            "Isp s",
+            "ṁ kg/s",
+            "Cf",
+            "Source",
+        )
+        frame = ttk.Frame(parent, style="Surface.TFrame")
+        frame.pack(fill="both", expand=True)
+        tree = ttk.Treeview(frame, columns=columns, show="headings")
+        tree.pack(side="left", fill="both", expand=True)
+        scrollbar = ttk.Scrollbar(frame, orient="vertical", command=tree.yview)
+        scrollbar.pack(side="right", fill="y")
+        tree.configure(yscrollcommand=scrollbar.set)
+        widths = (95, 95, 105, 105, 90, 100, 80, 130)
+        for column, width in zip(columns, widths):
+            tree.heading(column, text=column)
+            tree.column(column, width=width, minwidth=65, anchor="e")
+        tree.column("Source", anchor="w")
+        for item in rows:
+            row = _mapping(item)
+            tree.insert(
+                "",
+                "end",
+                values=(
+                    self._display(row.get("ambient_pressure_atm"), 6),
+                    self._display(row.get("ambient_pressure_bar"), 6),
+                    self._display(row.get("standard_altitude_km"), 3),
+                    self._display(row.get("thrust_n"), 4),
+                    self._display(row.get("isp_s"), 4),
+                    self._display(row.get("mass_flow_kg_s"), 6),
+                    self._display(row.get("thrust_coefficient"), 5),
+                    str(row.get("status", "OK")),
+                ),
+            )
+        ttk.Button(
+            parent,
+            text="Export CSV…",
+            command=lambda: self._export(rows, "ambient-pressure-performance.csv"),
+        ).pack(anchor="e", pady=(9, 0))
+
+    def _build_altitude_table(self, parent: ttk.Frame, rows: list[Any]) -> None:
+        if not rows:
+            ttk.Label(parent, text="No standard-atmosphere points are available.", style="Muted.TLabel").pack(pady=30)
+            return
+        columns = (
+            "Altitude km",
+            "Ambient atm",
+            "Temperature K",
+            "Density kg/m³",
+            "Thrust N",
+            "Isp s",
+            "Cf",
+            "Source",
+        )
+        frame = ttk.Frame(parent, style="Surface.TFrame")
+        frame.pack(fill="both", expand=True)
+        tree = ttk.Treeview(frame, columns=columns, show="headings")
+        tree.pack(side="left", fill="both", expand=True)
+        scrollbar = ttk.Scrollbar(frame, orient="vertical", command=tree.yview)
+        scrollbar.pack(side="right", fill="y")
+        tree.configure(yscrollcommand=scrollbar.set)
+        widths = (100, 95, 105, 110, 105, 90, 80, 130)
+        for column, width in zip(columns, widths):
+            tree.heading(column, text=column)
+            tree.column(column, width=width, minwidth=65, anchor="e")
+        tree.column("Source", anchor="w")
+        for item in rows:
+            row = _mapping(item)
+            tree.insert(
+                "",
+                "end",
+                values=(
+                    self._display(row.get("standard_altitude_km"), 3),
+                    self._display(row.get("ambient_pressure_atm"), 6),
+                    self._display(row.get("standard_temperature_k"), 3),
+                    self._display(row.get("standard_density_kg_m3"), 6),
+                    self._display(row.get("thrust_n"), 4),
+                    self._display(row.get("isp_s"), 4),
+                    self._display(row.get("thrust_coefficient"), 5),
+                    str(row.get("status", "OK")),
+                ),
+            )
+        ttk.Button(
+            parent,
+            text="Export CSV…",
+            command=lambda: self._export(rows, "altitude-performance.csv"),
+        ).pack(anchor="e", pady=(9, 0))
+
+    def _export(self, rows: list[Any], initialfile: str) -> None:
+        path = filedialog.asksaveasfilename(
+            parent=self,
+            title="Export ambient-condition performance",
+            defaultextension=".csv",
+            initialfile=initialfile,
+            filetypes=(("CSV table", "*.csv"), ("All files", "*.*")),
+        )
+        if not path:
+            return
+        mappings = [_mapping(row) for row in rows]
+        keys = sorted({key for row in mappings for key in row})
+        with Path(path).open("w", newline="", encoding="utf-8-sig") as stream:
+            writer = csv.DictWriter(stream, fieldnames=keys)
+            writer.writeheader()
+            writer.writerows(mappings)
+
+
 class ThrottledPerformancePage(ResultPage):
     title = "Throttled Performance"
-    page_description = "Performance across requested throttle and ambient-pressure settings."
+    page_description = "Performance across requested throttle settings."
 
     def __init__(self, master: tk.Misc) -> None:
         super().__init__(master)
@@ -1010,10 +1184,11 @@ class ThrottledPerformancePage(ResultPage):
         scrollbar = ttk.Scrollbar(frame, orient="vertical", command=tree.yview)
         scrollbar.pack(side="right", fill="y")
         tree.configure(yscrollcommand=scrollbar.set)
-        for column in columns:
+        widths = (85, 90, 90, 115, 90, 100, 75, 135)
+        for column, width in zip(columns, widths):
             tree.heading(column, text=column)
-            tree.column(column, width=120, anchor="e", minwidth=75)
-        tree.column("Status", width=150, anchor="w")
+            tree.column(column, width=width, anchor="e", minwidth=65)
+        tree.column("Status", anchor="w")
         for item in rows:
             row = _mapping(item)
             tree.insert(

@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import math
 import tkinter as tk
+import tkinter.font as tkfont
 from collections.abc import Iterator
 from pathlib import Path
 from tkinter import ttk
@@ -27,6 +28,7 @@ EXPECTED_PAGES = {
     "thermal_result",
     "thermo_result",
     "throttle_result",
+    "ambient_result",
 }
 
 
@@ -191,6 +193,40 @@ def test_minimum_window_does_not_clip_wrapped_input_labels(app: LPAApplication) 
     assert clipped == []
 
 
+def test_input_copy_is_compact_and_typography_has_a_consistent_hierarchy(
+    app: LPAApplication,
+) -> None:
+    forbidden = {
+        "Used in saved analysis files and exported reports.",
+        "CEA equilibrium chemistry is evaluated at this nominal state.",
+        "Optional sweeps produce dedicated result tables.",
+        "Bartz hot-gas correlation",
+        "The exact axial section count is reported with every result.",
+        "All lengths use millimetres unless another unit is shown.",
+    }
+    input_text = {
+        text
+        for key in ("engine", "chamber", "thermal_input")
+        for text in _label_texts(app.pages[key])
+    }
+    assert forbidden.isdisjoint(input_text)
+
+    style = ttk.Style(app)
+
+    def font(style_name: str) -> dict[str, Any]:
+        return tkfont.Font(root=app, font=style.lookup(style_name, "font")).actual()
+
+    page_font = font("PageTitle.TLabel")
+    section_font = font("Section.TLabel")
+    field_font = font("Field.TLabel")
+    unit_font = font("Unit.TLabel")
+    result_section_font = font("TLabelframe.Label")
+    assert page_font["size"] > section_font["size"] > field_font["size"] > unit_font["size"]
+    assert page_font["weight"] == section_font["weight"] == field_font["weight"] == "bold"
+    assert result_section_font["weight"] == "bold"
+    assert result_section_font["size"] >= field_font["size"]
+
+
 def test_collect_load_round_trip_preserves_fields_segments_and_control_states(app: LPAApplication) -> None:
     project = _rich_project(app)
     app.load_project_data(project)
@@ -235,7 +271,7 @@ def test_loading_project_stays_clean_after_text_events_are_drained(app: LPAAppli
 
     assert app._dirty is False
     assert app.pages["engine"].description.edit_modified() == 0
-    assert app.title() == "LPA 0.7.0"
+    assert app.title() == "LPA 0.10.0"
 
 
 def test_chamber_contraction_definition_and_card_order(app: LPAApplication) -> None:
@@ -286,7 +322,8 @@ def test_automatic_mixture_ratio_is_displayed_locked_and_serialized(
 
     assert page.mixture_ratio_var.get() == "2.7345"
     assert "readonly" in page.mixture_ratio_entry.state()
-    assert "RocketCEA optimum" in page.mixture_ratio_status.cget("text")
+    assert page.mixture_ratio_status.cget("text") == ""
+    assert not page.mixture_ratio_status.winfo_manager()
     assert calls[0]["engine"].oxidizer.value == "LOX"
     project = app.collect_project()
     assert project["engine"]["mixture_ratio_auto"] is True
@@ -301,12 +338,12 @@ def test_automatic_mixture_ratio_is_displayed_locked_and_serialized(
 def test_window_title_and_compact_page_context_replace_breadcrumbs(app: LPAApplication) -> None:
     app._project_path = None
     app._set_dirty(True)
-    assert app.title() == "LPA 0.7.0"
+    assert app.title() == "LPA 0.10.0"
     assert not hasattr(app, "logo_image")
 
     app._project_path = Path("named-project.cfg")
     app._set_dirty(False)
-    assert app.title() == "LPA 0.7.0"
+    assert app.title() == "LPA 0.10.0"
     assert not hasattr(app, "breadcrumb")
     assert not hasattr(app, "page_heading")
 
@@ -318,12 +355,19 @@ def test_window_title_and_compact_page_context_replace_breadcrumbs(app: LPAAppli
         "thermal_result": "Thermal Analysis",
         "thermo_result": "Thermodynamics",
         "throttle_result": "Throttled Performance",
+        "ambient_result": "Ambient Condition Performance",
     }
     for key, title in expected_titles.items():
         app.show_page(key)
-        assert app.title() == "LPA 0.7.0"
+        assert app.title() == "LPA 0.10.0"
         assert app.context_title.cget("text") == title
-        assert str(app.context_description.cget("text")).strip()
+        description = str(app.context_description.cget("text")).strip()
+        if key in {"engine", "chamber", "thermal_input"}:
+            assert description == ""
+            assert not app.context_description.winfo_manager()
+        else:
+            assert description
+            assert app.context_description.winfo_manager() == "pack"
         assert not any(str(label.cget("style")) == "Title.TLabel" for label in _labels(app.pages[key]))
 
 
@@ -460,7 +504,13 @@ def test_default_thermal_off_analysis_and_every_result_page_render(app: LPAAppli
     }
     assert math.isfinite(result["performance"]["with_film"]["vacuum_isp_s"])
 
-    for key in ("size_result", "thermal_result", "thermo_result", "throttle_result"):
+    for key in (
+        "size_result",
+        "thermal_result",
+        "thermo_result",
+        "throttle_result",
+        "ambient_result",
+    ):
         app.pages[key].set_result(result)
         app.show_page(key)
         app.update_idletasks()
@@ -525,9 +575,14 @@ def test_default_thermal_off_analysis_and_every_result_page_render(app: LPAAppli
     assert any("Thermal analysis was disabled" in text for text in _label_texts(thermal_page))
 
     thermo_page = app.pages["thermo_result"]
+    app.show_page("thermo_result")
+    app.update_idletasks()
+    assert thermo_page.scroll._scrollable is True
+    assert thermo_page.plot_frame.winfo_height() >= 400
     station_tables = [tree for tree in _treeviews(thermo_page) if tree.cget("height") == 13]
     assert len(station_tables) == 1
     station_table = station_tables[0]
+    assert not any(isinstance(child, ttk.Scrollbar) for child in station_table.master.winfo_children())
     assert len(station_table.get_children()) == 13
     for item in station_table.get_children():
         values = station_table.item(item, "values")
@@ -537,10 +592,76 @@ def test_default_thermal_off_analysis_and_every_result_page_render(app: LPAAppli
     throttle_page = app.pages["throttle_result"]
     assert any("Throttle analysis was not selected" in text for text in _label_texts(throttle_page))
 
+    ambient_page = app.pages["ambient_result"]
+    assert any("Ambient-condition analysis was not selected" in text for text in _label_texts(ambient_page))
+
     app.clear_results()
-    for key in ("size_result", "thermal_result", "thermo_result", "throttle_result"):
+    for key in (
+        "size_result",
+        "thermal_result",
+        "thermo_result",
+        "throttle_result",
+        "ambient_result",
+    ):
         assert app.pages[key].data is None
         assert app.pages[key].empty.winfo_manager() == "pack"
+
+
+def test_mass_flow_card_lists_external_regen_coolant_below_propellants(
+    app: LPAApplication,
+) -> None:
+    page = app.pages["size_result"]
+    result = AnalysisService().analyze(app.collect_project())
+    result["performance"]["mass_flow"]["external_regen_coolants"] = [
+        {
+            "segment_name": "Water circuit",
+            "coolant": "H2O",
+            "kg_s": 1.25,
+        }
+    ]
+    page.set_result(result)
+    app.update_idletasks()
+
+    mass_flow_card = next(
+        child
+        for child in _walk(page)
+        if isinstance(child, ttk.LabelFrame)
+        and "Mass flow rates" in str(child.cget("text"))
+    )
+    labels = _label_texts(mass_flow_card)
+    assert labels.index("H2O coolant (Water circuit)") > labels.index("Fuel")
+
+
+def test_ambient_condition_result_separates_pressure_and_standard_altitude(
+    app: LPAApplication,
+) -> None:
+    project = app.collect_project()
+    project["thrust_chamber"].update(
+        {
+            "throttle_enabled": False,
+            "ambient_enabled": True,
+            "ambient_mode": "Ambient pressure range",
+            "ambient_min_atm": "0.05",
+            "ambient_max_atm": "1.0",
+            "ambient_points": "5",
+        }
+    )
+    result = AnalysisService().analyze(project)
+    assert result["throttle"] == []
+    assert result["ambient"]["model"] == "U.S. Standard Atmosphere 1976"
+    assert len(result["ambient"]["pressure_rows"]) == 5
+    assert len(result["ambient"]["altitude_rows"]) == 5
+    assert result["ambient"]["altitude_rows"][0]["standard_altitude_km"] == pytest.approx(0.0)
+    assert result["ambient"]["altitude_rows"][0]["ambient_pressure_atm"] == pytest.approx(1.0)
+    assert result["ambient"]["altitude_rows"][-1]["ambient_pressure_atm"] == pytest.approx(0.05)
+
+    page = app.pages["ambient_result"]
+    page.set_result(result)
+    app.show_page("ambient_result")
+    app.update_idletasks()
+    tables = _treeviews(page)
+    assert len(tables) == 2
+    assert all(len(table.get_children()) == 5 for table in tables)
 
 
 def test_thermal_contour_uses_visible_upper_half_at_true_scale(app: LPAApplication) -> None:

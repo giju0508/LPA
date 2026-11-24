@@ -2,7 +2,7 @@
 
 LPA는 액체로켓 연소기의 성능, 추력실 형상, 열역학 상태와 정상상태 열전달을 예비 설계 단계에서 계산하는 Windows 데스크톱 도구입니다. RPA와 유사한 좌측 입력/결과 탐색 구조를 사용하며, 추진 성능은 RocketCEA, 고온가스측 열전달은 Bartz 상관식을 기본으로 합니다.
 
-현재 버전: **0.7.0** · [변경 이력](CHANGELOG.md)
+현재 버전: **0.10.0** · [변경 이력](CHANGELOG.md)
 
 기능, 해석 로직 또는 주요 GUI가 변경되는 릴리스마다 `lpa.__version__`을 올리고, 같은 버전의 변경 내용과 KST 일시를 `CHANGELOG.md`에 기록합니다.
 
@@ -24,14 +24,20 @@ RocketCEA가 로드되지 않거나 계산에 실패하면 LPA는 화면의 back
 
 1. 왼쪽 **INPUT**의 `Engine Definition`, `Thrust Chamber`, `Thermal Analysis`를 순서대로 입력합니다.
 2. 상단 **Run Analysis** 또는 `F5`를 누릅니다.
-3. 왼쪽 **RESULTS**에서 형상/성능, 열 해석, 열역학 표·그래프와 throttled performance를 확인합니다.
+3. 왼쪽 **RESULTS**에서 형상/성능, 열 해석, 열역학 표·그래프, throttled performance와 ambient-condition performance를 확인합니다.
 4. `File > Save As` 또는 `Ctrl+Shift+S`로 저장합니다. 프로젝트는 사람이 읽을 수 있는 UTF-8 JSON 형식의 `*.cfg` 파일이며, `File > Open` 또는 `Ctrl+O`로 다시 엽니다. 이전 버전의 `*.lpa.json` 및 일반 `*.json` 프로젝트도 계속 불러올 수 있습니다.
 
 저장 파일은 입력과 열 세그먼트 정의를 보존하지만, 현재 분석 결과의 영구 보고서가 아닙니다. 입력이나 프로그램 버전이 바뀌면 다시 해석하십시오.
 
-Engine Definition의 `Automatically optimize for maximum vacuum Isp`를 선택하면 현재 추진제, 연소실 압력, 수축비, 노즐 출구조건과 평형/동결 설정을 유지한 채 RocketCEA 진공 비추력이 최대가 되는 O/F를 탐색합니다. 계산된 O/F와 기준 비추력은 화면에 표시되고 `*.cfg`에도 저장됩니다. RocketCEA 계산이 실패한 경우에는 화면에 명시된 engineering fallback을 사용합니다.
+Engine Definition의 `Automatically optimize O/F (maximum ideal vacuum Isp)`를 선택하면 현재 추진제, 연소실 압력, 유한 수축비, 노즐 출구조건과 RocketCEA의 shifting/frozen 선택을 반영해 이상 진공 비추력이 최대가 되는 O/F를 탐색합니다. RPA 4 매뉴얼은 optimum mixture ratio를 maximum specific impulse 기준으로 정의합니다. 설치된 RPA 표준판의 shifting-equilibrium 사례와 solver export를 대조해 configured nozzle exit의 ideal vacuum specific impulse가 관측 가능한 목적함수임을 확인했습니다. RPA가 사용하는 조성 변수와 같이 `α = (O/F)/(O/F)stoich`인 산화제 과잉계수로 탐색하며, `(O/F)stoich`는 RocketCEA의 화학양론 변환값을 사용합니다. 출구가 외압으로 정의되면 후보 O/F마다 같은 출구압에 대응하는 `Ae/At`를 다시 계산하고 최종 해석에도 같은 RocketCEA 출구압 해법을 사용합니다. 직접 `Dc`와 명목 추력을 함께 지정한 경우에는 O/F와 `Ac/At`의 결합이 수렴할 때까지 반복합니다. 계산된 O/F는 `*.cfg`에도 저장됩니다.
+
+RPA는 내부 탐색 범위·정련 알고리즘·수렴 허용값을 공개하지 않습니다. LPA는 관측된 목적함수와 출구조건 의미를 따르되, O/F 0.10–30.0의 49점 bounded coarse scan 후 최상 구간을 golden-section 30회로 정련합니다. RocketCEA의 공개 API는 RPA처럼 임의의 pressure-ratio/area-ratio 위치에서 동결시키는 기능을 제공하지 않으므로, frozen 모드는 chamber/throat 선택으로 근사하며 임의 동결 위치까지 동일하게 재현한다고 주장하지 않습니다. 열역학 데이터베이스와 비공개 수치 설정까지 포함한 RPA와의 완전한 수치 일치도 보장하지 않습니다. RocketCEA 계산이 실패하면 engineering fallback을 사용하며 분석 결과 warning에 기록합니다.
 
 Thrust Chamber의 `Contraction definition`은 기존 `Area ratio (Ac/At)` 또는 `Chamber diameter (Dc)`를 선택할 수 있습니다. Dc를 선택하면 원형 단면 관계 `Ac/At = (Dc/Dt)²`로 유효 수축면적비를 계산합니다. 목 직경을 직접 입력한 경우 즉시 결정되며, 명목 추력으로 크기를 정하는 경우에는 RocketCEA 유한면적 연소기 계산과 목 직경이 일치할 때까지 반복합니다. 이전 프로젝트는 자동으로 Ac/At 방식으로 열립니다.
+
+Characteristic length는 `L* = (Vcyl + Vconv) / At`로 계산합니다. `Vcyl`은 원통형 연소실 체적, `Vconv`는 실제 원호–직선–원호 수축 형상의 회전체 체적입니다. L* 입력 모드에서는 지정 체적에서 수축부 체적을 제외한 나머지로 `Lcyl`을 역산하며, 직접 길이 모드의 결과 L*에도 두 체적을 모두 포함합니다.
+
+Ambient Condition Performance는 입력한 외압 점의 고정 하드웨어 성능과, 같은 외압 범위에 대응하는 균일 고도 점의 성능을 별도 표로 제공합니다. 고도·온도·밀도·압력 변환은 [U.S. Standard Atmosphere 1976](https://ntrs.nasa.gov/citations/19770009539)의 층별 geopotential-altitude 모델을 사용하며, 구현 범위는 기하 고도 -5 km부터 약 86 km입니다. 진공이나 모델 범위 밖의 외압은 외압 표에는 유지되지만 유한한 표준대기 등가고도로 표시하지 않으며, 고도 표는 요청 외압 범위와 모델 유효 범위의 교집합만 제공합니다.
 
 ## 열 해석과 Cooling segments
 
@@ -67,7 +73,7 @@ One-file EXE는 시작할 때 `%TEMP%` 아래에 번들 런타임을 풀므로 �
 
 - `RPA_LiquidRocketEngineAnalysis_II.pdf` pp. 4-17: 화학평형/동결 유동의 열역학 관계, 노즐 상태와 이론 로켓 성능. pp. 18-22: 입력·출력 항목과 NASA CEA2 비교 예제.
 - `RPA_ThermalAnalysis.pdf` p. 7: Bartz 열전달 상관식. pp. 8-11: 경계층/Film 냉각. pp. 11-18: 복사 및 재생냉각의 정상상태 열수지·채널 관계. p. 19: TBC. pp. 21-22: RPA 입력 및 `Twg`, `Twi`, `Twc`, `Tc` 결과 정의.
-- `RPA_4_User_Manual.pdf` pp. 12-19: 엔진/노즐/스로틀/추력실 입력 구조. pp. 20-29: 열전달 설정, Cooling segments, Regen/Film/Radiation과 TBC. pp. 30-45: 열역학, 성능, throttled performance, 추력실 형상과 열 해석 결과 화면.
+- `RPA_4_User_Manual.pdf` p. 12: O/F, 산화제 과잉계수와 maximum-specific-impulse optimum mixture ratio. pp. 12-19: 엔진/노즐/스로틀/추력실 입력 구조. pp. 20-29: 열전달 설정, Cooling segments, Regen/Film/Radiation과 TBC. pp. 30-45: 열역학, 성능, altitude/throttled performance, 추력실 형상과 열 해석 결과 화면.
 
 Rao bell의 Tn/Te 기호와 접선-교점 포물선 구성은 RPA와 같습니다. 다만 RPA 4 매뉴얼은 각도를 생략했을 때의 내부 자동 선택식을 공개하지 않습니다. 공식 RPA 4.0.13을 `Ae/At=14`, `Le/c15=80%`로 대조한 자동값은 Tn 27.291945°, Te 8.0°였고, 현재 LPA 경험식은 Tn 30.520318°, Te 10.629171°이므로 **자동 각도는 RPA와 수치적으로 동일하지 않습니다**. Bell 결과 metadata의 `rao_angle_method`가 이 출처를 표시하며 자세한 검증 경계는 [Rao contour verification](docs/RAO_CONTOUR.md)에 기록했습니다.
 

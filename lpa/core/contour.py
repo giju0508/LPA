@@ -128,6 +128,65 @@ def _section_intervals(
     return intervals[0], intervals[1], intervals[2]
 
 
+def _convergent_volume_m3(
+    *,
+    chamber_radius: float,
+    throat_radius: float,
+    chamber_blend_radius: float,
+    throat_blend_radius: float,
+    straight_axial_length: float,
+    contraction_angle: float,
+) -> float:
+    """Return the exact volume of the arc-line-arc converging section."""
+
+    sine = sin(contraction_angle)
+    cosine = cos(contraction_angle)
+    cosine_squared_integral = (
+        contraction_angle / 2.0
+        + sin(2.0 * contraction_angle) / 4.0
+    )
+    cosine_cubed_integral = sine - sine**3 / 3.0
+
+    def arc_volume(
+        *, radius_offset: float, arc_radius: float, cosine_sign: float
+    ) -> float:
+        # r(theta) = radius_offset +/- arc_radius*cos(theta),
+        # dx = arc_radius*cos(theta)dtheta for theta in [0, beta].
+        return pi * arc_radius * (
+            radius_offset**2 * sine
+            + 2.0
+            * cosine_sign
+            * radius_offset
+            * arc_radius
+            * cosine_squared_integral
+            + arc_radius**2 * cosine_cubed_integral
+        )
+
+    chamber_arc_volume = arc_volume(
+        radius_offset=chamber_radius - chamber_blend_radius,
+        arc_radius=chamber_blend_radius,
+        cosine_sign=1.0,
+    )
+    throat_arc_volume = arc_volume(
+        radius_offset=throat_radius + throat_blend_radius,
+        arc_radius=throat_blend_radius,
+        cosine_sign=-1.0,
+    )
+    straight_start_radius = chamber_radius - chamber_blend_radius * (1.0 - cosine)
+    straight_end_radius = throat_radius + throat_blend_radius * (1.0 - cosine)
+    straight_volume = (
+        pi
+        * straight_axial_length
+        / 3.0
+        * (
+            straight_start_radius**2
+            + straight_start_radius * straight_end_radius
+            + straight_end_radius**2
+        )
+    )
+    return chamber_arc_volume + straight_volume + throat_arc_volume
+
+
 def generate_contour(
     chamber: ThrustChamberInput,
     throat_diameter_mm: float,
@@ -173,20 +232,43 @@ def generate_contour(
         (upstream_radius + chamber_blend_radius) * sin(beta)
         + straight_axial_length
     )
+    natural_convergent_volume = _convergent_volume_m3(
+        chamber_radius=chamber_radius,
+        throat_radius=throat_radius,
+        chamber_blend_radius=chamber_blend_radius,
+        throat_blend_radius=upstream_radius,
+        straight_axial_length=straight_axial_length,
+        contraction_angle=beta,
+    )
+    throat_area = pi * throat_radius**2
+    chamber_area = pi * chamber_radius**2
     if chamber.length.mode is LengthMode.DIRECT:
         cylindrical_length = chamber.length.cylindrical_length_mm / 1000.0  # type: ignore[operator]
         total_chamber_length = chamber.length.chamber_length_mm / 1000.0  # type: ignore[operator]
         convergent_length = total_chamber_length - cylindrical_length
     else:
-        # LPA follows the requested convention: L* volume uses the cylindrical
-        # area and excludes the contraction volume.
-        cylindrical_length = (
-            chamber.length.characteristic_length_mm
-            / 1000.0
-            / contraction_area_ratio
+        # L* = (Vcyl + Vconv) / At.  The converging-section volume follows the
+        # actual arc-line-arc contour, so only the remaining target volume is
+        # assigned to the cylindrical chamber.
+        target_chamber_volume = (
+            chamber.length.characteristic_length_mm / 1000.0 * throat_area
         )  # type: ignore[operator]
+        cylindrical_volume = target_chamber_volume - natural_convergent_volume
+        if cylindrical_volume <= 0.0:
+            minimum_lstar_mm = natural_convergent_volume / throat_area * 1000.0
+            raise ValueError(
+                "characteristic length L* must exceed "
+                f"{minimum_lstar_mm:.3f} mm for the selected converging geometry"
+            )
+        cylindrical_length = cylindrical_volume / chamber_area
         convergent_length = natural_convergent_length
         total_chamber_length = cylindrical_length + convergent_length
+
+    axial_scale = convergent_length / natural_convergent_length
+    cylindrical_volume = chamber_area * cylindrical_length
+    convergent_volume = natural_convergent_volume * axial_scale
+    chamber_volume = cylindrical_volume + convergent_volume
+    resolved_characteristic_length_mm = chamber_volume / throat_area * 1000.0
 
     throat_blend_radius = chamber.nozzle.throat_radius_ratio * throat_radius
     conical_15_length = (
@@ -215,7 +297,6 @@ def generate_contour(
 
     convergent_x = linspace(cylindrical_length, total_chamber_length, convergent_count)
     convergent_r: list[float] = []
-    axial_scale = convergent_length / natural_convergent_length
     first_arc_end = chamber_blend_radius * sin(beta)
     straight_end = first_arc_end + straight_axial_length
     for x_value in convergent_x:
@@ -245,7 +326,11 @@ def generate_contour(
         "natural_convergent_length_mm": natural_convergent_length * 1000.0,
         "convergent_axial_scale": axial_scale,
         "nozzle_length_mm": nozzle_length * 1000.0,
-        "characteristic_volume_convention": "cylindrical_area_excluding_contraction",
+        "cylindrical_volume_m3": cylindrical_volume,
+        "convergent_volume_m3": convergent_volume,
+        "chamber_volume_m3": chamber_volume,
+        "characteristic_length_mm": resolved_characteristic_length_mm,
+        "characteristic_volume_convention": "cylinder_plus_converging_section",
         "R2/R2max": chamber.chamber_radius_ratio,
         "R1/Rt": chamber.throat_upstream_radius_ratio,
         "Rn/Rt": chamber.nozzle.throat_radius_ratio,

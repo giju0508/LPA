@@ -1252,15 +1252,15 @@ def _solve_regens(
             arrays.coolant_velocity_m_s[index] = solution.coolant_velocity_m_s
             arrays.coolant_density_kg_m3[index] = solution.coolant_density_kg_m3
             arrays.active[index] = identifier
-            axial_width = _cell_width_in_range(mesh, index, bounds)
-            if axial_width > 0:
-                area = annular_wall_area(mesh.radius_m[index], axial_width)
+            channel_path_length = _channel_path_length_in_range(mesh, index, bounds)
+            if channel_path_length > 0:
+                area = annular_wall_area(mesh.radius_m[index], channel_path_length)
                 current_temperature += (
                     solution.heat_flux * area / (mass_flow * solution.coolant_cp)
                 )
                 pressure_loss_pa = (
                     solution.coolant_pressure_gradient_pa_m
-                    * _channel_path_length_in_range(mesh, index, bounds)
+                    * channel_path_length
                 )
                 if pressure_loss_pa >= current_pressure_pa:
                     current_pressure_pa = 0.0

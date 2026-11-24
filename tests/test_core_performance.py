@@ -22,6 +22,8 @@ from lpa.core import (
     evaluate_performance,
     generate_contour,
     optimize_mixture_ratio,
+    optimize_mixture_ratio_for_inputs,
+    performance_at_ambient_pressure,
     run_ambient_sweep,
     run_throttle_sweep,
 )
@@ -60,6 +62,39 @@ def test_ambient_exit_condition_is_ideally_expanded_in_fallback():
     )
     result = evaluate_performance(AnalysisInput(thrust_chamber=chamber), prefer_rocketcea=False)
     assert result.exit_pressure_bar == pytest.approx(0.35 * 1.01325, rel=2e-6)
+
+
+def test_fixed_hardware_ambient_recalculation_matches_full_fallback_evaluation():
+    inputs = AnalysisInput()
+    baseline = evaluate_performance(
+        inputs,
+        film_mass_fraction=0.12,
+        prefer_rocketcea=False,
+    )
+    ambient_pressure_atm = 0.25
+
+    recalculated = performance_at_ambient_pressure(baseline, ambient_pressure_atm)
+    fully_evaluated = evaluate_performance(
+        inputs,
+        ambient_pressure_atm=ambient_pressure_atm,
+        fixed_throat_area_m2=baseline.throat_area_m2,
+        fixed_expansion_ratio=baseline.expansion_ratio,
+        film_mass_fraction=0.12,
+        prefer_rocketcea=False,
+    )
+
+    assert recalculated.without_film.thrust_design_n == pytest.approx(
+        fully_evaluated.without_film.thrust_design_n,
+        rel=1.0e-12,
+    )
+    assert recalculated.with_film.thrust_design_n == pytest.approx(
+        fully_evaluated.with_film.thrust_design_n,
+        rel=1.0e-12,
+    )
+    assert recalculated.with_film.isp_design_s == pytest.approx(
+        fully_evaluated.with_film.isp_design_s,
+        rel=1.0e-12,
+    )
 
 
 def test_film_blc_exposes_corrected_and_uncorrected_performance():
@@ -128,6 +163,10 @@ def test_mixture_ratio_optimizer_maximizes_rocketcea_vacuum_isp():
     factory_calls = []
 
     class QuadraticCEA:
+        def getMRforER(self, **kwargs):
+            assert kwargs == {"ERphi": 1.0}
+            return 4.0
+
         def get_IvacCstrTc(self, **kwargs):
             mixture_ratio = kwargs["MR"]
             return 410.0 - 7.5 * (mixture_ratio - 3.4) ** 2, 1800.0, 3500.0
@@ -147,7 +186,141 @@ def test_mixture_ratio_optimizer_maximizes_rocketcea_vacuum_isp():
     assert optimum.mixture_ratio == pytest.approx(3.4, abs=2e-4)
     assert optimum.vacuum_isp_s == pytest.approx(410.0, abs=1e-5)
     assert optimum.expansion_ratio == 18.0
+    assert optimum.stoichiometric_mixture_ratio == 4.0
+    assert optimum.oxidizer_excess_coefficient == pytest.approx(0.85, abs=5e-5)
+    assert optimum.objective == "ideal vacuum specific impulse"
     assert len(factory_calls) == 1
+
+
+def test_stoichiometric_lookup_failure_keeps_rocketcea_optimizer_available():
+    class WorkingCEA:
+        def getMRforER(self, **_kwargs):
+            raise LookupError("stoichiometric metadata unavailable")
+
+        def get_IvacCstrTc(self, **kwargs):
+            mixture_ratio = kwargs["MR"]
+            return 400.0 - 5.0 * (mixture_ratio - 2.6) ** 2, 1750.0, 3400.0
+
+    optimum = optimize_mixture_ratio(
+        EngineDefinition(chamber_pressure_bar=25.0, oxidizer="LOX", fuel="RP-1"),
+        expansion_ratio=12.0,
+        bounds=(1.0, 4.0),
+        cea_adapter=RocketCEAAdapter(lambda **_kwargs: WorkingCEA()),
+    )
+
+    assert optimum.source == "rocketcea"
+    assert optimum.mixture_ratio == pytest.approx(2.6, abs=2e-4)
+    assert optimum.stoichiometric_mixture_ratio is None
+    assert optimum.oxidizer_excess_coefficient is None
+
+
+def test_optimizer_does_not_report_nearby_interior_optimum_as_bound():
+    class NearBoundCEA:
+        def get_IvacCstrTc(self, **kwargs):
+            mixture_ratio = kwargs["MR"]
+            return 390.0 - 20.0 * (mixture_ratio - 1.01) ** 2, 1700.0, 3300.0
+
+    optimum = optimize_mixture_ratio(
+        EngineDefinition(chamber_pressure_bar=20.0, oxidizer="LOX", fuel="RP-1"),
+        expansion_ratio=10.0,
+        bounds=(1.0, 4.0),
+        cea_adapter=RocketCEAAdapter(lambda **_kwargs: NearBoundCEA()),
+    )
+
+    assert optimum.mixture_ratio == pytest.approx(1.01, abs=2e-4)
+    assert optimum.warning is None
+
+
+def test_ambient_exit_analysis_uses_rocketcea_pressure_to_area_solution():
+    resolved_epsilons: list[float] = []
+
+    class PressureExitCEA:
+        def get_eps_at_PcOvPe(self, **kwargs):
+            assert kwargs["PcOvPe"] == pytest.approx(30.0 / (0.4 * 1.01325))
+            return 12.345
+
+        def get_IvacCstrTc(self, **kwargs):
+            resolved_epsilons.append(kwargs["eps"])
+            return 330.0, 1800.0, 3500.0
+
+        def get_exit_MolWt_gamma(self, **_kwargs):
+            return 22.0, 1.21
+
+        def get_PcOvPe(self, **_kwargs):
+            return 30.0 / (0.4 * 1.01325)
+
+    chamber = ThrustChamberInput(
+        exit_condition=NozzleExitCondition(
+            mode="ambient_pressure",
+            ambient_pressure_atm=0.4,
+        )
+    )
+    inputs = AnalysisInput(
+        engine=EngineDefinition(chamber_pressure_bar=30.0),
+        thrust_chamber=chamber,
+    )
+
+    result = evaluate_performance(
+        inputs,
+        cea_adapter=RocketCEAAdapter(lambda **_kwargs: PressureExitCEA()),
+    )
+
+    assert result.source == "rocketcea"
+    assert result.expansion_ratio == pytest.approx(12.345)
+    assert resolved_epsilons == [pytest.approx(12.345)]
+    assert result.exit_pressure_bar == pytest.approx(0.4 * 1.01325)
+
+
+def test_direct_dc_nominal_thrust_optimizer_resolves_coupled_area_ratio():
+    class CoupledCEA:
+        def __init__(self, contraction_ratio: float):
+            self.contraction_ratio = contraction_ratio
+
+        def get_IvacCstrTc(self, **kwargs):
+            target = 2.2 + 0.03 * self.contraction_ratio
+            mixture_ratio = kwargs["MR"]
+            return 350.0 - 3.0 * (mixture_ratio - target) ** 2, 1800.0, 3450.0
+
+        def get_exit_MolWt_gamma(self, **_kwargs):
+            return 22.0, 1.21
+
+        def get_PcOvPe(self, **_kwargs):
+            return 50.0
+
+    def optimize_from_hidden_ratio(hidden_ratio: float):
+        chamber = ThrustChamberInput(
+            contraction_mode="chamber_diameter",
+            contraction_area_ratio=hidden_ratio,
+            chamber_diameter_mm=60.0,
+            exit_condition=NozzleExitCondition(
+                mode="expansion_ratio",
+                expansion_area_ratio=12.0,
+                ambient_pressure_atm=None,
+            ),
+            size=ThrustChamberSize(
+                mode=SizeMode.NOMINAL_THRUST,
+                nominal_thrust_n=1000.0,
+                thrust_ambient_pressure_atm=1.0,
+                throat_diameter_mm=None,
+            ),
+        )
+        adapter = RocketCEAAdapter(
+            lambda **kwargs: CoupledCEA(float(kwargs["fac_CR"]))
+        )
+        return optimize_mixture_ratio_for_inputs(
+            AnalysisInput(thrust_chamber=chamber),
+            bounds=(1.0, 4.0),
+            cea_adapter=adapter,
+        )
+
+    from_low_guess = optimize_from_hidden_ratio(2.0)
+    from_high_guess = optimize_from_hidden_ratio(12.0)
+
+    assert from_low_guess.source == "rocketcea"
+    assert from_low_guess.mixture_ratio == pytest.approx(
+        from_high_guess.mixture_ratio,
+        abs=2.0e-4,
+    )
 
 
 def test_mixture_ratio_optimizer_has_bounded_fallback():
@@ -162,6 +335,34 @@ def test_mixture_ratio_optimizer_has_bounded_fallback():
     assert 0.5 < optimum.mixture_ratio < 10.0
     assert optimum.vacuum_isp_s > 0.0
     assert optimum.warning is None
+
+
+def test_mixture_ratio_optimizer_retains_ambient_exit_pressure_for_each_candidate():
+    evaluated: list[tuple[float, float]] = []
+
+    class AmbientCEA:
+        def getMRforER(self, **_kwargs):
+            return 3.0
+
+        def get_eps_at_PcOvPe(self, **kwargs):
+            return 4.0 + kwargs["MR"]
+
+        def get_IvacCstrTc(self, **kwargs):
+            evaluated.append((kwargs["MR"], kwargs["eps"]))
+            return 390.0 - 4.0 * (kwargs["MR"] - 2.25) ** 2, 1750.0, 3400.0
+
+    optimum = optimize_mixture_ratio(
+        EngineDefinition(chamber_pressure_bar=30.0, oxidizer="LOX", fuel="RP-1"),
+        expansion_ratio=None,
+        ambient_pressure_atm=0.4,
+        bounds=(1.0, 4.0),
+        cea_adapter=RocketCEAAdapter(lambda **_kwargs: AmbientCEA()),
+    )
+
+    assert optimum.mixture_ratio == pytest.approx(2.25, abs=2e-4)
+    assert optimum.expansion_ratio == pytest.approx(6.25, abs=2e-4)
+    assert evaluated
+    assert all(expansion == pytest.approx(4.0 + ratio) for ratio, expansion in evaluated)
 
 
 def test_thermodynamic_station_table_and_axial_arrays_are_complete():

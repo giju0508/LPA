@@ -199,7 +199,7 @@ class FieldGrid(ttk.Frame):
         base_row = row * 3
         value_span = max(1, columnspan * 3 - 2)
         label_span = max(2, columnspan * 3 - 1)
-        ttk.Label(self, text=label, style="Surface.TLabel", font=(FONT_UI, 9, "bold")).grid(
+        ttk.Label(self, text=label, style="Field.TLabel").grid(
             row=base_row,
             column=start_column,
             sticky="w",
@@ -215,7 +215,7 @@ class FieldGrid(ttk.Frame):
         )
         if unit:
             unit_column = start_column + value_span
-            ttk.Label(self, text=unit, style="Muted.TLabel").grid(
+            ttk.Label(self, text=unit, style="Unit.TLabel").grid(
                 row=base_row + 1,
                 column=unit_column,
                 padx=(7, 0),
